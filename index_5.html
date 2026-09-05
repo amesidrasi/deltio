@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ημερήσιο Δελτίο Οχήματος</title>
+<style>
+  *{box-sizing:border-box;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:#f4f3ee;
+    margin:0;
+    padding:0 0 40px;
+    color:#1c2733;
+  }
+  .header{
+    background:#1f3a5f;
+    color:#fff;
+    padding:14px 18px 14px;
+    text-align:center;
+  }
+  .header .title{font-size:16px;font-weight:600;}
+  .header .subtitle{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    opacity:.9;
+    margin-top:5px;
+  }
+  .section{padding:14px 16px;}
+  .label{
+    font-size:11px;text-transform:uppercase;letter-spacing:.04em;
+    color:#5c6773;margin-bottom:4px;display:block;
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .field{margin-bottom:10px;}
+  .ac-wrapper{position:relative;}
+  .ac-list{
+    position:absolute;z-index:20;top:100%;left:0;right:0;
+    background:#fff;border:1px solid #ccc;border-top:none;
+    border-radius:0 0 6px 6px;max-height:180px;overflow-y:auto;display:none;
+  }
+  .ac-item{padding:9px 10px;font-size:14px;border-bottom:1px solid #f0f0f0;}
+  .ac-item:last-child{border-bottom:none;}
+  .ac-item:active{background:#f4f3ee;}
+  .suggest-toggle{
+    width:100%;margin-top:8px;padding:9px 10px;font-size:13px;
+    background:#fff;border:1px solid #1f3a5f;color:#1f3a5f;border-radius:6px;
+  }
+  .suggest-panel{
+    margin-top:8px;display:flex;flex-direction:column;gap:8px;
+  }
+  .suggest-card{
+    text-align:left;font-size:13px;line-height:1.5;padding:10px 12px;
+    background:#f4f3ee;border:1px solid #ddd;border-radius:8px;color:#1c2733;
+  }
+  .suggest-card:active{background:#e9e7df;}
+  .type-toggle{display:flex;gap:8px;margin-bottom:10px;}
+  .type-btn{
+    flex:1;padding:8px;font-size:13px;border:1px solid #1f3a5f;border-radius:6px;
+    background:#fff;color:#1f3a5f;
+  }
+  .type-btn.active{background:#1f3a5f;color:#fff;}
+  .top-tabs{display:flex;gap:0;background:#e3e1d8;}
+  .top-tab{
+    flex:1;padding:12px;font-size:13px;font-weight:600;background:none;border:none;
+    color:#5c6773;border-bottom:3px solid transparent;
+  }
+  .top-tab.active{color:#1f3a5f;border-bottom-color:#1f3a5f;background:#f4f3ee;}
+  .quick-log-item{
+    background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 12px;
+    margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+  }
+  .quick-log-item .qtxt{font-size:13px;line-height:1.4;}
+  .quick-log-item .qtime{font-weight:600;color:#1f3a5f;margin-right:6px;}
+  .quick-log-item .qdel{background:none;border:none;color:#993c1d;font-size:12px;flex-shrink:0;}
+  .quick-empty{font-size:12px;color:#888;text-align:center;padding:12px;}
+  .quick-log-item.editing{border-color:#1f3a5f;background:#f4f3ee;}
+  .undo-msg{
+    display:flex;justify-content:space-between;align-items:center;
+    background:#eef1f4;border-radius:6px;padding:8px 10px;margin-top:8px;font-size:12px;
+  }
+  .undo-msg button{background:none;border:none;color:#1f3a5f;font-weight:600;font-size:12px;}
+  .edit-hint{font-size:11px;color:#5c6773;margin-top:4px;}
+  .cancel-edit{background:none;border:none;color:#5c6773;font-size:12px;text-decoration:underline;margin-top:6px;}
+  .quick-log-item{flex-direction:column;align-items:stretch;}
+  .quick-log-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .quick-expand-panel{
+    margin-top:10px;padding-top:10px;border-top:1px solid #eee;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .quick-expand-panel .row2{margin-bottom:0;}
+  .quick-expand-panel label.label{margin-bottom:2px;}
+  .quick-save-btn{
+    padding:9px;font-size:13px;background:#1f3a5f;color:#fff;border:none;border-radius:6px;
+  }
+  .suggestions{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+  .suggestion-btn{
+    text-align:left;font-size:12px;line-height:1.4;padding:8px 10px;
+    background:#f4f3ee;border:1px solid #ddd;border-radius:6px;color:#1c2733;
+  }
+  .suggestion-btn:active{background:#e9e7df;}
+  input[type=text], input[type=date], select, textarea{
+    width:100%;font-size:15px;padding:9px 10px;
+    border:1px solid #ccc;border-radius:6px;background:#fff;
+    font-family:inherit;
+  }
+  textarea{resize:vertical;min-height:90px;line-height:1.4;}
+  .section-title{
+    font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#1f3a5f;
+    border-bottom:1px solid #ddd;padding-bottom:6px;margin:18px 0 10px;
+  }
+  .drafts-box{
+    background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:12px;
+  }
+  .drafts-box .dtitle{font-size:12px;font-weight:600;color:#1f3a5f;margin-bottom:6px;}
+  .draft-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:7px 4px;border-bottom:1px solid #eee;font-size:13px;
+  }
+  .draft-item:last-child{border-bottom:none;}
+  .draft-item button.load{background:none;border:none;color:#1f3a5f;font-weight:600;font-size:13px;}
+  .draft-item button.del{background:none;border:none;color:#993c1d;font-size:12px;}
+  .no-drafts{font-size:12px;color:#888;}
+  .new-btn{
+    width:100%;padding:9px;border:1px solid #1f3a5f;background:#fff;color:#1f3a5f;
+    border-radius:6px;font-size:13px;margin-bottom:10px;
+  }
+  .signal-card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:10px;}
+  .signal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .signal-head span{font-size:13px;font-weight:600;}
+  .del-btn{background:none;border:none;color:#993c1d;font-size:13px;padding:4px;}
+  .add-btn{
+    width:100%;padding:12px;border:1px dashed #1f3a5f;background:none;
+    color:#1f3a5f;border-radius:6px;font-size:14px;
+  }
+  .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+  .save-btn{
+    padding:14px;background:#fff;color:#1f3a5f;border:1px solid #1f3a5f;
+    border-radius:6px;font-size:14px;font-weight:600;
+  }
+  .send-btn{
+    padding:14px;background:#1f3a5f;color:#fff;border:none;
+    border-radius:6px;font-size:14px;font-weight:600;
+  }
+  .send-btn:disabled, .save-btn:disabled{opacity:.6;}
+  .status{text-align:center;font-size:13px;margin-top:10px;color:#2f6e4e;}
+  .status.error{color:#a32d2d;}
+  .confirm-panel{
+    background:#fff;border:1px solid #1f3a5f;border-radius:8px;padding:14px;margin-top:14px;
+  }
+  .confirm-panel h4{margin:0 0 8px;font-size:13px;color:#1f3a5f;text-transform:uppercase;letter-spacing:.04em;}
+  .confirm-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid #eee;}
+  .confirm-row:last-child{border-bottom:none;}
+  .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+  .confirm-btns .back-btn{padding:12px;background:#fff;border:1px solid #999;color:#333;border-radius:6px;font-size:13px;}
+  .confirm-btns .go-btn{padding:12px;background:#1f3a5f;border:none;color:#fff;border-radius:6px;font-size:13px;font-weight:600;}
+  .pdf-dl-btn{
+    width:100%;margin-top:10px;padding:12px;background:#2f6e4e;color:#fff;border:none;
+    border-radius:6px;font-size:13px;font-weight:600;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Ημερήσιο Δελτίο Οχήματος</div>
+  <div class="subtitle">Άμεση Δράση Αττικής &ndash; Γ&#39; Αλλαγή</div>
+</div>
+
+<div class="top-tabs">
+  <button type="button" class="top-tab active" id="tabQuickBtn" onclick="switchTab('quick')">Γρήγορη Καταγραφή</button>
+  <button type="button" class="top-tab" id="tabFullBtn" onclick="switchTab('full')">Πλήρες Δελτίο</button>
+</div>
+
+<div class="section" id="quickView">
+  <div class="section-title" style="margin-top:0;">Γρήγορη καταγραφή σήματος</div>
+  <div>
+    <span class="label">Κωδικός σήματος</span>
+    <div class="ac-wrapper">
+      <input type="text" id="quickCode" placeholder="π.χ. Ε-19" autocomplete="off">
+      <div class="ac-list" id="quickCodeList"></div>
+    </div>
+  </div>
+  <div class="field" style="margin-top:10px;">
+    <span class="label">Περιγραφή</span>
+    <input type="text" id="quickDesc" placeholder="π.χ. σε οικία">
+  </div>
+  <button type="button" class="add-btn" id="quickCaptureBtn" style="border-style:solid;background:#1f3a5f;color:#fff;border-color:#1f3a5f;" onclick="quickCapture()">+ Προσθήκη σήματος (θα καταγραφεί η τρέχουσα ώρα)</button>
+  <div id="undoBox"></div>
+
+  <div class="section-title">Καταγεγραμμένα <span id="quickCountLabel"></span></div>
+  <div class="edit-hint">Πατήστε πάνω σε μια καταγραφή για να προσθέσετε ώρα άφιξης, λήξης, ή πρόχειρα στοιχεία για το αποτέλεσμα.</div>
+  <div id="quickLogList"></div>
+
+  <button type="button" class="send-btn" style="margin-top:14px;" onclick="transferQuickLog()">Μεταφορά όλων στο Πλήρες Δελτίο</button>
+</div>
+
+<div class="section" id="fullView" style="display:none;">
+
+  <div class="drafts-box">
+    <div class="dtitle">Αποθηκευμένα προσχέδια</div>
+    <div id="draftsList"><span class="no-drafts">Κανένα προσχέδιο ακόμα.</span></div>
+  </div>
+  <button type="button" class="new-btn" onclick="newReport()">+ Νέο δελτίο</button>
+
+  <div class="row2">
+    <div>
+      <span class="label">Κωδικός Περιπολικού</span>
+      <div class="ac-wrapper">
+        <input type="text" id="code" placeholder="π.χ. Α3-4" autocomplete="off">
+        <div class="ac-list" id="codeList"></div>
+      </div>
+    </div>
+    <div><span class="label">Ε.Α.</span><input type="text" id="ea" placeholder="π.χ. 25689"></div>
+  </div>
+  <div class="row2">
+    <div>
+      <span class="label">Τομέας</span>
+      <div class="ac-wrapper">
+        <input type="text" id="tomeas" placeholder="π.χ. Α3η" autocomplete="off">
+        <div class="ac-list" id="sectorList"></div>
+      </div>
+    </div>
+    <div><span class="label">8ωρο</span>
+      <select id="oktaoro">
+        <option value="05:30-13:00">05:30-13:00</option>
+        <option value="13:00-21:00">13:00-21:00</option>
+        <option value="21:00-05:30">21:00-05:30</option>
+      </select>
+    </div>
+  </div>
+  <div class="field"><span class="label">Ημερομηνία</span><input type="date" id="imerominia"></div>
+  <div class="row2">
+    <div><span class="label">Ένδειξη χλμ</span><input type="text" id="kmA"></div>
+    <div><span class="label">Λήξη χλμ</span><input type="text" id="kmB"></div>
+  </div>
+
+  <div class="section-title">Πλήρωμα &amp; όχημα</div>
+  <div class="field"><span class="label">Οδηγός</span><input type="text" id="odigos"></div>
+  <div class="field"><span class="label">Αρχηγός</span><input type="text" id="arxigos"></div>
+  <div class="field"><span class="label">Συνοδός</span><input type="text" id="synodos"></div>
+  <div class="row2">
+    <div><span class="label">Κατάσταση οχήματος</span>
+      <select id="katastasi">
+        <option value="ΚΑΛΗ">ΚΑΛΗ</option>
+        <option value="ΒΛΑΒΗ">ΒΛΑΒΗ</option>
+      </select>
+    </div>
+    <div><span class="label">Χορ. Βενζίνη</span><input type="text" id="venzini"></div>
+  </div>
+  <div class="field"><span class="label">Χορ. Ορυκτέλαιο</span><input type="text" id="oryktelaio"></div>
+
+  <div class="section-title">Σήματα</div>
+  <div id="signalsContainer"></div>
+  <button type="button" class="add-btn" onclick="addSignal()">+ Προσθήκη σήματος</button>
+
+  <div class="field" style="margin-top:14px;">
+    <span class="label">Το email σας (προαιρετικό — για δικό σας αντίγραφο)</span>
+    <input type="text" id="senderEmail" placeholder="π.χ. onoma@gmail.com">
+  </div>
+
+  <div class="btn-row">
+    <button type="button" class="save-btn" id="saveBtn" onclick="saveDraft()">Αποθήκευση Προσχεδίου</button>
+    <button type="button" class="send-btn" id="sendBtn" onclick="reviewBeforeSend()">Αποστολή</button>
+  </div>
+  <div id="confirmBox"></div>
+  <div id="statusMsg" class="status"></div>
+  <div id="pdfDlBox"></div>
+</div>
+
+<script>
+/* =======================================================================
+   ΡΥΘΜΙΣΗ — ΤΟ ΜΟΝΟ ΣΗΜΕΙΟ ΠΟΥ ΠΡΕΠΕΙ ΝΑ ΑΛΛΑΞΕΤΕ
+   Επικολλήστε εδώ μέσα στα εισαγωγικά τη διεύθυνση /exec του Apps Script,
+   από: Deploy → Manage deployments → Web app URL.
+   Πρέπει να τελειώνει σε /exec (ΟΧΙ σε /dev).
+   ======================================================================= */
+const API_URL = "ΕΠΙΚΟΛΛΗΣΤΕ_ΕΔΩ_ΤΟ_EXEC_URL";
+/* ======================================================================= */
+
+const CAR_CODES = [
+  "Α1-1","Α1-2","Α1-3","Α1-4",
+  "Α2-1","Α2-2","Α2-3","Α2-4","Α2-5",
+  "Α3-1","Α3-2","Α3-3","Α3-5",
+  "Α4-1","Α4-2","Α4-3","Α4-4",
+  "Α5-1","Α5-2","Α5-3","Α5-4","Α5-5","Α5-6",
+  "Α6-1","Α6-2","Α6-3","Α6-4",
+  "Α7-1","Α7-2","Α7-3","Α7-4","Α7-5",
+  "Α8-1","Α8-2","Α8-3","Α8-4","Α8-5",
+  "Α9-1","Α9-2","Α9-3","Α9-4",
+  "Β1-1","Β1-2","Β1-3","Β1-4",
+  "Β2-1","Β2-2","Β2-3","Β2-4",
+  "Β3-1","Β3-2","Β3-3",
+  "Β4-1","Β4-2","Β4-3","Β4-4",
+  "Β5-1","Β5-2","Β5-3","Β5-4",
+  "Β6-1","Β6-2","Β6-3","Β6-4",
+  "Β7-1","Β7-2","Β7-3","Β7-4","Β7-5",
+  "Β8-1","Β8-2","Β8-3","Β8-4",
+  "Β9-1","Β9-2","Β9-3","Β9-4","Β9-5"
+];
+const SECTORS = [
+  "Α1η","Α2η","Α3η","Α4η","Α5η","Α6η","Α7η","Α8η","Α9η",
+  "Β1η","Β2η","Β3η","Β4η","Β5η","Β6η","Β7η","Β8η","Β9η"
+];
+
+const SIGNAL_CODES = [
+  {c:"Ε-1", n:"Πληροφορία"},
+  {c:"Ε-2", n:"Προσαγωγή"},
+  {c:"Ε-3", n:"Αρπαγή τσάντας"},
+  {c:"Ε-4", n:"Ύποπτοι Θόρυβοι"},
+  {c:"Ε-5", n:"Ύποπτο αντικείμενο"},
+  {c:"Ε-6", n:"Συγκεντρώσεις - πορεία ατόμων"},
+  {c:"Ε-7", n:"Κλοπή"},
+  {c:"Ε-8", n:"Διάρρηξη"},
+  {c:"Ε-9", n:"Πυρκαγιά"},
+  {c:"Ε-10", n:"Ανεύρεση πτώματος"},
+  {c:"Ε-11", n:"Σοβαρό επεισόδιο - συμπλοκή"},
+  {c:"Ε-12", n:"Επεισόδιο"},
+  {c:"Ε-13", n:"Ανθρωποκτονία"},
+  {c:"Ε-14", n:"Απαγχονισμός"},
+  {c:"Ε-15", n:"Αυτοκτονία"},
+  {c:"Ε-16", n:"Αιφνιδίως παθών"},
+  {c:"Ε-17", n:"Οίκος ανοχής"},
+  {c:"Ε-18", n:"Ηδονοβλεψίας"},
+  {c:"Ε-19", n:"Συναγερμός"},
+  {c:"Ε-20", n:"Προπομπός στον..."},
+  {c:"Ε-21", n:"Σύλληψη ατόμου"},
+  {c:"Ε-22", n:"Επικίνδυνο άτομο, οπλοφορεί"},
+  {c:"Ε-23", n:"Πυροβολισμοί"},
+  {c:"Ε-24", n:"Επιτήρηση στόχου"},
+  {c:"Ε-25", n:"Ύποπτο άτομο"},
+  {c:"Ε-26", n:"Ύποπτο όχημα"},
+  {c:"Ε-27", n:"Πλημμύρα"},
+  {c:"Ε-28", n:"Εξαφάνιση προσώπου"},
+  {c:"Ε-29", n:"Ομηρεία"},
+  {c:"Ε-30", n:"Επίθεση κατ' Αστυνομικού"},
+  {c:"Ε-31", n:"Επίθεση κατά Πρέσβεως - Προξένου"},
+  {c:"Ε-32", n:"Αναγραφή συνθημάτων"},
+  {c:"Ε-33", n:"Διασπορά Προκηρύξεων"},
+  {c:"Ε-34", n:"Παρακώλυση"},
+  {c:"Ε-35", n:"Στάθμευση"},
+  {c:"Ε-36", n:"Πνιγμός"},
+  {c:"Ε-37", n:"Οδοφράγματα"},
+  {c:"Ε-38", n:"Αποκλεισμός Εθνικών Οδών"},
+  {c:"Ε-39", n:"Άφιξη επισήμου προσώπου"},
+  {c:"Ε-40", n:"Αναχώρηση επισήμου προσώπου"},
+  {c:"Ε-41", n:"Λάδια στον δρόμο"},
+  {c:"Ε-42", n:"Ανάρτηση Πανό"},
+  {c:"Ε-43", n:"Τυχερά Παίγνια - Λέσχες"},
+  {c:"Ε-44", n:"Επαιτεία"},
+  {c:"Ε-45", n:"Παιδεραστία"},
+  {c:"Ε-46", n:"Πλαστά νομίσματα"},
+  {c:"Ε-47", n:"Παράπονα"},
+  {c:"Ε-48", n:"Παρακώλυση συγκοινωνιών"},
+  {c:"Ε-49", n:"Αυτοσχέδιοι αγώνες"},
+  {c:"Ε-50", n:"Εκρήξεις γενικά"},
+  {c:"Ε-51", n:"Τοποθετήσεις εκρηκτικών"},
+  {c:"Ε-52", n:"Ληστεία"},
+  {c:"Ε-53", n:"Απαγωγή"},
+  {c:"Ε-54", n:"Καλέσατε ειδικό"},
+  {c:"Ε-55", n:"Ανεύρεση όπλων-βλημάτων-πυρομ/κών"},
+  {c:"Ε-56", n:"Χρηματαποστολή"},
+  {c:"Ε-57", n:"Αναρχικοί"},
+  {c:"Ε-58", n:"Ειδική μεταγωγή-επικίνδυνος κρατ/νος"},
+  {c:"Ε-59", n:"Παράνομη είσοδος - κατάληψη"},
+  {c:"Ε-60", n:"Αεροπειρατεία"},
+  {c:"Ε-61", n:"Διακίνηση ναρκωτικών"},
+  {c:"Ε-62", n:"Απόδραση κρατουμένων"},
+  {c:"Ε-63", n:"Βιασμός"},
+  {c:"Ε-64", n:"Απόπειρα βιασμού"},
+  {c:"Ε-65", n:"Χρήση ναρκωτικών"},
+  {c:"Ε-66", n:"Λαθρομετανάστες"},
+  {c:"Ε-67", n:"Επιδειξίας"},
+  {c:"Ε-68", n:"Σύλληψη ατόμου"},
+  {c:"Ε-69", n:"Ενοχλητικό άτομο"},
+  {c:"Ε-70", n:"Ενοχλητικοί επαίτες"},
+  {c:"Ε-71", n:"Άτομο στο δρόμο"},
+  {c:"Ε-72", n:"Άτομο καλεί βοήθεια"},
+  {c:"Ε-73", n:"Πτώση ατόμου"},
+  {c:"Ε-74", n:"Αμνήμων άτομο"},
+  {c:"Ε-75", n:"Κρατείται άτομο"},
+  {c:"Ε-76", n:"Αναμένει άτομο"},
+  {c:"Ε-77", n:"Μεταφορά ατόμου"},
+  {c:"Ε-78", n:"Ανεύρεση κλοπιμαίων"},
+  {c:"Ε-79", n:"Ανεύρεση κλεμμένου αυτ/του"},
+  {c:"Ε-80", n:"Ανεύρεση κλεμμένου δικύκλου"},
+  {c:"Ε-81", n:"Παραλαβή και συνοδεία φιλάθλων"},
+  {c:"Ε-82", n:"Ρίψη αντικειμένων στο γήπεδο"},
+  {c:"Ε-83", n:"Τραυματισμός φιλάθλων"},
+  {c:"Ε-84", n:"Συνοδεία Αθλητικών - παραγόντων"},
+  {c:"Ε-85", n:"Τροχαίο ατύχημα"},
+  {c:"Ε-86", n:"Διεκομίσθει τροχαίο"},
+  {c:"Ε-87", n:"Σύγκρουση με υλικές ζημιές"},
+  {c:"Ε-88", n:"Πρόσκρουση - εκτροπή οχήματος"},
+  {c:"Ε-89", n:"Εγκαταλειμμένο όχημα"},
+  {c:"Ε-90", n:"Φθορές σε όχημα"},
+  {c:"Ε-91", n:"Έλεγχος με θορυβόμετρο"},
+  {c:"Ε-92", n:"Έλεγχος με αλκοολόμετρο"},
+  {c:"Ε-93", n:"Έλεγχος με RADAR (ταχύτητας)"},
+  {c:"Ε-94", n:"Έλεγχος καυσαερίων"},
+  {c:"Ε-95", n:"Τοξικά - ραδιενεργά υλικά"},
+  {c:"Ε-96", n:"Εύφλεκτα υλικά (υγραέριο κ.λ.π)"},
+  {c:"Ε-97", n:"Ανάληψη ευθύνης"},
+  {c:"Ε-98", n:"Οικοδομικές εργασίες"},
+  {c:"Ε-99", n:"Έλεγχος Αθλητικών εγκαταστάσεων"}
+];
+
+const SIGNAL_RESPONSES = {
+  "Ε-19": [
+    "Αναφέρω ότι μεταβήκαμε στην ανωτέρω διεύθυνση όπου εξωτερικά και όσο δυνάμεθα είχε καλώς ασφαλισμένο. Ενημερώθηκε το ΚΑΔ και αποχωρήσαμε",
+    "Αναφέρω ότι μεταβήκαμε στην ανωτέρω διεύθυνση όπου η οικία στο σημείο εξωτερικά και όσο δυνάμεθα είχε καλώς ασφαλισμένη. Ενημερώθηκε το ΚΑΔ και αποχωρήσαμε.",
+    "Αναφέρω ότι μεταβήκαμε στην ανωτέρω διεύθυνση όπου η οικία στο σημείο εξωτερικά και όσο δυνάμεθα είχε καλώς ασφαλισμένη. Λόγω υψηλής περίφραξης δεν κατέστη δυνατή η είσοδος εντός για περαιτέρω έλεγχο. Ενημερώθηκε το ΚΑΔ και αποχωρήσαμε.",
+    "Αναφέρω ότι μεταβήκαμε στην ανωτέρω διεύθυνση όπου το κατάστημα στο σημείο εξωτερικά και όσο δυνάμεθα είχε καλώς ασφαλισμένο. Ενημερώθηκε το ΚΑΔ και αποχωρήσαμε."
+  ]
+};
+
+const DRAFTS_KEY = 'deltio_drafts_v1';
+let signalCount = 0;
+let currentDraftId = null;
+
+function setupAutocomplete(inputId, listId, options){
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  function render(filter){
+    const f = filter.trim().toUpperCase();
+    const matches = f ? options.filter(o => o.toUpperCase().includes(f)) : options;
+    if (matches.length === 0){ list.style.display = 'none'; list.innerHTML = ''; return; }
+    list.innerHTML = matches.slice(0, 60).map(o => `<div class="ac-item">${o}</div>`).join('');
+    list.style.display = 'block';
+    list.querySelectorAll('.ac-item').forEach(item => {
+      item.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        input.value = item.textContent;
+        list.style.display = 'none';
+      });
+    });
+  }
+  input.addEventListener('focus', () => render(input.value));
+  input.addEventListener('input', () => render(input.value));
+  input.addEventListener('blur', () => setTimeout(() => { list.style.display = 'none'; }, 150));
+}
+
+function initAutocompletes(){
+  setupAutocomplete('code', 'codeList', CAR_CODES);
+  setupAutocomplete('tomeas', 'sectorList', SECTORS);
+}
+
+function addSignal(prefill){
+  prefill = prefill || {};
+  signalCount++;
+  const id = signalCount;
+  const div = document.createElement('div');
+  div.className = 'signal-card';
+  div.dataset.id = id;
+  const entryType = prefill.type || 'signal';
+  div.dataset.type = entryType;
+  div.innerHTML = `
+    <div class="signal-head">
+      <span>Εγγραφή ${id}</span>
+      <button type="button" class="del-btn" onclick="this.closest('.signal-card').remove()">Διαγραφή</button>
+    </div>
+    <div class="type-toggle">
+      <button type="button" class="type-btn ${entryType==='signal'?'active':''}" data-type="signal">Σήμα</button>
+      <button type="button" class="type-btn ${entryType==='incident'?'active':''}" data-type="incident">Περιστατικό</button>
+    </div>
+    <div class="row2">
+      <div><span class="label">Ώρα</span><input type="text" class="s-time" placeholder="ωω:λλ" value="${prefill.time||''}"></div>
+      <div class="signal-only">
+        <span class="label">Κωδικός σήματος</span>
+        <div class="ac-wrapper">
+          <input type="text" class="s-code" placeholder="π.χ. Ε-19" autocomplete="off" value="${prefill.signalCode||''}">
+          <div class="ac-list s-code-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="field signal-only"><span class="label">Περιγραφή σήματος</span><input type="text" class="s-desc" placeholder="π.χ. σε οικία" value="${prefill.desc||''}"></div>
+    <div class="row2 signal-only">
+      <div><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="ωω:λλ" value="${prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:''}"></div>
+      <div><span class="label">Ώρα λήξης</span><input type="text" class="s-departure" placeholder="ωω:λλ" value="${prefill.departure&&prefill.departure!=='-'?prefill.departure:''}"></div>
+    </div>
+    <div class="field">
+      <span class="label s-result-label">${entryType==='incident'?'Περιγραφή':'Αποτέλεσμα'}</span>
+      <button type="button" class="suggest-toggle signal-only" style="display:none;">Επιλογή έτοιμης απάντησης ▾</button>
+      <div class="suggest-panel signal-only" style="display:none;"></div>
+      <textarea class="s-result" rows="4" style="margin-top:8px;">${prefill.result||''}</textarea>
+    </div>
+  `;
+  document.getElementById('signalsContainer').appendChild(div);
+
+  const typeButtons = div.querySelectorAll('.type-btn');
+  const signalOnlyEls = div.querySelectorAll('.signal-only');
+  const resultLabel = div.querySelector('.s-result-label');
+  function applyType(type){
+    div.dataset.type = type;
+    typeButtons.forEach(b => b.classList.toggle('active', b.dataset.type === type));
+    signalOnlyEls.forEach(el => { el.style.display = (type === 'incident') ? 'none' : ''; });
+    resultLabel.textContent = (type === 'incident') ? 'Περιγραφή' : 'Αποτέλεσμα';
+  }
+  typeButtons.forEach(btn => btn.addEventListener('click', () => applyType(btn.dataset.type)));
+  applyType(entryType);
+
+  const codeInput = div.querySelector('.s-code');
+  const codeList = div.querySelector('.s-code-list');
+  const resultInput = div.querySelector('.s-result');
+
+  function renderCodes(filter){
+    const f = filter.trim().toUpperCase();
+    const matches = f
+      ? SIGNAL_CODES.filter(o => o.c.toUpperCase().includes(f) || o.n.toUpperCase().includes(f))
+      : SIGNAL_CODES;
+    if (matches.length === 0){ codeList.style.display='none'; codeList.innerHTML=''; return; }
+    codeList.innerHTML = matches.slice(0,60)
+      .map(o => `<div class="ac-item" data-code="${o.c}">${o.c} — ${o.n}</div>`).join('');
+    codeList.style.display = 'block';
+    codeList.querySelectorAll('.ac-item').forEach(item => {
+      item.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        codeInput.value = item.dataset.code;
+        codeList.style.display = 'none';
+        showSuggestions();
+      });
+    });
+  }
+  const suggestToggle = div.querySelector('.suggest-toggle');
+  const suggestPanel = div.querySelector('.suggest-panel');
+  let currentOptions = [];
+
+  function showSuggestions(){
+    const key = codeInput.value.trim().toUpperCase();
+    const match = Object.keys(SIGNAL_RESPONSES).find(k => k.toUpperCase() === key);
+    if (!match){
+      suggestToggle.style.display = 'none';
+      suggestPanel.style.display = 'none';
+      suggestPanel.innerHTML = '';
+      currentOptions = [];
+      return;
+    }
+    currentOptions = SIGNAL_RESPONSES[match];
+    suggestToggle.style.display = 'block';
+    suggestPanel.innerHTML = currentOptions.map((txt, i) =>
+      `<button type="button" class="suggest-card" data-i="${i}">${txt}</button>`
+    ).join('');
+    suggestPanel.querySelectorAll('.suggest-card').forEach(card => {
+      card.addEventListener('click', () => {
+        resultInput.value = currentOptions[card.dataset.i];
+        suggestPanel.style.display = 'none';
+      });
+    });
+  }
+  codeInput.addEventListener('focus', () => renderCodes(codeInput.value));
+  codeInput.addEventListener('input', () => renderCodes(codeInput.value));
+  codeInput.addEventListener('blur', () => setTimeout(()=>{ codeList.style.display='none'; showSuggestions(); }, 150));
+
+  suggestToggle.addEventListener('click', () => {
+    suggestPanel.style.display = (suggestPanel.style.display === 'none') ? 'flex' : 'none';
+  });
+}
+
+function collectData(){
+  const fields = {
+    code: document.getElementById('code').value.trim(),
+    ea: document.getElementById('ea').value.trim(),
+    tomeas: document.getElementById('tomeas').value.trim(),
+    oktaoro: document.getElementById('oktaoro').value,
+    kmA: document.getElementById('kmA').value.trim(),
+    kmB: document.getElementById('kmB').value.trim(),
+    odigos: document.getElementById('odigos').value.trim(),
+    arxigos: document.getElementById('arxigos').value.trim(),
+    synodos: document.getElementById('synodos').value.trim(),
+    katastasi: document.getElementById('katastasi').value,
+    venzini: document.getElementById('venzini').value.trim(),
+    oryktelaio: document.getElementById('oryktelaio').value.trim(),
+    imerominia: '',
+    imerominiaRaw: document.getElementById('imerominia').value,
+    senderEmail: document.getElementById('senderEmail').value.trim()
+  };
+  const dateVal = fields.imerominiaRaw;
+  if (dateVal){
+    const [y,m,dd] = dateVal.split('-');
+    fields.imerominia = `${dd}/${m}/${y}`;
+  }
+  const incidents = [];
+  document.querySelectorAll('#signalsContainer .signal-card').forEach(card=>{
+    incidents.push({
+      type: card.dataset.type || 'signal',
+      time: card.querySelector('.s-time').value.trim() || '-',
+      signalCode: card.querySelector('.s-code').value.trim(),
+      desc: card.querySelector('.s-desc').value.trim(),
+      arrival: card.querySelector('.s-arrival').value.trim() || '-',
+      departure: card.querySelector('.s-departure').value.trim() || '-',
+      result: card.querySelector('.s-result').value.trim()
+    });
+  });
+  return { fields, incidents };
+}
+
+function populateForm(data){
+  const f = data.fields;
+  document.getElementById('code').value = f.code || '';
+  document.getElementById('ea').value = f.ea || '';
+  document.getElementById('tomeas').value = f.tomeas || '';
+  document.getElementById('oktaoro').value = f.oktaoro || '05:30-13:00';
+  document.getElementById('kmA').value = f.kmA || '';
+  document.getElementById('kmB').value = f.kmB || '';
+  document.getElementById('odigos').value = f.odigos || '';
+  document.getElementById('arxigos').value = f.arxigos || '';
+  document.getElementById('synodos').value = f.synodos || '';
+  document.getElementById('katastasi').value = f.katastasi || 'ΚΑΛΗ';
+  document.getElementById('venzini').value = f.venzini || '';
+  document.getElementById('oryktelaio').value = f.oryktelaio || '';
+  document.getElementById('imerominia').value = f.imerominiaRaw || '';
+  document.getElementById('senderEmail').value = f.senderEmail || '';
+
+  document.getElementById('signalsContainer').innerHTML = '';
+  signalCount = 0;
+  (data.incidents || []).forEach(inc => addSignal(inc));
+  if ((data.incidents || []).length === 0) addSignal();
+}
+
+function clearForm(){
+  ['code','ea','tomeas','kmA','kmB','odigos','arxigos','synodos','venzini','oryktelaio','imerominia','senderEmail']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('oktaoro').value = '05:30-13:00';
+  document.getElementById('katastasi').value = 'ΚΑΛΗ';
+  document.getElementById('signalsContainer').innerHTML = '';
+  signalCount = 0;
+  addSignal();
+}
+
+function newReport(){
+  currentDraftId = null;
+  clearForm();
+  document.getElementById('statusMsg').textContent = '';
+  document.getElementById('pdfDlBox').innerHTML = '';
+  document.getElementById('confirmBox').innerHTML = '';
+}
+
+function getDrafts(){
+  try{ return JSON.parse(localStorage.getItem(DRAFTS_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function setDrafts(drafts){ localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts)); }
+
+function renderDraftsList(){
+  const drafts = getDrafts();
+  const container = document.getElementById('draftsList');
+  const ids = Object.keys(drafts);
+  if (ids.length === 0){
+    container.innerHTML = '<span class="no-drafts">Κανένα προσχέδιο ακόμα.</span>';
+    return;
+  }
+  container.innerHTML = '';
+  ids.sort((a,b)=> drafts[b].savedAt - drafts[a].savedAt).forEach(id=>{
+    const d = drafts[id];
+    const label = `${d.fields.code || '—'} · ${d.fields.imerominia || '—'}`;
+    const row = document.createElement('div');
+    row.className = 'draft-item';
+    row.innerHTML = `<button type="button" class="load">${label}</button><button type="button" class="del">Διαγραφή</button>`;
+    row.querySelector('.load').addEventListener('click', ()=> loadDraft(id));
+    row.querySelector('.del').addEventListener('click', ()=>{
+      const all = getDrafts();
+      delete all[id];
+      setDrafts(all);
+      renderDraftsList();
+    });
+    container.appendChild(row);
+  });
+}
+
+function saveDraft(){
+  const data = collectData();
+  const drafts = getDrafts();
+  const id = currentDraftId || ('d' + Date.now());
+  drafts[id] = { fields: data.fields, incidents: data.incidents, savedAt: Date.now() };
+  setDrafts(drafts);
+  currentDraftId = id;
+  renderDraftsList();
+  const status = document.getElementById('statusMsg');
+  status.textContent = 'Αποθηκεύτηκε.';
+  status.className = 'status';
+}
+
+function loadDraft(id){
+  const drafts = getDrafts();
+  const d = drafts[id];
+  if (!d) return;
+  currentDraftId = id;
+  populateForm(d);
+  document.getElementById('statusMsg').textContent = 'Φορτώθηκε προσχέδιο.';
+  document.getElementById('statusMsg').className = 'status';
+}
+
+function downloadPdf(base64, filename){
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i=0;i<byteChars.length;i++) byteNumbers[i] = byteChars.charCodeAt(i);
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], {type:'application/pdf'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function reviewBeforeSend(){
+  const data = collectData();
+  const f = data.fields;
+  const signalsCount = data.incidents.filter(i => i.type !== 'incident').length;
+  const incidentsCount = data.incidents.filter(i => i.type === 'incident').length;
+
+  const box = document.getElementById('confirmBox');
+  box.innerHTML = `
+    <div class="confirm-panel">
+      <h4>Έλεγχος πριν την αποστολή</h4>
+      <div class="confirm-row"><span>Κωδικός Περιπολικού</span><strong>${f.code || '—'}</strong></div>
+      <div class="confirm-row"><span>Ε.Α.</span><strong>${f.ea || '—'}</strong></div>
+      <div class="confirm-row"><span>Τομέας</span><strong>${f.tomeas || '—'}</strong></div>
+      <div class="confirm-row"><span>Ημερομηνία</span><strong>${f.imerominia || '—'}</strong></div>
+      <div class="confirm-row"><span>8ωρο</span><strong>${f.oktaoro || '—'}</strong></div>
+      <div class="confirm-row"><span>Σήματα</span><strong>${signalsCount}</strong></div>
+      <div class="confirm-row"><span>Περιστατικά</span><strong>${incidentsCount}</strong></div>
+      <div class="confirm-btns">
+        <button type="button" class="back-btn" onclick="document.getElementById('confirmBox').innerHTML=''">Πίσω</button>
+        <button type="button" class="go-btn" onclick="sendReport()">Επιβεβαίωση &amp; Αποστολή</button>
+      </div>
+    </div>
+  `;
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ===== ΑΠΟΣΤΟΛΗ ΠΡΟΣ ΤΟ APPS SCRIPT (μέσω fetch, από απόσταση) ===== */
+async function sendReport(){
+  const btn = document.getElementById('sendBtn');
+  const status = document.getElementById('statusMsg');
+  document.getElementById('confirmBox').innerHTML = '';
+  document.getElementById('pdfDlBox').innerHTML = '';
+
+  if (!API_URL || API_URL.indexOf('ΕΠΙΚΟΛΛΗΣΤΕ') !== -1 || API_URL.indexOf('/exec') === -1){
+    status.textContent = 'Σφάλμα ρύθμισης: δεν έχει οριστεί σωστά το API_URL (πρέπει να τελειώνει σε /exec).';
+    status.className = 'status error';
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = 'Αποστολή... (μπορεί να χρειαστεί 10-20 δευτερόλεπτα)';
+  status.className = 'status';
+
+  const payload = JSON.stringify(collectData());
+
+  try {
+    // Χωρίς custom headers και χωρίς JSON content-type, ώστε να μην ενεργοποιείται
+    // ο έλεγχος CORS preflight που το Apps Script δεν υποστηρίζει.
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      body: new URLSearchParams({ payload: payload })
+    });
+    const txt = await resp.text();
+
+    let out;
+    try {
+      out = JSON.parse(txt);
+    } catch (e) {
+      throw new Error('Μη αναμενόμενη απάντηση από τον διακομιστή. Ελέγξτε ότι το deployment είναι "Anyone".');
+    }
+    if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα στον διακομιστή.');
+
+    btn.disabled = false;
+    status.innerHTML = `✅ Το δελτίο στάλθηκε (${out.count} εγγραφές).`;
+    status.className = 'status';
+
+    const dlBox = document.getElementById('pdfDlBox');
+    dlBox.innerHTML = '';
+    if (out.pdfBase64){
+      const btnEl = document.createElement('button');
+      btnEl.type = 'button';
+      btnEl.className = 'pdf-dl-btn';
+      btnEl.textContent = `📄 Αποθήκευση ${out.pdfName || 'deltio.pdf'}`;
+      btnEl.onclick = () => downloadPdf(out.pdfBase64, out.pdfName || 'deltio.pdf');
+      dlBox.appendChild(btnEl);
+    }
+
+    if (currentDraftId){
+      const drafts = getDrafts();
+      delete drafts[currentDraftId];
+      setDrafts(drafts);
+      currentDraftId = null;
+      renderDraftsList();
+    }
+  } catch (err){
+    btn.disabled = false;
+    status.textContent = 'Σφάλμα: ' + (err && err.message ? err.message : err) +
+      ' — τα δεδομένα σας παραμένουν στη φόρμα. Δοκιμάστε ξανά ή αποθηκεύστε προσχέδιο.';
+    status.className = 'status error';
+  }
+}
+
+// ===== Γρήγορη Καταγραφή =====
+const QUICK_LOG_KEY = 'quick_log_v1';
+
+function getQuickLog(){
+  try{ return JSON.parse(localStorage.getItem(QUICK_LOG_KEY) || '[]'); }
+  catch(e){ return []; }
+}
+function setQuickLog(list){ localStorage.setItem(QUICK_LOG_KEY, JSON.stringify(list)); }
+
+function nowHHMM(){
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${hh}:${mm}`;
+}
+
+function setupQuickAutocomplete(){
+  const input = document.getElementById('quickCode');
+  const list = document.getElementById('quickCodeList');
+  function render(filter){
+    const f = filter.trim().toUpperCase();
+    const matches = f
+      ? SIGNAL_CODES.filter(o => o.c.toUpperCase().includes(f) || o.n.toUpperCase().includes(f))
+      : SIGNAL_CODES;
+    if (matches.length === 0){ list.style.display='none'; list.innerHTML=''; return; }
+    list.innerHTML = matches.slice(0,60)
+      .map(o => `<div class="ac-item" data-code="${o.c}">${o.c} — ${o.n}</div>`).join('');
+    list.style.display = 'block';
+    list.querySelectorAll('.ac-item').forEach(item => {
+      item.addEventListener('mousedown', function(e){
+        e.preventDefault();
+        input.value = item.dataset.code;
+        list.style.display = 'none';
+      });
+    });
+  }
+  input.addEventListener('focus', () => render(input.value));
+  input.addEventListener('input', () => render(input.value));
+  input.addEventListener('blur', () => setTimeout(() => { list.style.display = 'none'; }, 150));
+}
+
+let expandedIndex = null;
+let lastCapturedIndex = null;
+let undoTimer = null;
+
+function quickCapture(){
+  const codeInput = document.getElementById('quickCode');
+  const descInput = document.getElementById('quickDesc');
+  const code = codeInput.value.trim();
+  const desc = descInput.value.trim();
+  if (!code && !desc) return;
+  const log = getQuickLog();
+  log.push({ time: nowHHMM(), code, desc, arrival: '', departure: '', result: '' });
+  setQuickLog(log);
+  lastCapturedIndex = log.length - 1;
+  showUndo();
+  codeInput.value = '';
+  descInput.value = '';
+  codeInput.focus();
+  renderQuickLog();
+}
+
+function showUndo(){
+  clearTimeout(undoTimer);
+  const box = document.getElementById('undoBox');
+  box.innerHTML = `<div class="undo-msg"><span>Καταγράφηκε.</span><button type="button" id="undoBtn">Αναίρεση</button></div>`;
+  document.getElementById('undoBtn').addEventListener('click', undoLastCapture);
+  undoTimer = setTimeout(() => { box.innerHTML = ''; }, 6000);
+}
+
+function undoLastCapture(){
+  if (lastCapturedIndex === null) return;
+  const log = getQuickLog();
+  log.splice(lastCapturedIndex, 1);
+  setQuickLog(log);
+  lastCapturedIndex = null;
+  document.getElementById('undoBox').innerHTML = '';
+  renderQuickLog();
+}
+
+function toggleExpand(i){
+  expandedIndex = (expandedIndex === i) ? null : i;
+  renderQuickLog();
+}
+
+function saveInlineEdit(i){
+  const log = getQuickLog();
+  const entry = log[i];
+  if (!entry) return;
+  const panel = document.querySelector(`.quick-log-item[data-idx="${i}"] .quick-expand-panel`);
+  entry.time = panel.querySelector('.qe-time').value.trim() || entry.time;
+  entry.code = panel.querySelector('.qe-code').value.trim();
+  entry.desc = panel.querySelector('.qe-desc').value.trim();
+  entry.arrival = panel.querySelector('.qe-arrival').value.trim();
+  entry.departure = panel.querySelector('.qe-departure').value.trim();
+  entry.result = panel.querySelector('.qe-result').value.trim();
+  setQuickLog(log);
+  expandedIndex = null;
+  renderQuickLog();
+}
+
+function renderQuickLog(){
+  const log = getQuickLog();
+  const container = document.getElementById('quickLogList');
+  const countLabel = document.getElementById('quickCountLabel');
+  countLabel.textContent = log.length > 0 ? `(${log.length})` : '';
+  document.getElementById('tabFullBtn').textContent = log.length > 0
+    ? `Πλήρες Δελτίο (${log.length})`
+    : 'Πλήρες Δελτίο';
+
+  if (log.length === 0){
+    container.innerHTML = '<div class="quick-empty">Δεν έχετε καταγράψει ακόμα κάτι σε αυτή τη βάρδια.</div>';
+    return;
+  }
+  container.innerHTML = '';
+  const order = log.map((entry, i) => i).reverse();
+  order.forEach(i => {
+    const entry = log[i];
+    const isOpen = expandedIndex === i;
+    const row = document.createElement('div');
+    row.className = 'quick-log-item' + (isOpen ? ' editing' : '');
+    row.dataset.idx = i;
+
+    let panelHtml = '';
+    if (isOpen){
+      panelHtml = `
+        <div class="quick-expand-panel">
+          <div class="row2">
+            <div><span class="label">Ώρα</span><input type="text" class="qe-time" value="${entry.time||''}"></div>
+            <div><span class="label">Κωδικός σήματος</span><input type="text" class="qe-code" value="${entry.code||''}"></div>
+          </div>
+          <div><span class="label">Περιγραφή</span><input type="text" class="qe-desc" value="${entry.desc||''}"></div>
+          <div class="row2">
+            <div><span class="label">Ώρα άφιξης</span><input type="text" class="qe-arrival" placeholder="ωω:λλ" value="${entry.arrival||''}"></div>
+            <div><span class="label">Ώρα λήξης</span><input type="text" class="qe-departure" placeholder="ωω:λλ" value="${entry.departure||''}"></div>
+          </div>
+          <div><span class="label">Αποτέλεσμα</span><textarea class="qe-result" rows="3">${entry.result||''}</textarea></div>
+          <button type="button" class="quick-save-btn">Αποθήκευση</button>
+        </div>`;
+    }
+
+    row.innerHTML = `
+      <div class="quick-log-row">
+        <div class="qtxt"><span class="qtime">${entry.time}</span>${entry.code ? entry.code + ' — ' : ''}${entry.desc}</div>
+        <button type="button" class="qdel">✕</button>
+      </div>
+      ${panelHtml}
+    `;
+    row.querySelector('.quick-log-row .qtxt').addEventListener('click', () => toggleExpand(i));
+    row.querySelector('.qdel').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const all = getQuickLog();
+      all.splice(i, 1);
+      setQuickLog(all);
+      if (expandedIndex === i) expandedIndex = null;
+      renderQuickLog();
+    });
+    if (isOpen){
+      row.querySelector('.quick-save-btn').addEventListener('click', () => saveInlineEdit(i));
+    }
+    container.appendChild(row);
+  });
+}
+function isCardEmpty(card){
+  return !card.querySelector('.s-time').value.trim() &&
+         !card.querySelector('.s-code').value.trim() &&
+         !card.querySelector('.s-desc').value.trim() &&
+         !card.querySelector('.s-arrival').value.trim() &&
+         !card.querySelector('.s-departure').value.trim() &&
+         !card.querySelector('.s-result').value.trim();
+}
+
+function transferQuickLog(){
+  const log = getQuickLog();
+  if (log.length === 0){
+    switchTab('full');
+    return;
+  }
+  const existingCards = document.querySelectorAll('#signalsContainer .signal-card');
+  if (existingCards.length === 1 && isCardEmpty(existingCards[0])){
+    existingCards[0].remove();
+    signalCount = 0;
+  }
+  log.forEach(entry => {
+    addSignal({
+      type: 'signal',
+      time: entry.time,
+      signalCode: entry.code,
+      desc: entry.desc,
+      arrival: entry.arrival || '',
+      departure: entry.departure || '',
+      result: entry.result || ''
+    });
+  });
+  setQuickLog([]);
+  expandedIndex = null;
+  lastCapturedIndex = null;
+  document.getElementById('undoBox').innerHTML = '';
+  renderQuickLog();
+  switchTab('full');
+}
+
+function switchTab(tab){
+  document.getElementById('quickView').style.display = (tab === 'quick') ? 'block' : 'none';
+  document.getElementById('fullView').style.display = (tab === 'full') ? 'block' : 'none';
+  document.getElementById('tabQuickBtn').classList.toggle('active', tab === 'quick');
+  document.getElementById('tabFullBtn').classList.toggle('active', tab === 'full');
+}
+
+initAutocompletes();
+setupQuickAutocomplete();
+renderQuickLog();
+renderDraftsList();
+addSignal();
+</script>
+
+</body>
+</html>
