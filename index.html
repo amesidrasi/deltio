@@ -70,11 +70,12 @@
   .top-tab.active{color:#1f3a5f;border-bottom-color:#1f3a5f;background:#f4f3ee;}
   .quick-log-item{
     background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 12px;
-    margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
+    margin-bottom:8px;display:flex;flex-direction:column;align-items:stretch;gap:10px;
   }
   .quick-log-item .qtxt{font-size:13px;line-height:1.4;}
   .quick-log-item .qtime{font-weight:600;color:#1f3a5f;margin-right:6px;}
-  .quick-log-item .qdel{background:none;border:none;color:#993c1d;font-size:12px;flex-shrink:0;}
+  .quick-log-item .qaddr{display:block;color:#5c6773;font-size:12px;margin-top:2px;}
+  .quick-log-item .qdel{background:none;border:none;color:#993c1d;font-size:14px;flex-shrink:0;padding:2px 6px;}
   .quick-empty{font-size:12px;color:#888;text-align:center;padding:12px;}
   .quick-log-item.editing{border-color:#1f3a5f;background:#f4f3ee;}
   .undo-msg{
@@ -83,24 +84,15 @@
   }
   .undo-msg button{background:none;border:none;color:#1f3a5f;font-weight:600;font-size:12px;}
   .edit-hint{font-size:11px;color:#5c6773;margin-top:4px;}
-  .cancel-edit{background:none;border:none;color:#5c6773;font-size:12px;text-decoration:underline;margin-top:6px;}
-  .quick-log-item{flex-direction:column;align-items:stretch;}
   .quick-log-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
   .quick-expand-panel{
     margin-top:10px;padding-top:10px;border-top:1px solid #eee;
     display:flex;flex-direction:column;gap:8px;
   }
   .quick-expand-panel .row2{margin-bottom:0;}
-  .quick-expand-panel label.label{margin-bottom:2px;}
   .quick-save-btn{
     padding:9px;font-size:13px;background:#1f3a5f;color:#fff;border:none;border-radius:6px;
   }
-  .suggestions{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
-  .suggestion-btn{
-    text-align:left;font-size:12px;line-height:1.4;padding:8px 10px;
-    background:#f4f3ee;border:1px solid #ddd;border-radius:6px;color:#1c2733;
-  }
-  .suggestion-btn:active{background:#e9e7df;}
   input[type=text], input[type=date], select, textarea{
     width:100%;font-size:15px;padding:9px 10px;
     border:1px solid #ccc;border-radius:6px;background:#fff;
@@ -117,11 +109,11 @@
   .drafts-box .dtitle{font-size:12px;font-weight:600;color:#1f3a5f;margin-bottom:6px;}
   .draft-item{
     display:flex;justify-content:space-between;align-items:center;
-    padding:7px 4px;border-bottom:1px solid #eee;font-size:13px;
+    padding:7px 4px;border-bottom:1px solid #eee;font-size:13px;gap:8px;
   }
   .draft-item:last-child{border-bottom:none;}
-  .draft-item button.load{background:none;border:none;color:#1f3a5f;font-weight:600;font-size:13px;}
-  .draft-item button.del{background:none;border:none;color:#993c1d;font-size:12px;}
+  .draft-item button.load{background:none;border:none;color:#1f3a5f;font-weight:600;font-size:13px;text-align:left;flex:1;}
+  .draft-item button.del{background:none;border:none;color:#993c1d;font-size:12px;flex-shrink:0;}
   .no-drafts{font-size:12px;color:#888;}
   .new-btn{
     width:100%;padding:9px;border:1px solid #1f3a5f;background:#fff;color:#1f3a5f;
@@ -147,19 +139,47 @@
   .send-btn:disabled, .save-btn:disabled{opacity:.6;}
   .status{text-align:center;font-size:13px;margin-top:10px;color:#2f6e4e;}
   .status.error{color:#a32d2d;}
-  .confirm-panel{
-    background:#fff;border:1px solid #1f3a5f;border-radius:8px;padding:14px;margin-top:14px;
-  }
-  .confirm-panel h4{margin:0 0 8px;font-size:13px;color:#1f3a5f;text-transform:uppercase;letter-spacing:.04em;}
-  .confirm-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid #eee;}
-  .confirm-row:last-child{border-bottom:none;}
-  .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
-  .confirm-btns .back-btn{padding:12px;background:#fff;border:1px solid #999;color:#333;border-radius:6px;font-size:13px;}
-  .confirm-btns .go-btn{padding:12px;background:#1f3a5f;border:none;color:#fff;border-radius:6px;font-size:13px;font-weight:600;}
   .pdf-dl-btn{
     width:100%;margin-top:10px;padding:12px;background:#2f6e4e;color:#fff;border:none;
     border-radius:6px;font-size:13px;font-weight:600;
   }
+  .pending-box{
+    background:#fff4e5;border:1px solid #e0a458;border-radius:8px;
+    padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.4;
+  }
+  .pending-box button{
+    margin-top:8px;width:100%;padding:10px;background:#1f3a5f;color:#fff;
+    border:none;border-radius:6px;font-size:13px;font-weight:600;
+  }
+  .preview-wrap{
+    background:#fff;border:1px solid #1f3a5f;border-radius:8px;padding:12px;margin-top:14px;
+  }
+  .preview-wrap h4{
+    margin:0 0 10px;font-size:13px;color:#1f3a5f;text-transform:uppercase;letter-spacing:.04em;
+  }
+  .pv-warn{
+    background:#fff4e5;border:1px solid #e0a458;border-radius:6px;
+    padding:8px 10px;margin-bottom:10px;font-size:12px;line-height:1.4;
+  }
+  .pv-warn ul{margin:6px 0 0;padding-left:18px;}
+  .pv-doc{border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;overflow-x:auto;}
+  .pv-head{font-size:9px;color:#5c6773;line-height:1.4;margin-bottom:8px;}
+  .pv-ea{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:6px;gap:6px;}
+  .pv-title{text-align:center;font-weight:700;font-size:14px;margin:6px 0 10px;}
+  .pv-meta{font-size:11px;line-height:1.6;margin-bottom:10px;}
+  .pv-doc table{width:100%;border-collapse:collapse;}
+  .pv-doc td,.pv-doc th{
+    border:1px solid #999;padding:4px 5px;vertical-align:top;
+    font-size:11px;line-height:1.35;
+  }
+  .pv-doc th{background:#eee;font-weight:700;text-align:center;}
+  .pv-doc td.c1{width:52px;white-space:nowrap;}
+  .pv-doc td.c2{width:78px;white-space:nowrap;}
+  .pv-center{text-align:center;font-weight:600;}
+  .pv-sign{text-align:right;font-size:11px;margin-top:10px;line-height:1.6;}
+  .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+  .confirm-btns .back-btn{padding:12px;background:#fff;border:1px solid #999;color:#333;border-radius:6px;font-size:13px;}
+  .confirm-btns .go-btn{padding:12px;background:#1f3a5f;border:none;color:#fff;border-radius:6px;font-size:13px;font-weight:600;}
 </style>
 </head>
 <body>
@@ -187,6 +207,10 @@
     <span class="label">Περιγραφή</span>
     <input type="text" id="quickDesc" placeholder="π.χ. σε οικία">
   </div>
+  <div class="field">
+    <span class="label">Διεύθυνση - Δήμος</span>
+    <input type="text" id="quickAddress" placeholder="π.χ. Βουλιαγμένης 45 - Γλυφάδα">
+  </div>
   <button type="button" class="add-btn" id="quickCaptureBtn" style="border-style:solid;background:#1f3a5f;color:#fff;border-color:#1f3a5f;" onclick="quickCapture()">+ Προσθήκη σήματος (θα καταγραφεί η τρέχουσα ώρα)</button>
   <div id="undoBox"></div>
 
@@ -198,6 +222,8 @@
 </div>
 
 <div class="section" id="fullView" style="display:none;">
+
+  <div id="pendingBox"></div>
 
   <div class="drafts-box">
     <div class="dtitle">Αποθηκευμένα προσχέδια</div>
@@ -231,6 +257,11 @@
       </select>
     </div>
   </div>
+  <div class="row2">
+    <div><span class="label">Ώρα έναρξης (προαιρετικό)</span><input type="text" id="startTime" placeholder="αν διαφέρει"></div>
+    <div><span class="label">Ώρα λήξης (προαιρετικό)</span><input type="text" id="endTime" placeholder="αν διαφέρει"></div>
+  </div>
+  <div class="edit-hint" style="margin-bottom:10px;">Αφήστε τα κενά για να ισχύσουν οι ώρες του 8ώρου. Συμπληρώστε μόνο αν το ωράριο ήταν διαφορετικό.</div>
   <div class="field"><span class="label">Ημερομηνία</span><input type="date" id="imerominia"></div>
   <div class="row2">
     <div><span class="label">Ένδειξη χλμ</span><input type="text" id="kmA"></div>
@@ -273,9 +304,7 @@
 <script>
 /* =======================================================================
    ΡΥΘΜΙΣΗ — ΤΟ ΜΟΝΟ ΣΗΜΕΙΟ ΠΟΥ ΠΡΕΠΕΙ ΝΑ ΑΛΛΑΞΕΤΕ
-   Επικολλήστε εδώ μέσα στα εισαγωγικά τη διεύθυνση /exec του Apps Script,
-   από: Deploy → Manage deployments → Web app URL.
-   Πρέπει να τελειώνει σε /exec (ΟΧΙ σε /dev).
+   Επικολλήστε εδώ μέσα στα εισαγωγικά τη διεύθυνση /exec του Apps Script.
    ======================================================================= */
 const API_URL = "https://script.google.com/macros/s/AKfycbxcbvq7sbddhasdGRerib1cbOVvG6QIxg1JOuxZFQhvUZa2IfiKBsVBA5LH3iO7VzXG/exec";
 /* ======================================================================= */
@@ -419,6 +448,44 @@ const SIGNAL_RESPONSES = {
 const DRAFTS_KEY = 'deltio_drafts_v1';
 let signalCount = 0;
 let currentDraftId = null;
+let lastSavedSnapshot = null;
+
+/* ===== Βοηθητικά ώρας / βάρδιας ===== */
+function timeToMinutes(t){
+  if (!t || t === '-' || !/^\d{1,2}:\d{2}$/.test(String(t).trim())) return null;
+  const p = String(t).trim().split(':').map(Number);
+  return p[0]*60 + p[1];
+}
+function getShiftTimes(f){
+  const parts = ((f && f.oktaoro) || '').split('-').map(s => s.trim());
+  const start = ((f && f.startTime) || '').trim() || parts[0] || '-';
+  const end   = ((f && f.endTime)   || '').trim() || parts[1] || '-';
+  return { start: start, end: end };
+}
+function shiftLabel(f){
+  const s = getShiftTimes(f);
+  return s.start + '-' + s.end;
+}
+function sortKeyForTime(t, startMin){
+  const v = timeToMinutes(t);
+  if (v === null) return 999999;
+  if (startMin !== null && v < startMin) return v + 1440;
+  return v;
+}
+function sortIncidents(incidents, f){
+  const startMin = timeToMinutes(getShiftTimes(f).start);
+  return incidents
+    .map(function(inc,i){ return {inc:inc,i:i}; })
+    .sort(function(a,b){
+      const d = sortKeyForTime(a.inc.time, startMin) - sortKeyForTime(b.inc.time, startMin);
+      return d !== 0 ? d : a.i - b.i;
+    })
+    .map(function(x){ return x.inc; });
+}
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 function setupAutocomplete(inputId, listId, options){
   const input = document.getElementById(inputId);
@@ -466,25 +533,26 @@ function addSignal(prefill){
       <button type="button" class="type-btn ${entryType==='incident'?'active':''}" data-type="incident">Περιστατικό</button>
     </div>
     <div class="row2">
-      <div><span class="label">Ώρα</span><input type="text" class="s-time" placeholder="ωω:λλ" value="${prefill.time||''}"></div>
+      <div><span class="label">Ώρα</span><input type="text" class="s-time" placeholder="ωω:λλ" value="${esc(prefill.time||'')}"></div>
       <div class="signal-only">
         <span class="label">Κωδικός σήματος</span>
         <div class="ac-wrapper">
-          <input type="text" class="s-code" placeholder="π.χ. Ε-19" autocomplete="off" value="${prefill.signalCode||''}">
+          <input type="text" class="s-code" placeholder="π.χ. Ε-19" autocomplete="off" value="${esc(prefill.signalCode||'')}">
           <div class="ac-list s-code-list"></div>
         </div>
       </div>
     </div>
-    <div class="field signal-only"><span class="label">Περιγραφή σήματος</span><input type="text" class="s-desc" placeholder="π.χ. σε οικία" value="${prefill.desc||''}"></div>
+    <div class="field signal-only"><span class="label">Περιγραφή σήματος</span><input type="text" class="s-desc" placeholder="π.χ. σε οικία" value="${esc(prefill.desc||'')}"></div>
+    <div class="field signal-only"><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="s-address" placeholder="π.χ. Βουλιαγμένης 45 - Γλυφάδα" value="${esc(prefill.address||'')}"></div>
     <div class="row2 signal-only">
-      <div><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="ωω:λλ" value="${prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:''}"></div>
-      <div><span class="label">Ώρα λήξης</span><input type="text" class="s-departure" placeholder="ωω:λλ" value="${prefill.departure&&prefill.departure!=='-'?prefill.departure:''}"></div>
+      <div><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="ωω:λλ" value="${esc(prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:'')}"></div>
+      <div><span class="label">Ώρα λήξης</span><input type="text" class="s-departure" placeholder="ωω:λλ" value="${esc(prefill.departure&&prefill.departure!=='-'?prefill.departure:'')}"></div>
     </div>
     <div class="field">
       <span class="label s-result-label">${entryType==='incident'?'Περιγραφή':'Αποτέλεσμα'}</span>
       <button type="button" class="suggest-toggle signal-only" style="display:none;">Επιλογή έτοιμης απάντησης ▾</button>
       <div class="suggest-panel signal-only" style="display:none;"></div>
-      <textarea class="s-result" rows="4" style="margin-top:8px;">${prefill.result||''}</textarea>
+      <textarea class="s-result" rows="4" style="margin-top:8px;">${esc(prefill.result||'')}</textarea>
     </div>
   `;
   document.getElementById('signalsContainer').appendChild(div);
@@ -540,7 +608,7 @@ function addSignal(prefill){
     currentOptions = SIGNAL_RESPONSES[match];
     suggestToggle.style.display = 'block';
     suggestPanel.innerHTML = currentOptions.map((txt, i) =>
-      `<button type="button" class="suggest-card" data-i="${i}">${txt}</button>`
+      `<button type="button" class="suggest-card" data-i="${i}">${esc(txt)}</button>`
     ).join('');
     suggestPanel.querySelectorAll('.suggest-card').forEach(card => {
       card.addEventListener('click', () => {
@@ -564,6 +632,8 @@ function collectData(){
     ea: document.getElementById('ea').value.trim(),
     tomeas: document.getElementById('tomeas').value.trim(),
     oktaoro: document.getElementById('oktaoro').value,
+    startTime: document.getElementById('startTime').value.trim(),
+    endTime: document.getElementById('endTime').value.trim(),
     kmA: document.getElementById('kmA').value.trim(),
     kmB: document.getElementById('kmB').value.trim(),
     odigos: document.getElementById('odigos').value.trim(),
@@ -578,8 +648,8 @@ function collectData(){
   };
   const dateVal = fields.imerominiaRaw;
   if (dateVal){
-    const [y,m,dd] = dateVal.split('-');
-    fields.imerominia = `${dd}/${m}/${y}`;
+    const p = dateVal.split('-');
+    fields.imerominia = `${p[2]}/${p[1]}/${p[0]}`;
   }
   const incidents = [];
   document.querySelectorAll('#signalsContainer .signal-card').forEach(card=>{
@@ -588,12 +658,13 @@ function collectData(){
       time: card.querySelector('.s-time').value.trim() || '-',
       signalCode: card.querySelector('.s-code').value.trim(),
       desc: card.querySelector('.s-desc').value.trim(),
+      address: card.querySelector('.s-address').value.trim(),
       arrival: card.querySelector('.s-arrival').value.trim() || '-',
       departure: card.querySelector('.s-departure').value.trim() || '-',
       result: card.querySelector('.s-result').value.trim()
     });
   });
-  return { fields, incidents };
+  return { fields: fields, incidents: incidents };
 }
 
 function populateForm(data){
@@ -602,6 +673,8 @@ function populateForm(data){
   document.getElementById('ea').value = f.ea || '';
   document.getElementById('tomeas').value = f.tomeas || '';
   document.getElementById('oktaoro').value = f.oktaoro || '05:30-13:00';
+  document.getElementById('startTime').value = f.startTime || '';
+  document.getElementById('endTime').value = f.endTime || '';
   document.getElementById('kmA').value = f.kmA || '';
   document.getElementById('kmB').value = f.kmB || '';
   document.getElementById('odigos').value = f.odigos || '';
@@ -620,7 +693,7 @@ function populateForm(data){
 }
 
 function clearForm(){
-  ['code','ea','tomeas','kmA','kmB','odigos','arxigos','synodos','venzini','oryktelaio','imerominia','senderEmail']
+  ['code','ea','tomeas','startTime','endTime','kmA','kmB','odigos','arxigos','synodos','venzini','oryktelaio','imerominia','senderEmail']
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('oktaoro').value = '05:30-13:00';
   document.getElementById('katastasi').value = 'ΚΑΛΗ';
@@ -629,9 +702,16 @@ function clearForm(){
   addSignal();
 }
 
+/* ===== Έλεγχος μη αποθηκευμένων αλλαγών ===== */
+function snapshot(){ return JSON.stringify(collectData()); }
+function markSaved(){ lastSavedSnapshot = snapshot(); }
+function isDirty(){ return lastSavedSnapshot !== snapshot(); }
+
 function newReport(){
+  if (isDirty() && !confirm('Έχετε συμπληρωμένα στοιχεία που δεν έχουν αποθηκευτεί.\n\nΝα ξεκινήσει νέο δελτίο; Ό,τι δεν έχει αποθηκευτεί θα χαθεί.')) return;
   currentDraftId = null;
   clearForm();
+  markSaved();
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('pdfDlBox').innerHTML = '';
   document.getElementById('confirmBox').innerHTML = '';
@@ -654,12 +734,14 @@ function renderDraftsList(){
   container.innerHTML = '';
   ids.sort((a,b)=> drafts[b].savedAt - drafts[a].savedAt).forEach(id=>{
     const d = drafts[id];
-    const label = `${d.fields.code || '—'} · ${d.fields.imerominia || '—'}`;
+    const n = (d.incidents || []).length;
+    const label = `${d.fields.code || '—'} · ${d.fields.imerominia || '—'} · ${shiftLabel(d.fields)} (${n})`;
     const row = document.createElement('div');
     row.className = 'draft-item';
-    row.innerHTML = `<button type="button" class="load">${label}</button><button type="button" class="del">Διαγραφή</button>`;
+    row.innerHTML = `<button type="button" class="load">${esc(label)}</button><button type="button" class="del">Διαγραφή</button>`;
     row.querySelector('.load').addEventListener('click', ()=> loadDraft(id));
     row.querySelector('.del').addEventListener('click', ()=>{
+      if (!confirm('Διαγραφή αυτού του προσχεδίου;')) return;
       const all = getDrafts();
       delete all[id];
       setDrafts(all);
@@ -669,25 +751,31 @@ function renderDraftsList(){
   });
 }
 
-function saveDraft(){
+function saveDraft(silent){
   const data = collectData();
   const drafts = getDrafts();
   const id = currentDraftId || ('d' + Date.now());
   drafts[id] = { fields: data.fields, incidents: data.incidents, savedAt: Date.now() };
   setDrafts(drafts);
   currentDraftId = id;
+  markSaved();
   renderDraftsList();
-  const status = document.getElementById('statusMsg');
-  status.textContent = 'Αποθηκεύτηκε.';
-  status.className = 'status';
+  if (silent !== true){
+    const status = document.getElementById('statusMsg');
+    status.textContent = 'Αποθηκεύτηκε.';
+    status.className = 'status';
+  }
 }
 
 function loadDraft(id){
   const drafts = getDrafts();
   const d = drafts[id];
   if (!d) return;
+  if (isDirty() && !confirm('Έχετε συμπληρωμένα στοιχεία που δεν έχουν αποθηκευτεί.\n\nΝα φορτωθεί το προσχέδιο; Ό,τι δεν έχει αποθηκευτεί θα χαθεί.')) return;
   currentDraftId = id;
   populateForm(d);
+  markSaved();
+  document.getElementById('confirmBox').innerHTML = '';
   document.getElementById('statusMsg').textContent = 'Φορτώθηκε προσχέδιο.';
   document.getElementById('statusMsg').className = 'status';
 }
@@ -706,33 +794,109 @@ function downloadPdf(base64, filename){
   URL.revokeObjectURL(url);
 }
 
+/* ===== Προεπισκόπηση στη μορφή του εντύπου ===== */
+function signalFirstLine(inc){
+  const base = [inc.signalCode, inc.desc].filter(String).join(' ');
+  if (!inc.address) return base;
+  return base ? (base + ', ' + inc.address) : inc.address;
+}
+
+function collectWarnings(data){
+  const w = [];
+  const f = data.fields;
+  if (!f.code) w.push('Δεν έχει συμπληρωθεί ο κωδικός περιπολικού.');
+  if (!f.imerominia) w.push('Δεν έχει συμπληρωθεί ημερομηνία.');
+  if (!f.synodos) w.push('Δεν έχει συμπληρωθεί ο Συνοδός (υπογράφει το δελτίο).');
+  data.incidents.forEach(function(inc, i){
+    const n = i + 1;
+    if (!inc.time || inc.time === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα.');
+    if (inc.type === 'incident'){
+      if (!inc.result) w.push('Εγγραφή ' + n + ': λείπει η περιγραφή.');
+    } else {
+      if (!inc.signalCode) w.push('Εγγραφή ' + n + ': λείπει ο κωδικός σήματος.');
+      if (!inc.arrival || inc.arrival === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα άφιξης.');
+      if (!inc.departure || inc.departure === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα λήξης.');
+      if (!inc.result) w.push('Εγγραφή ' + n + ': λείπει το αποτέλεσμα.');
+    }
+  });
+  return w;
+}
+
+function buildPreviewHtml(data){
+  const f = data.fields;
+  const incidents = sortIncidents(data.incidents, f);
+  const shift = getShiftTimes(f);
+  const code = f.code || '—';
+  const rows = [];
+
+  rows.push('<tr><td class="c1"></td><td class="c2"></td><td class="pv-center">ΕΝΑΡΞΗ ΥΠΗΡΕΣΙΑΣ</td></tr>');
+  rows.push('<tr><td class="c1">' + esc(shift.start) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>Σας αναφέρω ότι το ανωτέρω όχημα παρελήφθη κανονικά από τον όρχο με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.</td></tr>');
+
+  incidents.forEach(function(inc, i){
+    rows.push('<tr><td class="c1"></td><td class="c2"></td><td class="pv-center">(' + (i+1) + ')</td></tr>');
+    if (inc.type === 'incident'){
+      rows.push('<tr><td class="c1">' + esc(inc.time) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>' + esc(inc.result) + '</td></tr>');
+    } else {
+      rows.push('<tr><td class="c1">' + esc(inc.time) + '</td><td class="c2">ΚΑΔ/' + esc(code) + '</td><td>' + esc(signalFirstLine(inc)) + '</td></tr>');
+      rows.push('<tr><td class="c1">' + esc(inc.arrival) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΑΦΙΞΗ.</td></tr>');
+      rows.push('<tr><td class="c1">' + esc(inc.departure) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΛΗΞΗ.' + (inc.result ? ' ' + esc(inc.result) : '') + '</td></tr>');
+    }
+  });
+
+  rows.push('<tr><td class="c1"></td><td class="c2"></td><td class="pv-center">ΛΗΞΗ ΥΠΗΡΕΣΙΑΣ</td></tr>');
+  rows.push('<tr><td class="c1">' + esc(shift.end) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>Σας αναφέρω ότι το ανωτέρω όχημα αφέθη κανονικά στον όρχο με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.</td></tr>');
+
+  return `
+    <div class="pv-doc">
+      <div class="pv-head">
+        Χορηγείται από τη Δ.Τ.Ε. / 3ο Τμήμα Τυπογραφείο &nbsp;|&nbsp;
+        Συντάσσεται από τον Αρχηγό Πληρώματος Περιπολικού Αυτοκινήτου &nbsp;|&nbsp; Υπόδειγμα Α-56
+      </div>
+      <div class="pv-ea">
+        <span>Ε.Α.: ${esc(f.ea || '—')}</span>
+        <span>${esc(code)}/Γ'</span>
+        <span>ΤΟΜΕΑΣ: ${esc(f.tomeas || '—')}</span>
+      </div>
+      <div class="pv-title">ΗΜΕΡΗΣΙΟ ΔΕΛΤΙΟ ΟΧΗΜΑΤΟΣ</div>
+      <div class="pv-meta">
+        Ημερομηνία: ${esc(f.imerominia || '—')} &nbsp;&nbsp; 8ωρο: ${esc(shiftLabel(f))} &nbsp;&nbsp;
+        Ένδειξη χλμ: ${esc(f.kmA || '—')} &nbsp;&nbsp; Λήξη χλμ: ${esc(f.kmB || '—')}<br>
+        Στοιχεία Πληρώματος: Οδηγός: ${esc(f.odigos || '—')} &nbsp;&nbsp; Αρχηγός: ${esc(f.arxigos || '—')} &nbsp;&nbsp; Συνοδός: ${esc(f.synodos || '—')}<br>
+        Κατάσταση οχήματος: ${esc(f.katastasi || '—')} &nbsp;&nbsp; Χορ. Βενζίνη: ${esc(f.venzini || '—')} &nbsp;&nbsp; Χορ. Ορυκτέλαιο: ${esc(f.oryktelaio || '—')}
+      </div>
+      <table>
+        <tr><th>Ώρα</th><th>Αριθ. Αυτοκ.</th><th>Περιγραφή Συμβάντος</th></tr>
+        ${rows.join('')}
+      </table>
+      <div class="pv-sign">Ο ΑΝΑΦΕΡΩΝ<br>${esc(f.synodos || '')}</div>
+    </div>
+  `;
+}
+
 function reviewBeforeSend(){
   const data = collectData();
-  const f = data.fields;
-  const signalsCount = data.incidents.filter(i => i.type !== 'incident').length;
-  const incidentsCount = data.incidents.filter(i => i.type === 'incident').length;
-
+  const warnings = collectWarnings(data);
   const box = document.getElementById('confirmBox');
+
+  const warnHtml = warnings.length
+    ? '<div class="pv-warn"><strong>Προσοχή — ελλείψεις:</strong><ul>' + warnings.map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('') + '</ul></div>'
+    : '';
+
   box.innerHTML = `
-    <div class="confirm-panel">
-      <h4>Έλεγχος πριν την αποστολή</h4>
-      <div class="confirm-row"><span>Κωδικός Περιπολικού</span><strong>${f.code || '—'}</strong></div>
-      <div class="confirm-row"><span>Ε.Α.</span><strong>${f.ea || '—'}</strong></div>
-      <div class="confirm-row"><span>Τομέας</span><strong>${f.tomeas || '—'}</strong></div>
-      <div class="confirm-row"><span>Ημερομηνία</span><strong>${f.imerominia || '—'}</strong></div>
-      <div class="confirm-row"><span>8ωρο</span><strong>${f.oktaoro || '—'}</strong></div>
-      <div class="confirm-row"><span>Σήματα</span><strong>${signalsCount}</strong></div>
-      <div class="confirm-row"><span>Περιστατικά</span><strong>${incidentsCount}</strong></div>
+    <div class="preview-wrap">
+      <h4>Προεπισκόπηση δελτίου</h4>
+      ${warnHtml}
+      ${buildPreviewHtml(data)}
       <div class="confirm-btns">
-        <button type="button" class="back-btn" onclick="document.getElementById('confirmBox').innerHTML=''">Πίσω</button>
+        <button type="button" class="back-btn" onclick="document.getElementById('confirmBox').innerHTML=''">Πίσω για διόρθωση</button>
         <button type="button" class="go-btn" onclick="sendReport()">Επιβεβαίωση &amp; Αποστολή</button>
       </div>
     </div>
   `;
-  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-/* ===== ΑΠΟΣΤΟΛΗ ΠΡΟΣ ΤΟ APPS SCRIPT (μέσω fetch, από απόσταση) ===== */
+/* ===== ΑΠΟΣΤΟΛΗ ΠΡΟΣ ΤΟ APPS SCRIPT ===== */
 async function sendReport(){
   const btn = document.getElementById('sendBtn');
   const status = document.getElementById('statusMsg');
@@ -752,8 +916,6 @@ async function sendReport(){
   const payload = JSON.stringify(collectData());
 
   try {
-    // Χωρίς custom headers και χωρίς JSON content-type, ώστε να μην ενεργοποιείται
-    // ο έλεγχος CORS preflight που το Apps Script δεν υποστηρίζει.
     const resp = await fetch(API_URL, {
       method: 'POST',
       body: new URLSearchParams({ payload: payload })
@@ -769,7 +931,7 @@ async function sendReport(){
     if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα στον διακομιστή.');
 
     btn.disabled = false;
-    status.innerHTML = `✅ Το δελτίο στάλθηκε (${out.count} εγγραφές).`;
+    status.innerHTML = '✅ Το δελτίο στάλθηκε (' + out.count + ' εγγραφές).';
     status.className = 'status';
 
     const dlBox = document.getElementById('pdfDlBox');
@@ -778,8 +940,8 @@ async function sendReport(){
       const btnEl = document.createElement('button');
       btnEl.type = 'button';
       btnEl.className = 'pdf-dl-btn';
-      btnEl.textContent = `📄 Αποθήκευση ${out.pdfName || 'deltio.pdf'}`;
-      btnEl.onclick = () => downloadPdf(out.pdfBase64, out.pdfName || 'deltio.pdf');
+      btnEl.textContent = '📄 Αποθήκευση ' + (out.pdfName || 'deltio.pdf');
+      btnEl.onclick = function(){ downloadPdf(out.pdfBase64, out.pdfName || 'deltio.pdf'); };
       dlBox.appendChild(btnEl);
     }
 
@@ -790,6 +952,7 @@ async function sendReport(){
       currentDraftId = null;
       renderDraftsList();
     }
+    markSaved();
   } catch (err){
     btn.disabled = false;
     status.textContent = 'Σφάλμα: ' + (err && err.message ? err.message : err) +
@@ -811,7 +974,7 @@ function nowHHMM(){
   const d = new Date();
   const hh = String(d.getHours()).padStart(2,'0');
   const mm = String(d.getMinutes()).padStart(2,'0');
-  return `${hh}:${mm}`;
+  return hh + ':' + mm;
 }
 
 function setupQuickAutocomplete(){
@@ -846,26 +1009,29 @@ let undoTimer = null;
 function quickCapture(){
   const codeInput = document.getElementById('quickCode');
   const descInput = document.getElementById('quickDesc');
+  const addrInput = document.getElementById('quickAddress');
   const code = codeInput.value.trim();
   const desc = descInput.value.trim();
-  if (!code && !desc) return;
+  const address = addrInput.value.trim();
+  if (!code && !desc && !address) return;
   const log = getQuickLog();
-  log.push({ time: nowHHMM(), code, desc, arrival: '', departure: '', result: '' });
+  log.push({ time: nowHHMM(), code: code, desc: desc, address: address, arrival: '', departure: '', result: '' });
   setQuickLog(log);
   lastCapturedIndex = log.length - 1;
   showUndo();
   codeInput.value = '';
   descInput.value = '';
-  codeInput.focus();
+  addrInput.value = '';
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   renderQuickLog();
 }
 
 function showUndo(){
   clearTimeout(undoTimer);
   const box = document.getElementById('undoBox');
-  box.innerHTML = `<div class="undo-msg"><span>Καταγράφηκε.</span><button type="button" id="undoBtn">Αναίρεση</button></div>`;
+  box.innerHTML = '<div class="undo-msg"><span>Καταγράφηκε.</span><button type="button" id="undoBtn">Αναίρεση</button></div>';
   document.getElementById('undoBtn').addEventListener('click', undoLastCapture);
-  undoTimer = setTimeout(() => { box.innerHTML = ''; }, 6000);
+  undoTimer = setTimeout(function(){ box.innerHTML = ''; }, 6000);
 }
 
 function undoLastCapture(){
@@ -887,10 +1053,11 @@ function saveInlineEdit(i){
   const log = getQuickLog();
   const entry = log[i];
   if (!entry) return;
-  const panel = document.querySelector(`.quick-log-item[data-idx="${i}"] .quick-expand-panel`);
+  const panel = document.querySelector('.quick-log-item[data-idx="' + i + '"] .quick-expand-panel');
   entry.time = panel.querySelector('.qe-time').value.trim() || entry.time;
   entry.code = panel.querySelector('.qe-code').value.trim();
   entry.desc = panel.querySelector('.qe-desc').value.trim();
+  entry.address = panel.querySelector('.qe-address').value.trim();
   entry.arrival = panel.querySelector('.qe-arrival').value.trim();
   entry.departure = panel.querySelector('.qe-departure').value.trim();
   entry.result = panel.querySelector('.qe-result').value.trim();
@@ -903,18 +1070,19 @@ function renderQuickLog(){
   const log = getQuickLog();
   const container = document.getElementById('quickLogList');
   const countLabel = document.getElementById('quickCountLabel');
-  countLabel.textContent = log.length > 0 ? `(${log.length})` : '';
+  countLabel.textContent = log.length > 0 ? '(' + log.length + ')' : '';
   document.getElementById('tabFullBtn').textContent = log.length > 0
-    ? `Πλήρες Δελτίο (${log.length})`
+    ? 'Πλήρες Δελτίο (' + log.length + ')'
     : 'Πλήρες Δελτίο';
+  renderPendingNotice();
 
   if (log.length === 0){
     container.innerHTML = '<div class="quick-empty">Δεν έχετε καταγράψει ακόμα κάτι σε αυτή τη βάρδια.</div>';
     return;
   }
   container.innerHTML = '';
-  const order = log.map((entry, i) => i).reverse();
-  order.forEach(i => {
+  const order = log.map(function(entry, i){ return i; }).reverse();
+  order.forEach(function(i){
     const entry = log[i];
     const isOpen = expandedIndex === i;
     const row = document.createElement('div');
@@ -926,29 +1094,34 @@ function renderQuickLog(){
       panelHtml = `
         <div class="quick-expand-panel">
           <div class="row2">
-            <div><span class="label">Ώρα</span><input type="text" class="qe-time" value="${entry.time||''}"></div>
-            <div><span class="label">Κωδικός σήματος</span><input type="text" class="qe-code" value="${entry.code||''}"></div>
+            <div><span class="label">Ώρα</span><input type="text" class="qe-time" value="${esc(entry.time||'')}"></div>
+            <div><span class="label">Κωδικός σήματος</span><input type="text" class="qe-code" value="${esc(entry.code||'')}"></div>
           </div>
-          <div><span class="label">Περιγραφή</span><input type="text" class="qe-desc" value="${entry.desc||''}"></div>
+          <div><span class="label">Περιγραφή</span><input type="text" class="qe-desc" value="${esc(entry.desc||'')}"></div>
+          <div><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="qe-address" value="${esc(entry.address||'')}"></div>
           <div class="row2">
-            <div><span class="label">Ώρα άφιξης</span><input type="text" class="qe-arrival" placeholder="ωω:λλ" value="${entry.arrival||''}"></div>
-            <div><span class="label">Ώρα λήξης</span><input type="text" class="qe-departure" placeholder="ωω:λλ" value="${entry.departure||''}"></div>
+            <div><span class="label">Ώρα άφιξης</span><input type="text" class="qe-arrival" placeholder="ωω:λλ" value="${esc(entry.arrival||'')}"></div>
+            <div><span class="label">Ώρα λήξης</span><input type="text" class="qe-departure" placeholder="ωω:λλ" value="${esc(entry.departure||'')}"></div>
           </div>
-          <div><span class="label">Αποτέλεσμα</span><textarea class="qe-result" rows="3">${entry.result||''}</textarea></div>
+          <div><span class="label">Αποτέλεσμα</span><textarea class="qe-result" rows="3">${esc(entry.result||'')}</textarea></div>
           <button type="button" class="quick-save-btn">Αποθήκευση</button>
         </div>`;
     }
 
     row.innerHTML = `
       <div class="quick-log-row">
-        <div class="qtxt"><span class="qtime">${entry.time}</span>${entry.code ? entry.code + ' — ' : ''}${entry.desc}</div>
+        <div class="qtxt">
+          <span class="qtime">${esc(entry.time)}</span>${entry.code ? esc(entry.code) + ' — ' : ''}${esc(entry.desc||'')}
+          ${entry.address ? '<span class="qaddr">' + esc(entry.address) + '</span>' : ''}
+        </div>
         <button type="button" class="qdel">✕</button>
       </div>
       ${panelHtml}
     `;
-    row.querySelector('.quick-log-row .qtxt').addEventListener('click', () => toggleExpand(i));
-    row.querySelector('.qdel').addEventListener('click', (e) => {
+    row.querySelector('.quick-log-row .qtxt').addEventListener('click', function(){ toggleExpand(i); });
+    row.querySelector('.qdel').addEventListener('click', function(e){
       e.stopPropagation();
+      if (!confirm('Διαγραφή αυτής της καταγραφής;')) return;
       const all = getQuickLog();
       all.splice(i, 1);
       setQuickLog(all);
@@ -956,15 +1129,29 @@ function renderQuickLog(){
       renderQuickLog();
     });
     if (isOpen){
-      row.querySelector('.quick-save-btn').addEventListener('click', () => saveInlineEdit(i));
+      row.querySelector('.quick-save-btn').addEventListener('click', function(){ saveInlineEdit(i); });
     }
     container.appendChild(row);
   });
 }
+
+function renderPendingNotice(){
+  const box = document.getElementById('pendingBox');
+  if (!box) return;
+  const n = getQuickLog().length;
+  if (n === 0){ box.innerHTML = ''; return; }
+  box.innerHTML =
+    '<div class="pending-box">Έχετε <strong>' + n + '</strong> ' +
+    (n === 1 ? 'εγγραφή' : 'εγγραφές') + ' στη Γρήγορη Καταγραφή που δεν έχ' +
+    (n === 1 ? 'ει' : 'ουν') + ' μεταφερθεί σε αυτό το δελτίο.' +
+    '<button type="button" onclick="transferQuickLog()">Μεταφορά τώρα</button></div>';
+}
+
 function isCardEmpty(card){
   return !card.querySelector('.s-time').value.trim() &&
          !card.querySelector('.s-code').value.trim() &&
          !card.querySelector('.s-desc').value.trim() &&
+         !card.querySelector('.s-address').value.trim() &&
          !card.querySelector('.s-arrival').value.trim() &&
          !card.querySelector('.s-departure').value.trim() &&
          !card.querySelector('.s-result').value.trim();
@@ -981,23 +1168,31 @@ function transferQuickLog(){
     existingCards[0].remove();
     signalCount = 0;
   }
-  log.forEach(entry => {
+  log.forEach(function(entry){
     addSignal({
       type: 'signal',
       time: entry.time,
       signalCode: entry.code,
       desc: entry.desc,
+      address: entry.address || '',
       arrival: entry.arrival || '',
       departure: entry.departure || '',
       result: entry.result || ''
     });
   });
+  const moved = log.length;
   setQuickLog([]);
   expandedIndex = null;
   lastCapturedIndex = null;
   document.getElementById('undoBox').innerHTML = '';
   renderQuickLog();
   switchTab('full');
+
+  // Αυτόματη αποθήκευση προσχεδίου, ώστε να μη μείνει τίποτα στον αέρα
+  saveDraft(true);
+  const status = document.getElementById('statusMsg');
+  status.textContent = 'Μεταφέρθηκαν ' + moved + ' ' + (moved === 1 ? 'εγγραφή' : 'εγγραφές') + ' και αποθηκεύτηκαν ως προσχέδιο.';
+  status.className = 'status';
 }
 
 function switchTab(tab){
@@ -1005,6 +1200,7 @@ function switchTab(tab){
   document.getElementById('fullView').style.display = (tab === 'full') ? 'block' : 'none';
   document.getElementById('tabQuickBtn').classList.toggle('active', tab === 'quick');
   document.getElementById('tabFullBtn').classList.toggle('active', tab === 'full');
+  if (tab === 'full') renderPendingNotice();
 }
 
 initAutocompletes();
@@ -1012,6 +1208,7 @@ setupQuickAutocomplete();
 renderQuickLog();
 renderDraftsList();
 addSignal();
+markSaved();
 </script>
 
 </body>
