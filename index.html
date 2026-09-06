@@ -252,8 +252,11 @@
     </div>
   </div>
   <div class="field">
-    <span class="label">Όρχος (συμπληρώνεται αυτόματα από τον κωδικό)</span>
-    <input type="text" id="orxos" placeholder="π.χ. ΓΛΥΦΑΔΑΣ" autocomplete="off">
+    <span class="label">Όρχος (συμπληρώνεται αυτόματα από το Ε.Α.)</span>
+    <div class="ac-wrapper">
+      <input type="text" id="orxos" placeholder="π.χ. ΜΕΣΟΓΕΙΩΝ" autocomplete="off">
+      <div class="ac-list" id="orxosList"></div>
+    </div>
   </div>
   <div class="row2">
     <div>
@@ -370,7 +373,9 @@ const FALLBACK_SECTORS = [
 
 // Οι ενεργές λίστες. Ενημερώνονται από το Google Sheet κατά το άνοιγμα.
 const LISTS_KEY = 'deltio_lists_v1';
-let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS, responses: {}, depots: {} };
+const FALLBACK_DEPOTS = ["ΜΕΣΟΓΕΙΩΝ", "ΚΕΡΑΝΗ", "ΣΑΚΕΤΑ", "ΔΕΕ", "ΑΜΥΓΔΑΛΕΖΑ"];
+
+let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS, depotNames: FALLBACK_DEPOTS, responses: {}, depots: {} };
 
 const SIGNAL_CODES = [
   {c:"Ε-1", n:"Πληροφορία"},
@@ -549,7 +554,7 @@ function setupAutocomplete(inputId, listId, getOptions){
         e.preventDefault();
         input.value = item.textContent;
         list.style.display = 'none';
-        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new CustomEvent('acpick'));
       });
     });
   }
@@ -565,16 +570,19 @@ function initAutocompletes(){
   setupAutocomplete('odigos',  'odigosList',  function(){ return LISTS.personnel; });
   setupAutocomplete('arxigos', 'arxigosList', function(){ return LISTS.personnel; });
   setupAutocomplete('synodos', 'synodosList', function(){ return LISTS.personnel; });
-  document.getElementById('code').addEventListener('input', autoFillDepot);
+  setupAutocomplete('orxos',   'orxosList',   function(){ return LISTS.depotNames; });
+  const eaEl = document.getElementById('ea');
+  eaEl.addEventListener('input', autoFillDepot);
+  eaEl.addEventListener('acpick', autoFillDepot);
 }
 
-// Ο όρχος συμπληρώνεται από τον κωδικό. Αν ο χρήστης τον έχει αλλάξει
-// χειροκίνητα, δεν τον πειράζουμε.
+// Ο όρχος συμπληρώνεται από το Ε.Α. του οχήματος. Αν ο χρήστης τον έχει
+// αλλάξει χειροκίνητα, δεν τον πειράζουμε.
 let lastAutoDepot = '';
 function autoFillDepot(){
-  const codeVal = document.getElementById('code').value.trim().toUpperCase();
+  const eaVal = document.getElementById('ea').value.trim().toUpperCase();
   const field = document.getElementById('orxos');
-  const depot = (LISTS.depots || {})[codeVal];
+  const depot = (LISTS.depots || {})[eaVal];
   if (!depot) return;
   if (field.value.trim() === '' || field.value.trim() === lastAutoDepot){
     field.value = depot;
@@ -593,6 +601,7 @@ function applyLists(obj){
     ea:        obj.ea        && obj.ea.length        ? obj.ea        : LISTS.ea,
     codes:     obj.codes     && obj.codes.length     ? obj.codes     : FALLBACK_CODES,
     sectors:   obj.sectors   && obj.sectors.length   ? obj.sectors   : FALLBACK_SECTORS,
+    depotNames: obj.depotNames && obj.depotNames.length ? obj.depotNames : FALLBACK_DEPOTS,
     responses: obj.responses || LISTS.responses,
     depots:    obj.depots    || LISTS.depots
   };
