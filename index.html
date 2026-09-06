@@ -166,7 +166,11 @@
   .pv-head{font-size:9px;color:#5c6773;line-height:1.4;margin-bottom:8px;}
   .pv-ea{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:6px;gap:6px;}
   .pv-title{text-align:center;font-weight:700;font-size:14px;margin:6px 0 10px;}
-  .pv-meta{font-size:11px;line-height:1.6;margin-bottom:10px;}
+  .pv-meta{font-size:11px;line-height:1.5;margin-bottom:10px;}
+  .pv-grid{display:grid;gap:4px 8px;margin-bottom:4px;}
+  .pv-grid.pv-g3{grid-template-columns:repeat(3,1fr);}
+  .pv-grid.pv-g4{grid-template-columns:repeat(4,1fr);}
+  .pv-grid span{word-break:break-word;}
   .pv-doc table{width:100%;border-collapse:collapse;}
   .pv-doc td,.pv-doc th{
     border:1px solid #999;padding:4px 5px;vertical-align:top;
@@ -239,7 +243,13 @@
         <div class="ac-list" id="codeList"></div>
       </div>
     </div>
-    <div><span class="label">Ε.Α.</span><input type="text" id="ea" placeholder="π.χ. 25689"></div>
+    <div>
+      <span class="label">Ε.Α.</span>
+      <div class="ac-wrapper">
+        <input type="text" id="ea" placeholder="π.χ. 25689" autocomplete="off">
+        <div class="ac-list" id="eaList"></div>
+      </div>
+    </div>
   </div>
   <div class="row2">
     <div>
@@ -269,9 +279,27 @@
   </div>
 
   <div class="section-title">Πλήρωμα &amp; όχημα</div>
-  <div class="field"><span class="label">Οδηγός</span><input type="text" id="odigos"></div>
-  <div class="field"><span class="label">Αρχηγός</span><input type="text" id="arxigos"></div>
-  <div class="field"><span class="label">Συνοδός</span><input type="text" id="synodos"></div>
+  <div class="field">
+    <span class="label">Οδηγός</span>
+    <div class="ac-wrapper">
+      <input type="text" id="odigos" autocomplete="off">
+      <div class="ac-list" id="odigosList"></div>
+    </div>
+  </div>
+  <div class="field">
+    <span class="label">Αρχηγός</span>
+    <div class="ac-wrapper">
+      <input type="text" id="arxigos" autocomplete="off">
+      <div class="ac-list" id="arxigosList"></div>
+    </div>
+  </div>
+  <div class="field">
+    <span class="label">Συνοδός</span>
+    <div class="ac-wrapper">
+      <input type="text" id="synodos" autocomplete="off">
+      <div class="ac-list" id="synodosList"></div>
+    </div>
+  </div>
   <div class="row2">
     <div><span class="label">Κατάσταση οχήματος</span>
       <select id="katastasi">
@@ -306,10 +334,12 @@
    ΡΥΘΜΙΣΗ — ΤΟ ΜΟΝΟ ΣΗΜΕΙΟ ΠΟΥ ΠΡΕΠΕΙ ΝΑ ΑΛΛΑΞΕΤΕ
    Επικολλήστε εδώ μέσα στα εισαγωγικά τη διεύθυνση /exec του Apps Script.
    ======================================================================= */
-const API_URL = "https://script.google.com/macros/s/AKfycbxcbvq7sbddhasdGRerib1cbOVvG6QIxg1JOuxZFQhvUZa2IfiKBsVBA5LH3iO7VzXG/exec";
+const API_URL = "ΕΠΙΚΟΛΛΗΣΤΕ_ΕΔΩ_ΤΟ_EXEC_URL";
 /* ======================================================================= */
 
-const CAR_CODES = [
+/* Εφεδρικές λίστες: χρησιμοποιούνται μόνο αν δεν έχει κατέβει ποτέ
+   η λίστα από το Google Sheet (φύλλο «Λίστες»). */
+const FALLBACK_CODES = [
   "Α1-1","Α1-2","Α1-3","Α1-4",
   "Α2-1","Α2-2","Α2-3","Α2-4","Α2-5",
   "Α3-1","Α3-2","Α3-3","Α3-5",
@@ -329,10 +359,14 @@ const CAR_CODES = [
   "Β8-1","Β8-2","Β8-3","Β8-4",
   "Β9-1","Β9-2","Β9-3","Β9-4","Β9-5"
 ];
-const SECTORS = [
+const FALLBACK_SECTORS = [
   "Α1η","Α2η","Α3η","Α4η","Α5η","Α6η","Α7η","Α8η","Α9η",
   "Β1η","Β2η","Β3η","Β4η","Β5η","Β6η","Β7η","Β8η","Β9η"
 ];
+
+// Οι ενεργές λίστες. Ενημερώνονται από το Google Sheet κατά το άνοιγμα.
+const LISTS_KEY = 'deltio_lists_v1';
+let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS };
 
 const SIGNAL_CODES = [
   {c:"Ε-1", n:"Πληροφορία"},
@@ -487,10 +521,12 @@ function esc(s){
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function setupAutocomplete(inputId, listId, options){
+function setupAutocomplete(inputId, listId, getOptions){
   const input = document.getElementById(inputId);
   const list = document.getElementById(listId);
   function render(filter){
+    const options = getOptions() || [];
+    if (options.length === 0){ list.style.display = 'none'; list.innerHTML = ''; return; }
     const f = filter.trim().toUpperCase();
     const matches = f ? options.filter(o => o.toUpperCase().includes(f)) : options;
     if (matches.length === 0){ list.style.display = 'none'; list.innerHTML = ''; return; }
@@ -510,8 +546,45 @@ function setupAutocomplete(inputId, listId, options){
 }
 
 function initAutocompletes(){
-  setupAutocomplete('code', 'codeList', CAR_CODES);
-  setupAutocomplete('tomeas', 'sectorList', SECTORS);
+  setupAutocomplete('code',    'codeList',    function(){ return LISTS.codes; });
+  setupAutocomplete('tomeas',  'sectorList',  function(){ return LISTS.sectors; });
+  setupAutocomplete('ea',      'eaList',      function(){ return LISTS.ea; });
+  setupAutocomplete('odigos',  'odigosList',  function(){ return LISTS.personnel; });
+  setupAutocomplete('arxigos', 'arxigosList', function(){ return LISTS.personnel; });
+  setupAutocomplete('synodos', 'synodosList', function(){ return LISTS.personnel; });
+}
+
+/* ===== Λίστες από το Google Sheet =====
+   1) Εφαρμόζεται αμέσως το τοπικό αντίγραφο (αν υπάρχει), ώστε η φόρμα
+      να είναι πλήρως λειτουργική ακόμα και χωρίς σήμα.
+   2) Στο παρασκήνιο ζητείται η ενημερωμένη λίστα από το Apps Script. */
+function applyLists(obj){
+  if (!obj) return;
+  LISTS = {
+    personnel: obj.personnel && obj.personnel.length ? obj.personnel : LISTS.personnel,
+    ea:        obj.ea        && obj.ea.length        ? obj.ea        : LISTS.ea,
+    codes:     obj.codes     && obj.codes.length     ? obj.codes     : FALLBACK_CODES,
+    sectors:   obj.sectors   && obj.sectors.length   ? obj.sectors   : FALLBACK_SECTORS
+  };
+}
+
+function loadLists(){
+  try {
+    const cached = localStorage.getItem(LISTS_KEY);
+    if (cached) applyLists(JSON.parse(cached));
+  } catch(e){ /* αγνοείται */ }
+
+  if (!API_URL || API_URL.indexOf('/exec') === -1) return;
+
+  fetch(API_URL, { method: 'POST', body: new URLSearchParams({ action: 'lists' }) })
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      const out = JSON.parse(t);
+      if (!out.ok || !out.lists) return;
+      applyLists(out.lists);
+      try { localStorage.setItem(LISTS_KEY, JSON.stringify(out.lists)); } catch(e){ /* αγνοείται */ }
+    })
+    .catch(function(){ /* συνεχίζουμε με ό,τι έχουμε τοπικά */ });
 }
 
 function addSignal(prefill){
@@ -859,10 +932,22 @@ function buildPreviewHtml(data){
       </div>
       <div class="pv-title">ΗΜΕΡΗΣΙΟ ΔΕΛΤΙΟ ΟΧΗΜΑΤΟΣ</div>
       <div class="pv-meta">
-        Ημερομηνία: ${esc(f.imerominia || '—')} &nbsp;&nbsp; 8ωρο: ${esc(shiftLabel(f))} &nbsp;&nbsp;
-        Ένδειξη χλμ: ${esc(f.kmA || '—')} &nbsp;&nbsp; Λήξη χλμ: ${esc(f.kmB || '—')}<br>
-        Στοιχεία Πληρώματος: Οδηγός: ${esc(f.odigos || '—')} &nbsp;&nbsp; Αρχηγός: ${esc(f.arxigos || '—')} &nbsp;&nbsp; Συνοδός: ${esc(f.synodos || '—')}<br>
-        Κατάσταση οχήματος: ${esc(f.katastasi || '—')} &nbsp;&nbsp; Χορ. Βενζίνη: ${esc(f.venzini || '—')} &nbsp;&nbsp; Χορ. Ορυκτέλαιο: ${esc(f.oryktelaio || '—')}
+        <div class="pv-grid pv-g4">
+          <span>Ημερομηνία: ${esc(f.imerominia || '—')}</span>
+          <span>8ωρο: ${esc(shiftLabel(f))}</span>
+          <span>Ένδειξη χλμ: ${esc(f.kmA || '—')}</span>
+          <span>Λήξη χλμ: ${esc(f.kmB || '—')}</span>
+        </div>
+        <div class="pv-grid pv-g3">
+          <span>Οδηγός: ${esc(f.odigos || '—')}</span>
+          <span>Αρχηγός: ${esc(f.arxigos || '—')}</span>
+          <span>Συνοδός: ${esc(f.synodos || '—')}</span>
+        </div>
+        <div class="pv-grid pv-g3">
+          <span>Κατάσταση: ${esc(f.katastasi || '—')}</span>
+          <span>Χορ. Βενζίνη: ${esc(f.venzini || '—')}</span>
+          <span>Χορ. Ορυκτέλαιο: ${esc(f.oryktelaio || '—')}</span>
+        </div>
       </div>
       <table>
         <tr><th>Ώρα</th><th>Αριθ. Αυτοκ.</th><th>Περιγραφή Συμβάντος</th></tr>
@@ -1204,6 +1289,7 @@ function switchTab(tab){
 }
 
 initAutocompletes();
+loadLists();
 setupQuickAutocomplete();
 renderQuickLog();
 renderDraftsList();
