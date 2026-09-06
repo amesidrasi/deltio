@@ -251,6 +251,10 @@
       </div>
     </div>
   </div>
+  <div class="field">
+    <span class="label">Όρχος (συμπληρώνεται αυτόματα από τον κωδικό)</span>
+    <input type="text" id="orxos" placeholder="π.χ. ΓΛΥΦΑΔΑΣ" autocomplete="off">
+  </div>
   <div class="row2">
     <div>
       <span class="label">Τομέας</span>
@@ -366,7 +370,7 @@ const FALLBACK_SECTORS = [
 
 // Οι ενεργές λίστες. Ενημερώνονται από το Google Sheet κατά το άνοιγμα.
 const LISTS_KEY = 'deltio_lists_v1';
-let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS };
+let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS, responses: {}, depots: {} };
 
 const SIGNAL_CODES = [
   {c:"Ε-1", n:"Πληροφορία"},
@@ -470,7 +474,7 @@ const SIGNAL_CODES = [
   {c:"Ε-99", n:"Έλεγχος Αθλητικών εγκαταστάσεων"}
 ];
 
-const SIGNAL_RESPONSES = {
+const FALLBACK_RESPONSES = {
   "Ε-19": [
     "Αναφέρω ότι μεταβήκαμε στην ανωτέρω διεύθυνση όπου εξωτερικά και όσο δυνάμεθα είχε καλώς ασφαλισμένο. Ενημερώθηκε το ΚΑΔ και αποχωρήσαμε",
     "Αναφέρω ότι μεταβήκαμε στην ανωτέρω διεύθυνση όπου η οικία στο σημείο εξωτερικά και όσο δυνάμεθα είχε καλώς ασφαλισμένη. Ενημερώθηκε το ΚΑΔ και αποχωρήσαμε.",
@@ -478,6 +482,14 @@ const SIGNAL_RESPONSES = {
     "Αναφέρω ότι μεταβήκαμε στην ανωτέρω διεύθυνση όπου το κατάστημα στο σημείο εξωτερικά και όσο δυνάμεθα είχε καλώς ασφαλισμένο. Ενημερώθηκε το ΚΑΔ και αποχωρήσαμε."
   ]
 };
+
+function getResponsesFor(code){
+  const key = String(code || '').trim().toUpperCase();
+  if (!key) return null;
+  const src = (LISTS.responses && Object.keys(LISTS.responses).length) ? LISTS.responses : FALLBACK_RESPONSES;
+  const match = Object.keys(src).find(k => k.toUpperCase() === key);
+  return match ? src[match] : null;
+}
 
 const DRAFTS_KEY = 'deltio_drafts_v1';
 let signalCount = 0;
@@ -537,6 +549,7 @@ function setupAutocomplete(inputId, listId, getOptions){
         e.preventDefault();
         input.value = item.textContent;
         list.style.display = 'none';
+        input.dispatchEvent(new Event('input'));
       });
     });
   }
@@ -552,6 +565,21 @@ function initAutocompletes(){
   setupAutocomplete('odigos',  'odigosList',  function(){ return LISTS.personnel; });
   setupAutocomplete('arxigos', 'arxigosList', function(){ return LISTS.personnel; });
   setupAutocomplete('synodos', 'synodosList', function(){ return LISTS.personnel; });
+  document.getElementById('code').addEventListener('input', autoFillDepot);
+}
+
+// Ο όρχος συμπληρώνεται από τον κωδικό. Αν ο χρήστης τον έχει αλλάξει
+// χειροκίνητα, δεν τον πειράζουμε.
+let lastAutoDepot = '';
+function autoFillDepot(){
+  const codeVal = document.getElementById('code').value.trim().toUpperCase();
+  const field = document.getElementById('orxos');
+  const depot = (LISTS.depots || {})[codeVal];
+  if (!depot) return;
+  if (field.value.trim() === '' || field.value.trim() === lastAutoDepot){
+    field.value = depot;
+    lastAutoDepot = depot;
+  }
 }
 
 /* ===== Λίστες από το Google Sheet =====
@@ -564,7 +592,9 @@ function applyLists(obj){
     personnel: obj.personnel && obj.personnel.length ? obj.personnel : LISTS.personnel,
     ea:        obj.ea        && obj.ea.length        ? obj.ea        : LISTS.ea,
     codes:     obj.codes     && obj.codes.length     ? obj.codes     : FALLBACK_CODES,
-    sectors:   obj.sectors   && obj.sectors.length   ? obj.sectors   : FALLBACK_SECTORS
+    sectors:   obj.sectors   && obj.sectors.length   ? obj.sectors   : FALLBACK_SECTORS,
+    responses: obj.responses || LISTS.responses,
+    depots:    obj.depots    || LISTS.depots
   };
 }
 
@@ -669,16 +699,15 @@ function addSignal(prefill){
   let currentOptions = [];
 
   function showSuggestions(){
-    const key = codeInput.value.trim().toUpperCase();
-    const match = Object.keys(SIGNAL_RESPONSES).find(k => k.toUpperCase() === key);
-    if (!match){
+    const found = getResponsesFor(codeInput.value);
+    if (!found || !found.length){
       suggestToggle.style.display = 'none';
       suggestPanel.style.display = 'none';
       suggestPanel.innerHTML = '';
       currentOptions = [];
       return;
     }
-    currentOptions = SIGNAL_RESPONSES[match];
+    currentOptions = found;
     suggestToggle.style.display = 'block';
     suggestPanel.innerHTML = currentOptions.map((txt, i) =>
       `<button type="button" class="suggest-card" data-i="${i}">${esc(txt)}</button>`
@@ -704,6 +733,7 @@ function collectData(){
     code: document.getElementById('code').value.trim(),
     ea: document.getElementById('ea').value.trim(),
     tomeas: document.getElementById('tomeas').value.trim(),
+    orxos: document.getElementById('orxos').value.trim(),
     oktaoro: document.getElementById('oktaoro').value,
     startTime: document.getElementById('startTime').value.trim(),
     endTime: document.getElementById('endTime').value.trim(),
@@ -745,6 +775,7 @@ function populateForm(data){
   document.getElementById('code').value = f.code || '';
   document.getElementById('ea').value = f.ea || '';
   document.getElementById('tomeas').value = f.tomeas || '';
+  document.getElementById('orxos').value = f.orxos || '';
   document.getElementById('oktaoro').value = f.oktaoro || '05:30-13:00';
   document.getElementById('startTime').value = f.startTime || '';
   document.getElementById('endTime').value = f.endTime || '';
@@ -766,7 +797,7 @@ function populateForm(data){
 }
 
 function clearForm(){
-  ['code','ea','tomeas','startTime','endTime','kmA','kmB','odigos','arxigos','synodos','venzini','oryktelaio','imerominia','senderEmail']
+  ['code','ea','tomeas','orxos','startTime','endTime','kmA','kmB','odigos','arxigos','synodos','venzini','oryktelaio','imerominia','senderEmail']
     .forEach(id => document.getElementById(id).value = '');
   document.getElementById('oktaoro').value = '05:30-13:00';
   document.getElementById('katastasi').value = 'ΚΑΛΗ';
@@ -868,6 +899,19 @@ function downloadPdf(base64, filename){
 }
 
 /* ===== Προεπισκόπηση στη μορφή του εντύπου ===== */
+function serviceStartText(f){
+  const orxos = String((f && f.orxos) || '').trim();
+  return 'Σας αναφέρω ότι το ανωτέρω όχημα παρελήφθη κανονικά από τον όρχο ' +
+    (orxos ? orxos + ' ' : '') +
+    'με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.';
+}
+function serviceEndText(f){
+  const orxos = String((f && f.orxos) || '').trim();
+  return 'Σας αναφέρω ότι το ανωτέρω όχημα αφέθη κανονικά στον όρχο ' +
+    (orxos ? orxos + ' ' : '') +
+    'με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.';
+}
+
 function signalFirstLine(inc){
   const base = [inc.signalCode, inc.desc].filter(String).join(' ');
   if (!inc.address) return base;
@@ -903,7 +947,7 @@ function buildPreviewHtml(data){
   const rows = [];
 
   rows.push('<tr><td class="c1"></td><td class="c2"></td><td class="pv-center">ΕΝΑΡΞΗ ΥΠΗΡΕΣΙΑΣ</td></tr>');
-  rows.push('<tr><td class="c1">' + esc(shift.start) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>Σας αναφέρω ότι το ανωτέρω όχημα παρελήφθη κανονικά από τον όρχο με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.</td></tr>');
+  rows.push('<tr><td class="c1">' + esc(shift.start) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>' + esc(serviceStartText(f)) + '</td></tr>');
 
   incidents.forEach(function(inc, i){
     rows.push('<tr><td class="c1"></td><td class="c2"></td><td class="pv-center">(' + (i+1) + ')</td></tr>');
@@ -917,7 +961,7 @@ function buildPreviewHtml(data){
   });
 
   rows.push('<tr><td class="c1"></td><td class="c2"></td><td class="pv-center">ΛΗΞΗ ΥΠΗΡΕΣΙΑΣ</td></tr>');
-  rows.push('<tr><td class="c1">' + esc(shift.end) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>Σας αναφέρω ότι το ανωτέρω όχημα αφέθη κανονικά στον όρχο με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.</td></tr>');
+  rows.push('<tr><td class="c1">' + esc(shift.end) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>' + esc(serviceEndText(f)) + '</td></tr>');
 
   return `
     <div class="pv-doc">
