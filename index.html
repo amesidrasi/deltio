@@ -1016,7 +1016,7 @@ async function sendReport(){
     if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα στον διακομιστή.');
 
     btn.disabled = false;
-    status.innerHTML = '✅ Το δελτίο στάλθηκε (' + out.count + ' εγγραφές).';
+    status.innerHTML = '✅ Το δελτίο στάλθηκε (' + out.count + ' εγγραφές). Η φόρμα είναι έτοιμη για νέο δελτίο.';
     status.className = 'status';
 
     const dlBox = document.getElementById('pdfDlBox');
@@ -1034,9 +1034,11 @@ async function sendReport(){
       const drafts = getDrafts();
       delete drafts[currentDraftId];
       setDrafts(drafts);
-      currentDraftId = null;
       renderDraftsList();
     }
+    currentDraftId = null;
+    // Καθαρίζουμε τη φόρμα ώστε το επόμενο δελτίο να ξεκινά από την αρχή.
+    clearForm();
     markSaved();
   } catch (err){
     btn.disabled = false;
@@ -1289,13 +1291,4 @@ function switchTab(tab){
 }
 
 initAutocompletes();
-loadLists();
-setupQuickAutocomplete();
-renderQuickLog();
-renderDraftsList();
-addSignal();
-markSaved();
-</script>
-
-</body>
-</html>
+loa
