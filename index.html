@@ -985,11 +985,10 @@ function buildPreviewHtml(data){
       </div>
       <div class="pv-title">ΗΜΕΡΗΣΙΟ ΔΕΛΤΙΟ ΟΧΗΜΑΤΟΣ</div>
       <div class="pv-meta">
-        <div class="pv-grid pv-g4">
-          <span>Ημερομηνία: ${esc(f.imerominia || '—')}</span>
-          <span>8ωρο: ${esc(shiftLabel(f))}</span>
-          <span>Ένδειξη χλμ: ${esc(f.kmA || '—')}</span>
-          <span>Λήξη χλμ: ${esc(f.kmB || '—')}</span>
+        <div class="pv-grid pv-g3">
+          <span>Ημερομηνία: ${esc(f.imerominia || '—')} &nbsp; 8ωρο: ${esc(shiftLabel(f))}</span>
+          <span>Ενδειξ χιλιομ: ${esc(f.kmA || '—')}</span>
+          <span>Λήξη χιλιομ.: ${esc(f.kmB || '—')}</span>
         </div>
         <div class="pv-grid pv-g3">
           <span>Οδηγός: ${esc(f.odigos || '—')}</span>
