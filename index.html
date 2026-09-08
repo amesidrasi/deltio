@@ -143,6 +143,22 @@
     width:100%;margin-top:10px;padding:12px;background:#2f6e4e;color:#fff;border:none;
     border-radius:6px;font-size:13px;font-weight:600;
   }
+  .hint{font-size:11px;color:#5c6773;margin-top:5px;line-height:1.4;}
+  .shift-info{
+    background:#eef1f4;border:1px solid #ccd4dc;border-radius:8px;
+    padding:10px 12px;font-size:14px;font-weight:600;color:#1f3a5f;margin-bottom:8px;
+  }
+  .shift-info.warn{background:#fdecea;border-color:#e0a09a;color:#a32d2d;font-weight:600;}
+  .link-btn{
+    background:none;border:none;color:#1f3a5f;font-size:12px;text-decoration:underline;
+    padding:4px 0;text-align:left;display:block;
+  }
+  .choice-row{display:flex;gap:8px;margin-top:8px;}
+  .choice{
+    flex:1;padding:11px 6px;font-size:13px;border:1px solid #1f3a5f;border-radius:6px;
+    background:#fff;color:#1f3a5f;font-weight:600;
+  }
+  .choice.active{background:#1f3a5f;color:#fff;}
   .pending-box{
     background:#fff4e5;border:1px solid #e0a458;border-radius:8px;
     padding:10px 12px;margin-bottom:12px;font-size:13px;line-height:1.4;
@@ -235,6 +251,30 @@
   </div>
   <button type="button" class="new-btn" onclick="newReport()">+ Νέο δελτίο</button>
 
+  <div class="section-title" style="margin-top:0;">Βάρδια</div>
+  <div class="field">
+    <span class="label">Ημερομηνία δελτίου</span>
+    <input type="date" id="imerominia">
+    <div class="hint">Επιλέξτε την ημέρα που εκτελέσατε την υπηρεσία. Το ωράριο συμπληρώνεται αυτόματα.</div>
+  </div>
+
+  <div id="shiftInfo" class="shift-info">Επιλέξτε πρώτα ημερομηνία.</div>
+  <input type="hidden" id="oktaoro" value="">
+  <button type="button" class="link-btn" id="shiftToggle">Αν εργαστήκατε σε διαφορετικό ωράριο, επιλέξτε το εδώ</button>
+  <div id="shiftPanel" style="display:none;">
+    <div class="choice-row">
+      <button type="button" class="choice" data-shift="05:30-13:00">05:30-13:00</button>
+      <button type="button" class="choice" data-shift="13:00-21:00">13:00-21:00</button>
+      <button type="button" class="choice" data-shift="21:00-05:30">21:00-05:30</button>
+    </div>
+    <div class="row2" style="margin-top:10px;">
+      <div><span class="label">Πραγματική ώρα έναρξης</span><input type="text" id="startTime" inputmode="numeric" placeholder="ωω:λλ"></div>
+      <div><span class="label">Πραγματική ώρα λήξης</span><input type="text" id="endTime" inputmode="numeric" placeholder="ωω:λλ"></div>
+    </div>
+    <div class="hint">Συμπληρώστε τα δύο αυτά πεδία μόνο αν αναλάβατε ή σχολάσατε σε ώρα διαφορετική από το ωράριο. Αλλιώς αφήστε τα κενά.</div>
+  </div>
+
+  <div class="section-title">Όχημα</div>
   <div class="row2">
     <div>
       <span class="label">Κωδικός Περιπολικού</span>
@@ -246,46 +286,47 @@
     <div>
       <span class="label">Ε.Α.</span>
       <div class="ac-wrapper">
-        <input type="text" id="ea" placeholder="π.χ. 25689" autocomplete="off">
+        <input type="text" id="ea" placeholder="π.χ. 25689" autocomplete="off" inputmode="numeric">
         <div class="ac-list" id="eaList"></div>
       </div>
     </div>
   </div>
   <div class="field">
-    <span class="label">Όρχος (συμπληρώνεται αυτόματα από το Ε.Α.)</span>
+    <span class="label">Τομέας</span>
+    <div class="ac-wrapper">
+      <input type="text" id="tomeas" placeholder="π.χ. Α3η" autocomplete="off">
+      <div class="ac-list" id="sectorList"></div>
+    </div>
+  </div>
+
+  <div class="field" id="orxosField" style="display:none;">
+    <span class="label">Όρχος</span>
     <div class="ac-wrapper">
       <input type="text" id="orxos" placeholder="π.χ. ΜΕΣΟΓΕΙΩΝ" autocomplete="off">
       <div class="ac-list" id="orxosList"></div>
     </div>
-  </div>
-  <div class="row2">
-    <div>
-      <span class="label">Τομέας</span>
-      <div class="ac-wrapper">
-        <input type="text" id="tomeas" placeholder="π.χ. Α3η" autocomplete="off">
-        <div class="ac-list" id="sectorList"></div>
-      </div>
-    </div>
-    <div><span class="label">8ωρο</span>
-      <select id="oktaoro">
-        <option value="05:30-13:00">05:30-13:00</option>
-        <option value="13:00-21:00">13:00-21:00</option>
-        <option value="21:00-05:30">21:00-05:30</option>
-      </select>
-    </div>
-  </div>
-  <div class="row2">
-    <div><span class="label">Ώρα έναρξης (προαιρετικό)</span><input type="text" id="startTime" placeholder="αν διαφέρει"></div>
-    <div><span class="label">Ώρα λήξης (προαιρετικό)</span><input type="text" id="endTime" placeholder="αν διαφέρει"></div>
-  </div>
-  <div class="edit-hint" style="margin-bottom:10px;">Αφήστε τα κενά για να ισχύσουν οι ώρες του 8ώρου. Συμπληρώστε μόνο αν το ωράριο ήταν διαφορετικό.</div>
-  <div class="field"><span class="label">Ημερομηνία</span><input type="date" id="imerominia"></div>
-  <div class="row2">
-    <div><span class="label">Ένδειξη χλμ</span><input type="text" id="kmA"></div>
-    <div><span class="label">Λήξη χλμ</span><input type="text" id="kmB"></div>
+    <div class="hint" id="orxosHint">Δεν βρέθηκε όρχος για αυτό το Ε.Α. Επιλέξτε τον από τη λίστα.</div>
   </div>
 
-  <div class="section-title">Πλήρωμα &amp; όχημα</div>
+  <div class="row2">
+    <div><span class="label">Ένδειξη χλμ (έναρξη)</span><input type="text" id="kmA" inputmode="numeric"></div>
+    <div><span class="label">Λήξη χλμ</span><input type="text" id="kmB" inputmode="numeric"></div>
+  </div>
+
+  <div class="field">
+    <span class="label">Κατάσταση οχήματος</span>
+    <input type="hidden" id="katastasi" value="ΚΑΛΗ">
+    <div class="choice-row">
+      <button type="button" class="choice" data-katastasi="ΚΑΛΗ">ΚΑΛΗ</button>
+      <button type="button" class="choice" data-katastasi="ΒΛΑΒΗ">ΒΛΑΒΗ</button>
+    </div>
+  </div>
+  <div class="row2">
+    <div><span class="label">Χορηγ. Βενζίνη</span><input type="text" id="venzini"></div>
+    <div><span class="label">Χορηγ. Ορυκτέλαιο</span><input type="text" id="oryktelaio"></div>
+  </div>
+
+  <div class="section-title">Πλήρωμα</div>
   <div class="field">
     <span class="label">Οδηγός</span>
     <div class="ac-wrapper">
@@ -306,25 +347,18 @@
       <input type="text" id="synodos" autocomplete="off">
       <div class="ac-list" id="synodosList"></div>
     </div>
+    <div class="hint">Ο Συνοδός υπογράφει το δελτίο ως «Ο ΑΝΑΦΕΡΩΝ».</div>
   </div>
-  <div class="row2">
-    <div><span class="label">Κατάσταση οχήματος</span>
-      <select id="katastasi">
-        <option value="ΚΑΛΗ">ΚΑΛΗ</option>
-        <option value="ΒΛΑΒΗ">ΒΛΑΒΗ</option>
-      </select>
-    </div>
-    <div><span class="label">Χορ. Βενζίνη</span><input type="text" id="venzini"></div>
-  </div>
-  <div class="field"><span class="label">Χορ. Ορυκτέλαιο</span><input type="text" id="oryktelaio"></div>
 
   <div class="section-title">Σήματα</div>
   <div id="signalsContainer"></div>
   <button type="button" class="add-btn" onclick="addSignal()">+ Προσθήκη σήματος</button>
 
-  <div class="field" style="margin-top:14px;">
-    <span class="label">Το email σας (προαιρετικό — για δικό σας αντίγραφο)</span>
-    <input type="text" id="senderEmail" placeholder="π.χ. onoma@gmail.com">
+  <button type="button" class="link-btn" id="emailToggle" style="margin-top:14px;">Αλλαγή email αντιγράφου</button>
+  <div class="field" id="emailField">
+    <span class="label">Το email σας</span>
+    <input type="text" id="senderEmail" placeholder="π.χ. onoma@gmail.com" inputmode="email">
+    <div class="hint">Γράψτε το μία φορά. Θα λαμβάνετε αντίγραφο κάθε δελτίου που στέλνετε και δεν θα χρειαστεί να το ξαναγράψετε.</div>
   </div>
 
   <div class="btn-row">
@@ -497,6 +531,23 @@ function getResponsesFor(code){
 }
 
 const DRAFTS_KEY = 'deltio_drafts_v1';
+const EMAIL_KEY = 'deltio_email_v1';
+
+/* ===== Κύκλος βάρδιας Γ' Αλλαγής =====
+   Τετραήμερος κύκλος με σημείο αναφοράς την 08/09/2026:
+   ημέρα 1 απόγευμα, ημέρα 2 νύχτα, ημέρα 3 αδιάθετο, ημέρα 4 πρωί. */
+const SHIFT_CYCLE = ['13:00-21:00', '21:00-05:30', '', '05:30-13:00'];
+const SHIFT_REF = Date.UTC(2026, 8, 8); // 8 Σεπτεμβρίου 2026
+
+function shiftForDate(isoDate){
+  if (!isoDate) return null;
+  const p = isoDate.split('-').map(Number);
+  if (p.length !== 3) return null;
+  const t = Date.UTC(p[0], p[1] - 1, p[2]);
+  const diff = Math.floor((t - SHIFT_REF) / 86400000);
+  const idx = ((diff % 4) + 4) % 4;
+  return SHIFT_CYCLE[idx];
+}
 let signalCount = 0;
 let currentDraftId = null;
 let lastSavedSnapshot = null;
@@ -581,13 +632,126 @@ function initAutocompletes(){
 let lastAutoDepot = '';
 function autoFillDepot(){
   const eaVal = document.getElementById('ea').value.trim().toUpperCase();
-  const field = document.getElementById('orxos');
+  const input = document.getElementById('orxos');
+  const wrap = document.getElementById('orxosField');
   const depot = (LISTS.depots || {})[eaVal];
-  if (!depot) return;
-  if (field.value.trim() === '' || field.value.trim() === lastAutoDepot){
-    field.value = depot;
-    lastAutoDepot = depot;
+
+  if (depot){
+    if (input.value.trim() === '' || input.value.trim() === lastAutoDepot){
+      input.value = depot;
+      lastAutoDepot = depot;
+    }
+    // Βρέθηκε όρχος: το πεδίο δεν χρειάζεται να φαίνεται.
+    wrap.style.display = (input.value.trim() === depot) ? 'none' : 'block';
+  } else {
+    // Άγνωστο Ε.Α.: ο χρήστης πρέπει να τον συμπληρώσει μόνος του.
+    wrap.style.display = eaVal ? 'block' : 'none';
   }
+}
+
+/* ===== Ωράριο βάρδιας ===== */
+let manualShift = false;
+
+function setShift(value, manual){
+  document.getElementById('oktaoro').value = value || '';
+  if (manual) manualShift = true;
+  document.querySelectorAll('#shiftPanel .choice').forEach(function(b){
+    b.classList.toggle('active', b.dataset.shift === value);
+  });
+  renderShiftInfo();
+}
+
+function renderShiftInfo(){
+  const box = document.getElementById('shiftInfo');
+  const date = document.getElementById('imerominia').value;
+  const cur = document.getElementById('oktaoro').value;
+
+  if (!date && !cur){
+    box.className = 'shift-info';
+    box.textContent = 'Επιλέξτε πρώτα ημερομηνία.';
+    return;
+  }
+  const auto = shiftForDate(date);
+  if (date && auto === '' && !cur){
+    box.className = 'shift-info warn';
+    box.textContent = 'Η ημερομηνία αυτή αντιστοιχεί σε αδιάθετο της Γ΄ Αλλαγής. Ελέγξτε ότι είναι σωστή και επιλέξτε ωράριο από κάτω.';
+    return;
+  }
+  if (!cur){
+    box.className = 'shift-info warn';
+    box.textContent = 'Δεν έχει οριστεί ωράριο. Επιλέξτε το από κάτω.';
+    return;
+  }
+  box.className = 'shift-info';
+  box.textContent = 'Ωράριο βάρδιας: ' + cur + (manualShift ? '  (επιλέχθηκε χειροκίνητα)' : '');
+}
+
+function onDateChange(){
+  const date = document.getElementById('imerominia').value;
+  const auto = shiftForDate(date);
+  // Δεν σβήνουμε χειροκίνητη επιλογή του χρήστη.
+  if (!manualShift) setShift(auto === null ? '' : auto, false);
+  else renderShiftInfo();
+  if (auto === '') document.getElementById('shiftPanel').style.display = 'block';
+}
+
+function initShiftControls(){
+  document.getElementById('imerominia').addEventListener('change', onDateChange);
+  document.getElementById('shiftToggle').addEventListener('click', function(){
+    const p = document.getElementById('shiftPanel');
+    p.style.display = (p.style.display === 'none') ? 'block' : 'none';
+  });
+  document.querySelectorAll('#shiftPanel .choice').forEach(function(b){
+    b.addEventListener('click', function(){ setShift(b.dataset.shift, true); });
+  });
+  document.querySelectorAll('.choice[data-katastasi]').forEach(function(b){
+    b.addEventListener('click', function(){ setKatastasi(b.dataset.katastasi); });
+  });
+}
+
+function setKatastasi(v){
+  document.getElementById('katastasi').value = v;
+  document.querySelectorAll('.choice[data-katastasi]').forEach(function(b){
+    b.classList.toggle('active', b.dataset.katastasi === v);
+  });
+}
+
+/* ===== Πεδία ώρας: αυτόματη άνω τελεία ===== */
+function attachTimeInput(el){
+  if (!el) return;
+  el.setAttribute('inputmode', 'numeric');
+  el.addEventListener('input', function(){
+    let v = el.value.replace(/[^0-9]/g, '').slice(0, 4);
+    if (v.length >= 3) v = v.slice(0, v.length - 2) + ':' + v.slice(v.length - 2);
+    el.value = v;
+  });
+  el.addEventListener('blur', function(){
+    const v = el.value.trim();
+    if (!v) return;
+    const m = v.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m || Number(m[1]) > 23 || Number(m[2]) > 59){
+      el.value = '';
+      return;
+    }
+    el.value = ('0' + m[1]).slice(-2) + ':' + m[2];
+  });
+}
+
+/* ===== Email αντιγράφου ===== */
+function initEmail(){
+  const field = document.getElementById('emailField');
+  const input = document.getElementById('senderEmail');
+  const saved = localStorage.getItem(EMAIL_KEY) || '';
+  if (saved){
+    input.value = saved;
+    field.style.display = 'none';
+  }
+  document.getElementById('emailToggle').addEventListener('click', function(){
+    field.style.display = (field.style.display === 'none') ? 'block' : 'none';
+  });
+  input.addEventListener('change', function(){
+    localStorage.setItem(EMAIL_KEY, input.value.trim());
+  });
 }
 
 /* ===== Λίστες από το Google Sheet =====
@@ -680,6 +844,10 @@ function addSignal(prefill){
   }
   typeButtons.forEach(btn => btn.addEventListener('click', () => applyType(btn.dataset.type)));
   applyType(entryType);
+
+  attachTimeInput(div.querySelector('.s-time'));
+  attachTimeInput(div.querySelector('.s-arrival'));
+  attachTimeInput(div.querySelector('.s-departure'));
 
   const codeInput = div.querySelector('.s-code');
   const codeList = div.querySelector('.s-code-list');
@@ -785,7 +953,7 @@ function populateForm(data){
   document.getElementById('ea').value = f.ea || '';
   document.getElementById('tomeas').value = f.tomeas || '';
   document.getElementById('orxos').value = f.orxos || '';
-  document.getElementById('oktaoro').value = f.oktaoro || '05:30-13:00';
+  setShift(f.oktaoro || '', false);
   document.getElementById('startTime').value = f.startTime || '';
   document.getElementById('endTime').value = f.endTime || '';
   document.getElementById('kmA').value = f.kmA || '';
@@ -793,11 +961,14 @@ function populateForm(data){
   document.getElementById('odigos').value = f.odigos || '';
   document.getElementById('arxigos').value = f.arxigos || '';
   document.getElementById('synodos').value = f.synodos || '';
-  document.getElementById('katastasi').value = f.katastasi || 'ΚΑΛΗ';
+  setKatastasi(f.katastasi || 'ΚΑΛΗ');
   document.getElementById('venzini').value = f.venzini || '';
   document.getElementById('oryktelaio').value = f.oryktelaio || '';
   document.getElementById('imerominia').value = f.imerominiaRaw || '';
-  document.getElementById('senderEmail').value = f.senderEmail || '';
+  document.getElementById('senderEmail').value = f.senderEmail || localStorage.getItem(EMAIL_KEY) || '';
+  manualShift = false;
+  renderShiftInfo();
+  autoFillDepot();
 
   document.getElementById('signalsContainer').innerHTML = '';
   signalCount = 0;
@@ -806,10 +977,14 @@ function populateForm(data){
 }
 
 function clearForm(){
-  ['code','ea','tomeas','orxos','startTime','endTime','kmA','kmB','odigos','arxigos','synodos','venzini','oryktelaio','imerominia','senderEmail']
+  ['code','ea','tomeas','orxos','startTime','endTime','kmA','kmB','odigos','arxigos','synodos','venzini','oryktelaio','imerominia']
     .forEach(id => document.getElementById(id).value = '');
-  document.getElementById('oktaoro').value = '05:30-13:00';
-  document.getElementById('katastasi').value = 'ΚΑΛΗ';
+  manualShift = false;
+  setShift('', false);
+  setKatastasi('ΚΑΛΗ');
+  document.getElementById('senderEmail').value = localStorage.getItem(EMAIL_KEY) || '';
+  document.getElementById('orxosField').style.display = 'none';
+  lastAutoDepot = '';
   document.getElementById('signalsContainer').innerHTML = '';
   signalCount = 0;
   addSignal();
@@ -1050,6 +1225,9 @@ async function sendReport(){
   status.textContent = 'Αποστολή... (μπορεί να χρειαστεί 10-20 δευτερόλεπτα)';
   status.className = 'status';
 
+  const emailVal = document.getElementById('senderEmail').value.trim();
+  if (emailVal) localStorage.setItem(EMAIL_KEY, emailVal);
+
   const payload = JSON.stringify(collectData());
 
   try {
@@ -1268,6 +1446,9 @@ function renderQuickLog(){
       renderQuickLog();
     });
     if (isOpen){
+      attachTimeInput(row.querySelector('.qe-time'));
+      attachTimeInput(row.querySelector('.qe-arrival'));
+      attachTimeInput(row.querySelector('.qe-departure'));
       row.querySelector('.quick-save-btn').addEventListener('click', function(){ saveInlineEdit(i); });
     }
     container.appendChild(row);
@@ -1342,6 +1523,12 @@ function switchTab(tab){
   if (tab === 'full') renderPendingNotice();
 }
 
+initShiftControls();
+initEmail();
+setKatastasi('ΚΑΛΗ');
+renderShiftInfo();
+attachTimeInput(document.getElementById('startTime'));
+attachTimeInput(document.getElementById('endTime'));
 initAutocompletes();
 loadLists();
 setupQuickAutocomplete();
