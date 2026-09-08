@@ -148,7 +148,12 @@
     background:#eef1f4;border:1px solid #ccd4dc;border-radius:8px;
     padding:10px 12px;font-size:14px;font-weight:600;color:#1f3a5f;margin-bottom:8px;
   }
-  .shift-info.warn{background:#fdecea;border-color:#e0a09a;color:#a32d2d;font-weight:600;}
+  .shift-info.empty{background:#fdecea;border-color:#e0a09a;color:#a32d2d;}
+  .shift-warn{
+    background:#fdecea;border:1px solid #e0a09a;border-radius:8px;
+    padding:10px 12px;font-size:13px;color:#a32d2d;font-weight:600;
+    margin-bottom:8px;line-height:1.4;
+  }
   .link-btn{
     background:none;border:none;color:#1f3a5f;font-size:12px;text-decoration:underline;
     padding:4px 0;text-align:left;display:block;
@@ -258,6 +263,7 @@
     <div class="hint">Επιλέξτε την ημέρα που εκτελέσατε την υπηρεσία. Το ωράριο συμπληρώνεται αυτόματα.</div>
   </div>
 
+  <div id="shiftWarn" class="shift-warn" style="display:none;"></div>
   <div id="shiftInfo" class="shift-info">Επιλέξτε πρώτα ημερομηνία.</div>
   <input type="hidden" id="oktaoro" value="">
   <button type="button" class="link-btn" id="shiftToggle">Αν εργαστήκατε σε διαφορετικό ωράριο, επιλέξτε το εδώ</button>
@@ -268,8 +274,8 @@
       <button type="button" class="choice" data-shift="21:00-05:30">21:00-05:30</button>
     </div>
     <div class="row2" style="margin-top:10px;">
-      <div><span class="label">Πραγματική ώρα έναρξης</span><input type="text" id="startTime" inputmode="numeric" placeholder="ωω:λλ"></div>
-      <div><span class="label">Πραγματική ώρα λήξης</span><input type="text" id="endTime" inputmode="numeric" placeholder="ωω:λλ"></div>
+      <div><span class="label">Πραγματική ώρα έναρξης</span><input type="text" id="startTime" inputmode="numeric" placeholder="π.χ. 1120"></div>
+      <div><span class="label">Πραγματική ώρα λήξης</span><input type="text" id="endTime" inputmode="numeric" placeholder="π.χ. 1120"></div>
     </div>
     <div class="hint">Συμπληρώστε τα δύο αυτά πεδία μόνο αν αναλάβατε ή σχολάσατε σε ώρα διαφορετική από το ωράριο. Αλλιώς αφήστε τα κενά.</div>
   </div>
@@ -291,6 +297,7 @@
       </div>
     </div>
   </div>
+  <div class="hint" style="margin:-4px 0 12px;">Η λίστα Ε.Α. περιέχει μόνο τα οχήματα της Γ΄ Αλλαγής. Αν το Ε.Α. σας δεν υπάρχει, γράψτε το και συμπληρώστε και τον όρχο. Αλλιώς ο όρχος συμπληρώνεται αυτόματα.</div>
   <div class="field">
     <span class="label">Τομέας</span>
     <div class="ac-wrapper">
@@ -351,6 +358,7 @@
   </div>
 
   <div class="section-title">Σήματα</div>
+  <div class="hint" style="margin-bottom:10px;">Στις ώρες γράψτε μόνο αριθμούς, π.χ. 1120. Η άνω τελεία μπαίνει μόνη της.</div>
   <div id="signalsContainer"></div>
   <button type="button" class="add-btn" onclick="addSignal()">+ Προσθήκη σήματος</button>
 
@@ -655,35 +663,44 @@ let manualShift = false;
 function setShift(value, manual){
   document.getElementById('oktaoro').value = value || '';
   if (manual) manualShift = true;
-  document.querySelectorAll('#shiftPanel .choice').forEach(function(b){
-    b.classList.toggle('active', b.dataset.shift === value);
-  });
   renderShiftInfo();
 }
 
 function renderShiftInfo(){
   const box = document.getElementById('shiftInfo');
+  const warn = document.getElementById('shiftWarn');
   const date = document.getElementById('imerominia').value;
   const cur = document.getElementById('oktaoro').value;
+  const auto = shiftForDate(date);
+
+  // Η προειδοποίηση αφορά την ημερομηνία και παραμένει ανεξάρτητα
+  // από το ωράριο που θα επιλεγεί.
+  if (date && auto === ''){
+    warn.style.display = 'block';
+    warn.textContent = 'Η ημερομηνία αυτή αντιστοιχεί σε αδιάθετο της Γ΄ Αλλαγής. Ελέγξτε ότι είναι σωστή.';
+  } else {
+    warn.style.display = 'none';
+  }
 
   if (!date && !cur){
     box.className = 'shift-info';
     box.textContent = 'Επιλέξτε πρώτα ημερομηνία.';
-    return;
-  }
-  const auto = shiftForDate(date);
-  if (date && auto === '' && !cur){
-    box.className = 'shift-info warn';
-    box.textContent = 'Η ημερομηνία αυτή αντιστοιχεί σε αδιάθετο της Γ΄ Αλλαγής. Ελέγξτε ότι είναι σωστή και επιλέξτε ωράριο από κάτω.';
-    return;
-  }
-  if (!cur){
-    box.className = 'shift-info warn';
+  } else if (!cur){
+    box.className = 'shift-info empty';
     box.textContent = 'Δεν έχει οριστεί ωράριο. Επιλέξτε το από κάτω.';
-    return;
+  } else {
+    box.className = 'shift-info';
+    box.textContent = 'Ωράριο βάρδιας: ' + cur;
   }
-  box.className = 'shift-info';
-  box.textContent = 'Ωράριο βάρδιας: ' + cur + (manualShift ? '  (επιλέχθηκε χειροκίνητα)' : '');
+  renderShiftChoices();
+}
+
+// Στα κουμπιά εμφανίζονται μόνο τα εναλλακτικά ωράρια.
+function renderShiftChoices(){
+  const cur = document.getElementById('oktaoro').value;
+  document.querySelectorAll('#shiftPanel .choice').forEach(function(b){
+    b.style.display = (b.dataset.shift === cur) ? 'none' : '';
+  });
 }
 
 function onDateChange(){
@@ -809,7 +826,7 @@ function addSignal(prefill){
       <button type="button" class="type-btn ${entryType==='incident'?'active':''}" data-type="incident">Περιστατικό</button>
     </div>
     <div class="row2">
-      <div><span class="label">Ώρα</span><input type="text" class="s-time" placeholder="ωω:λλ" value="${esc(prefill.time||'')}"></div>
+      <div><span class="label">Ώρα</span><input type="text" class="s-time" placeholder="π.χ. 1120" value="${esc(prefill.time||'')}"></div>
       <div class="signal-only">
         <span class="label">Κωδικός σήματος</span>
         <div class="ac-wrapper">
@@ -821,8 +838,8 @@ function addSignal(prefill){
     <div class="field signal-only"><span class="label">Περιγραφή σήματος</span><input type="text" class="s-desc" placeholder="π.χ. σε οικία" value="${esc(prefill.desc||'')}"></div>
     <div class="field signal-only"><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="s-address" placeholder="π.χ. Βουλιαγμένης 45 - Γλυφάδα" value="${esc(prefill.address||'')}"></div>
     <div class="row2 signal-only">
-      <div><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="ωω:λλ" value="${esc(prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:'')}"></div>
-      <div><span class="label">Ώρα λήξης</span><input type="text" class="s-departure" placeholder="ωω:λλ" value="${esc(prefill.departure&&prefill.departure!=='-'?prefill.departure:'')}"></div>
+      <div><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="π.χ. 1120" value="${esc(prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:'')}"></div>
+      <div><span class="label">Ώρα λήξης</span><input type="text" class="s-departure" placeholder="π.χ. 1120" value="${esc(prefill.departure&&prefill.departure!=='-'?prefill.departure:'')}"></div>
     </div>
     <div class="field">
       <span class="label s-result-label">${entryType==='incident'?'Περιγραφή':'Αποτέλεσμα'}</span>
@@ -1417,8 +1434,8 @@ function renderQuickLog(){
           <div><span class="label">Περιγραφή</span><input type="text" class="qe-desc" value="${esc(entry.desc||'')}"></div>
           <div><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="qe-address" value="${esc(entry.address||'')}"></div>
           <div class="row2">
-            <div><span class="label">Ώρα άφιξης</span><input type="text" class="qe-arrival" placeholder="ωω:λλ" value="${esc(entry.arrival||'')}"></div>
-            <div><span class="label">Ώρα λήξης</span><input type="text" class="qe-departure" placeholder="ωω:λλ" value="${esc(entry.departure||'')}"></div>
+            <div><span class="label">Ώρα άφιξης</span><input type="text" class="qe-arrival" placeholder="π.χ. 1120" value="${esc(entry.arrival||'')}"></div>
+            <div><span class="label">Ώρα λήξης</span><input type="text" class="qe-departure" placeholder="π.χ. 1120" value="${esc(entry.departure||'')}"></div>
           </div>
           <div><span class="label">Αποτέλεσμα</span><textarea class="qe-result" rows="3">${esc(entry.result||'')}</textarea></div>
           <button type="button" class="quick-save-btn">Αποθήκευση</button>
