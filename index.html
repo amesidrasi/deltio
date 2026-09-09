@@ -274,8 +274,8 @@
       <button type="button" class="choice" data-shift="21:00-05:30">21:00-05:30</button>
     </div>
     <div class="row2" style="margin-top:10px;">
-      <div><span class="label">Πραγματική ώρα έναρξης</span><input type="text" id="startTime" inputmode="numeric" placeholder="π.χ. 1120"></div>
-      <div><span class="label">Πραγματική ώρα λήξης</span><input type="text" id="endTime" inputmode="numeric" placeholder="π.χ. 1120"></div>
+      <div><span class="label">Ώρα έναρξης</span><input type="text" id="startTime" inputmode="numeric" placeholder="π.χ. 1120"></div>
+      <div><span class="label">Ώρα λήξης</span><input type="text" id="endTime" inputmode="numeric" placeholder="π.χ. 1120"></div>
     </div>
     <div class="hint">Συμπληρώστε τα δύο αυτά πεδία μόνο αν αναλάβατε ή σχολάσατε σε ώρα διαφορετική από το ωράριο. Αλλιώς αφήστε τα κενά.</div>
   </div>
@@ -652,7 +652,10 @@ function autoFillDepot(){
     // Βρέθηκε όρχος: το πεδίο δεν χρειάζεται να φαίνεται.
     wrap.style.display = (input.value.trim() === depot) ? 'none' : 'block';
   } else {
-    // Άγνωστο Ε.Α.: ο χρήστης πρέπει να τον συμπληρώσει μόνος του.
+    // Άγνωστο Ε.Α.: σβήνουμε τον όρχο που είχε μπει αυτόματα από
+    // προηγούμενο Ε.Α., ώστε να μη μείνει λάθος τιμή.
+    if (input.value.trim() === lastAutoDepot) input.value = '';
+    lastAutoDepot = '';
     wrap.style.display = eaVal ? 'block' : 'none';
   }
 }
