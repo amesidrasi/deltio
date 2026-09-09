@@ -149,6 +149,27 @@
     padding:10px 12px;font-size:14px;font-weight:600;color:#1f3a5f;margin-bottom:8px;
   }
   .shift-info.empty{background:#fdecea;border-color:#e0a09a;color:#a32d2d;}
+  .who-bar{
+    background:#e3e1d8;border-bottom:1px solid #cfccc0;
+    padding:7px 16px;font-size:12px;color:#5c6773;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+  }
+  .who-bar .who-name{font-weight:600;color:#1f3a5f;}
+  .who-bar .link-btn{font-size:12px;padding:0;flex-shrink:0;}
+  .who-setup{
+    background:#eef1f4;border-bottom:1px solid #ccd4dc;
+    padding:12px 16px;font-size:13px;line-height:1.4;color:#1c2733;
+  }
+  .who-setup select{margin-top:8px;}
+  .who-setup .who-btn{
+    margin-top:8px;width:100%;padding:10px;background:#1f3a5f;color:#fff;
+    border:none;border-radius:6px;font-size:13px;font-weight:600;
+  }
+  .recall-btn{
+    width:100%;padding:10px;margin-bottom:10px;font-size:13px;
+    background:#fff;border:1px solid #1f3a5f;color:#1f3a5f;border-radius:6px;
+    text-align:left;line-height:1.4;
+  }
   .pair-warn{color:#a32d2d;font-size:12px;font-weight:600;margin-top:8px;line-height:1.4;}
   .shift-warn{
     background:#fdecea;border:1px solid #e0a09a;border-radius:8px;
@@ -214,6 +235,8 @@
   <div class="title">Ημερήσιο Δελτίο Οχήματος</div>
   <div class="subtitle">Άμεση Δράση Αττικής &ndash; Γ&#39; Αλλαγή</div>
 </div>
+
+<div id="whoBox"></div>
 
 <div class="top-tabs">
   <button type="button" class="top-tab active" id="tabQuickBtn" onclick="switchTab('quick')">Γρήγορη Καταγραφή</button>
@@ -331,6 +354,7 @@
   </div>
 
   <div class="section-title">Πλήρωμα</div>
+  <div id="crewRecall"></div>
   <div class="field">
     <span class="label">Οδηγός</span>
     <div class="ac-wrapper">
@@ -657,6 +681,70 @@ function autoFillDepot(){
   }
 }
 
+/* ===== Ποιος είμαι — δηλώνεται μία φορά ανά συσκευή ===== */
+const ME_KEY = 'deltio_me_v1';
+const CREW_KEY = 'deltio_crew_v1';
+
+function getMe(){ return localStorage.getItem(ME_KEY) || ''; }
+
+function renderWho(){
+  const box = document.getElementById('whoBox');
+  const me = getMe();
+  if (me){
+    box.innerHTML = '<div class="who-bar"><span>Συντάσσει: <span class="who-name">' + esc(me) + '</span></span>' +
+      '<button type="button" class="link-btn" id="whoChange">αλλαγή</button></div>';
+    document.getElementById('whoChange').addEventListener('click', function(){
+      localStorage.removeItem(ME_KEY);
+      renderWho();
+    });
+    return;
+  }
+  const names = LISTS.personnel || [];
+  box.innerHTML = '<div class="who-setup">Ποιος συμπληρώνει τα δελτία; Επιλέξτε το όνομά σας — θα ζητηθεί μόνο αυτή τη φορά.' +
+    '<select id="whoSelect"><option value="">— Επιλέξτε —</option>' +
+    names.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join('') +
+    '</select><button type="button" class="who-btn" id="whoSave">Αποθήκευση</button></div>';
+  document.getElementById('whoSave').addEventListener('click', function(){
+    const v = document.getElementById('whoSelect').value;
+    if (!v) return;
+    localStorage.setItem(ME_KEY, v);
+    const syn = document.getElementById('synodos');
+    if (!syn.value.trim()) syn.value = v;
+    renderWho();
+  });
+}
+
+/* ===== Ανάκληση πληρώματος από την προηγούμενη φορά ===== */
+function saveCrew(){
+  const c = {
+    odigos: document.getElementById('odigos').value.trim(),
+    arxigos: document.getElementById('arxigos').value.trim()
+  };
+  if (c.odigos || c.arxigos) localStorage.setItem(CREW_KEY, JSON.stringify(c));
+}
+
+function getCrew(){
+  try { return JSON.parse(localStorage.getItem(CREW_KEY) || 'null'); }
+  catch(e){ return null; }
+}
+
+function renderCrewRecall(){
+  const box = document.getElementById('crewRecall');
+  if (!box) return;
+  const c = getCrew();
+  const od = document.getElementById('odigos').value.trim();
+  const ar = document.getElementById('arxigos').value.trim();
+  if (!c || (od && ar)){ box.innerHTML = ''; return; }
+  const label = [c.odigos ? 'Οδηγός: ' + c.odigos : '', c.arxigos ? 'Αρχηγός: ' + c.arxigos : '']
+    .filter(String).join('  ·  ');
+  box.innerHTML = '<button type="button" class="recall-btn" id="recallBtn">Ίδιο πλήρωμα με την προηγούμενη φορά<br><small>' + esc(label) + '</small></button>';
+  document.getElementById('recallBtn').addEventListener('click', function(){
+    if (c.odigos) document.getElementById('odigos').value = c.odigos;
+    if (c.arxigos) document.getElementById('arxigos').value = c.arxigos;
+    box.innerHTML = '';
+  });
+}
+
 /* ===== Ωράριο βάρδιας ===== */
 let manualShift = false;
 
@@ -816,6 +904,7 @@ function loadLists(){
       const out = JSON.parse(t);
       if (!out.ok || !out.lists) return;
       applyLists(out.lists);
+      renderWho();
       try { localStorage.setItem(LISTS_KEY, JSON.stringify(out.lists)); } catch(e){ /* αγνοείται */ }
     })
     .catch(function(){ /* συνεχίζουμε με ό,τι έχουμε τοπικά */ });
@@ -1000,6 +1089,7 @@ function populateForm(data){
   manualShift = false;
   renderShiftInfo();
   autoFillDepot();
+  renderCrewRecall();
 
   document.getElementById('signalsContainer').innerHTML = '';
   signalCount = 0;
@@ -1013,6 +1103,9 @@ function clearForm(){
   manualShift = false;
   setShift('', false);
   setKatastasi('ΚΑΛΗ');
+  const me = getMe();
+  if (me) document.getElementById('synodos').value = me;
+  renderCrewRecall();
   document.getElementById('senderEmail').value = localStorage.getItem(EMAIL_KEY) || '';
   document.getElementById('orxosField').style.display = 'none';
   lastAutoDepot = '';
@@ -1139,6 +1232,9 @@ function collectWarnings(data){
   if (!f.code) w.push('Δεν έχει συμπληρωθεί ο κωδικός περιπολικού.');
   if (!f.imerominia) w.push('Δεν έχει συμπληρωθεί ημερομηνία.');
   if (!f.synodos) w.push('Δεν έχει συμπληρωθεί ο Συνοδός (υπογράφει το δελτίο).');
+  if (f.startTime && !f.endTime) w.push('Συμπληρώσατε ώρα έναρξης αλλά όχι ώρα λήξης.');
+  if (f.endTime && !f.startTime) w.push('Συμπληρώσατε ώρα λήξης αλλά όχι ώρα έναρξης.');
+  if (!f.oktaoro && !(f.startTime && f.endTime)) w.push('Δεν έχει οριστεί ωράριο βάρδιας.');
   data.incidents.forEach(function(inc, i){
     const n = i + 1;
     if (!inc.time || inc.time === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα.');
@@ -1298,6 +1394,7 @@ async function sendReport(){
       renderDraftsList();
     }
     currentDraftId = null;
+    saveCrew();
     // Καθαρίζουμε τη φόρμα ώστε το επόμενο δελτίο να ξεκινά από την αρχή.
     clearForm();
     markSaved();
@@ -1317,6 +1414,13 @@ function getQuickLog(){
   catch(e){ return []; }
 }
 function setQuickLog(list){ localStorage.setItem(QUICK_LOG_KEY, JSON.stringify(list)); }
+
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
 
 function nowHHMM(){
   const d = new Date();
@@ -1363,7 +1467,7 @@ function quickCapture(){
   const address = addrInput.value.trim();
   if (!code && !desc && !address) return;
   const log = getQuickLog();
-  log.push({ time: nowHHMM(), code: code, desc: desc, address: address, arrival: '', departure: '', result: '' });
+  log.push({ date: todayISO(), time: nowHHMM(), code: code, desc: desc, address: address, arrival: '', departure: '', result: '' });
   setQuickLog(log);
   lastCapturedIndex = log.length - 1;
   showUndo();
@@ -1539,6 +1643,18 @@ function transferQuickLog(){
   renderQuickLog();
   switchTab('full');
 
+  // Πρόταση ημερομηνίας από την πρώτη καταγραφή της παρτίδας
+  const firstDate = (log[0] && log[0].date) ? log[0].date : '';
+  const dateEl = document.getElementById('imerominia');
+  if (firstDate && dateEl.value !== firstDate){
+    const p = firstDate.split('-');
+    const shown = p[2] + '/' + p[1] + '/' + p[0];
+    if (confirm('Οι καταγραφές ξεκίνησαν στις ' + shown + '.\n\nΝα μπει αυτή η ημερομηνία στο δελτίο;')){
+      dateEl.value = firstDate;
+      onDateChange();
+    }
+  }
+
   // Αυτόματη αποθήκευση προσχεδίου, ώστε να μη μείνει τίποτα στον αέρα
   saveDraft(true);
   const status = document.getElementById('statusMsg');
@@ -1556,6 +1672,7 @@ function switchTab(tab){
 
 initShiftControls();
 initEmail();
+renderWho();
 setKatastasi('ΚΑΛΗ');
 renderShiftInfo();
 attachTimeInput(document.getElementById('startTime'));
@@ -1566,6 +1683,12 @@ setupQuickAutocomplete();
 renderQuickLog();
 renderDraftsList();
 addSignal();
+(function(){
+  const me = getMe();
+  const syn = document.getElementById('synodos');
+  if (me && !syn.value.trim()) syn.value = me;
+  renderCrewRecall();
+})();
 markSaved();
 </script>
 
