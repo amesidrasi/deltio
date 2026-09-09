@@ -149,6 +149,7 @@
     padding:10px 12px;font-size:14px;font-weight:600;color:#1f3a5f;margin-bottom:8px;
   }
   .shift-info.empty{background:#fdecea;border-color:#e0a09a;color:#a32d2d;}
+  .pair-warn{color:#a32d2d;font-size:12px;font-weight:600;margin-top:8px;line-height:1.4;}
   .shift-warn{
     background:#fdecea;border:1px solid #e0a09a;border-radius:8px;
     padding:10px 12px;font-size:13px;color:#a32d2d;font-weight:600;
@@ -268,16 +269,12 @@
   <input type="hidden" id="oktaoro" value="">
   <button type="button" class="link-btn" id="shiftToggle">Αν εργαστήκατε σε διαφορετικό ωράριο, επιλέξτε το εδώ</button>
   <div id="shiftPanel" style="display:none;">
-    <div class="choice-row">
-      <button type="button" class="choice" data-shift="05:30-13:00">05:30-13:00</button>
-      <button type="button" class="choice" data-shift="13:00-21:00">13:00-21:00</button>
-      <button type="button" class="choice" data-shift="21:00-05:30">21:00-05:30</button>
+    <div class="hint" style="margin-bottom:8px;">Συμπληρώστε <b>και τα δύο</b> πεδία με το ωράριο που εργαστήκατε.</div>
+    <div class="row2">
+      <div><span class="label">Ώρα έναρξης</span><input type="text" id="startTime" inputmode="numeric" placeholder="π.χ. 2000"></div>
+      <div><span class="label">Ώρα λήξης</span><input type="text" id="endTime" inputmode="numeric" placeholder="π.χ. 0200"></div>
     </div>
-    <div class="row2" style="margin-top:10px;">
-      <div><span class="label">Ώρα έναρξης</span><input type="text" id="startTime" inputmode="numeric" placeholder="π.χ. 1120"></div>
-      <div><span class="label">Ώρα λήξης</span><input type="text" id="endTime" inputmode="numeric" placeholder="π.χ. 1120"></div>
-    </div>
-    <div class="hint">Συμπληρώστε τα δύο αυτά πεδία μόνο αν αναλάβατε ή σχολάσατε σε ώρα διαφορετική από το ωράριο. Αλλιώς αφήστε τα κενά.</div>
+    <div id="shiftPairWarn" class="pair-warn" style="display:none;"></div>
   </div>
 
   <div class="section-title">Όχημα</div>
@@ -690,20 +687,33 @@ function renderShiftInfo(){
     box.textContent = 'Επιλέξτε πρώτα ημερομηνία.';
   } else if (!cur){
     box.className = 'shift-info empty';
-    box.textContent = 'Δεν έχει οριστεί ωράριο. Επιλέξτε το από κάτω.';
+    box.textContent = 'Δεν προκύπτει ωράριο για αυτή την ημερομηνία (αδιάθετο). Το δελτίο θα σταλεί χωρίς ωράριο αν δεν συμπληρώσετε τις ώρες από κάτω.';
   } else {
+    const st = document.getElementById('startTime').value.trim();
+    const en = document.getElementById('endTime').value.trim();
     box.className = 'shift-info';
-    box.textContent = 'Ωράριο βάρδιας: ' + cur;
+    box.textContent = (st && en)
+      ? 'Ωράριο βάρδιας: ' + st + '-' + en
+      : 'Ωράριο βάρδιας: ' + cur;
   }
-  renderShiftChoices();
+  renderPairWarn();
 }
 
-// Στα κουμπιά εμφανίζονται μόνο τα εναλλακτικά ωράρια.
-function renderShiftChoices(){
-  const cur = document.getElementById('oktaoro').value;
-  document.querySelectorAll('#shiftPanel .choice').forEach(function(b){
-    b.style.display = (b.dataset.shift === cur) ? 'none' : '';
-  });
+// Οι δύο ώρες πάνε πάντα μαζί: αν λείπει η μία, το επισημαίνουμε.
+function renderPairWarn(){
+  const box = document.getElementById('shiftPairWarn');
+  if (!box) return;
+  const a = document.getElementById('startTime').value.trim();
+  const b = document.getElementById('endTime').value.trim();
+  if (a && !b){
+    box.style.display = 'block';
+    box.textContent = 'Συμπληρώσατε ώρα έναρξης αλλά όχι λήξης. Συμπληρώστε και τη λήξη.';
+  } else if (b && !a){
+    box.style.display = 'block';
+    box.textContent = 'Συμπληρώσατε ώρα λήξης αλλά όχι έναρξης. Συμπληρώστε και την έναρξη.';
+  } else {
+    box.style.display = 'none';
+  }
 }
 
 function onDateChange(){
@@ -712,7 +722,6 @@ function onDateChange(){
   // Δεν σβήνουμε χειροκίνητη επιλογή του χρήστη.
   if (!manualShift) setShift(auto === null ? '' : auto, false);
   else renderShiftInfo();
-  if (auto === '') document.getElementById('shiftPanel').style.display = 'block';
 }
 
 function initShiftControls(){
@@ -721,8 +730,10 @@ function initShiftControls(){
     const p = document.getElementById('shiftPanel');
     p.style.display = (p.style.display === 'none') ? 'block' : 'none';
   });
-  document.querySelectorAll('#shiftPanel .choice').forEach(function(b){
-    b.addEventListener('click', function(){ setShift(b.dataset.shift, true); });
+  ['startTime','endTime'].forEach(function(id){
+    const el = document.getElementById(id);
+    el.addEventListener('input', renderPairWarn);
+    el.addEventListener('blur', renderShiftInfo);
   });
   document.querySelectorAll('.choice[data-katastasi]').forEach(function(b){
     b.addEventListener('click', function(){ setKatastasi(b.dataset.katastasi); });
