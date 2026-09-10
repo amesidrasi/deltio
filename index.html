@@ -1069,6 +1069,8 @@ function addSignal(prefill){
     }
     currentOptions = found;
     suggestToggle.style.display = 'block';
+    // Το πάνελ μένει κλειστό μέχρι να το ζητήσει ο χρήστης.
+    suggestPanel.style.display = 'none';
     suggestPanel.innerHTML = currentOptions.map((txt, i) =>
       `<button type="button" class="suggest-card" data-i="${i}">${esc(txt)}</button>`
     ).join('');
@@ -1076,6 +1078,7 @@ function addSignal(prefill){
       card.addEventListener('click', () => {
         resultInput.value = currentOptions[card.dataset.i];
         suggestPanel.style.display = 'none';
+        suggestToggle.textContent = 'Επιλογή έτοιμης απάντησης ▾';
       });
     });
   }
@@ -1084,7 +1087,9 @@ function addSignal(prefill){
   codeInput.addEventListener('blur', () => setTimeout(()=>{ codeList.style.display='none'; showSuggestions(); }, 150));
 
   suggestToggle.addEventListener('click', () => {
-    suggestPanel.style.display = (suggestPanel.style.display === 'none') ? 'flex' : 'none';
+    const open = (suggestPanel.style.display === 'none');
+    suggestPanel.style.display = open ? 'flex' : 'none';
+    suggestToggle.textContent = open ? 'Απόκρυψη έτοιμων απαντήσεων ▴' : 'Επιλογή έτοιμης απάντησης ▾';
   });
 
   renumberSignals();
