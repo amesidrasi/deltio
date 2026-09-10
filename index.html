@@ -753,6 +753,10 @@ function renderWho(){
     return;
   }
   const names = LISTS.personnel || [];
+  if (!names.length){
+    box.innerHTML = '<div class="who-setup">Φόρτωση λίστας ονομάτων…</div>';
+    return;
+  }
   box.innerHTML = '<div class="who-setup">Ποιος συμπληρώνει τα δελτία; Επιλέξτε το όνομά σας — θα ζητηθεί μόνο αυτή τη φορά.' +
     '<select id="whoSelect"><option value="">— Επιλέξτε —</option>' +
     names.map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join('') +
@@ -940,7 +944,7 @@ function applyLists(obj){
 function loadLists(){
   try {
     const cached = localStorage.getItem(LISTS_KEY);
-    if (cached) applyLists(JSON.parse(cached));
+    if (cached){ applyLists(JSON.parse(cached)); renderWho(); }
   } catch(e){ /* αγνοείται */ }
 
   if (!API_URL || API_URL.indexOf('/exec') === -1) return;
@@ -1864,7 +1868,6 @@ function switchTab(tab){
 
 initShiftControls();
 initEmail();
-renderWho();
 document.getElementById('fullView').addEventListener('input', renderSectionMarks);
 document.getElementById('fullView').addEventListener('change', renderSectionMarks);
 setKatastasi('ΚΑΛΗ');
@@ -1873,6 +1876,7 @@ attachTimeInput(document.getElementById('startTime'));
 attachTimeInput(document.getElementById('endTime'));
 initAutocompletes();
 loadLists();
+renderWho();
 setupQuickAutocomplete();
 renderQuickLog();
 renderDraftsList();
