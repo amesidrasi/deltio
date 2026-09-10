@@ -170,6 +170,24 @@
     background:#fff;border:1px solid #1f3a5f;color:#1f3a5f;border-radius:6px;
     text-align:left;line-height:1.4;
   }
+  .signal-card.collapsed .signal-body{display:none;}
+  .signal-summary{
+    display:none;font-size:13px;line-height:1.4;color:#1c2733;padding:2px 0;
+  }
+  .signal-card.collapsed .signal-summary{display:block;}
+  .signal-summary .s-num{font-weight:700;color:#1f3a5f;margin-right:6px;}
+  .signal-summary .s-time-lbl{font-weight:600;color:#1f3a5f;margin-right:6px;}
+  .signal-summary .s-addr{display:block;color:#5c6773;font-size:12px;margin-top:2px;}
+  .signal-head .s-index{font-weight:700;color:#1f3a5f;margin-right:6px;}
+  .del-btn{
+    background:#fff;border:1px solid #c9a09a;color:#993c1d;
+    font-size:12px;padding:8px 12px;border-radius:6px;font-weight:600;
+  }
+  .fold-btn{
+    background:none;border:none;color:#1f3a5f;font-size:12px;
+    text-decoration:underline;padding:8px 6px;
+  }
+  .done-mark{color:#2f6e4e;font-weight:700;margin-left:6px;}
   .pair-warn{color:#a32d2d;font-size:12px;font-weight:600;margin-top:8px;line-height:1.4;}
   .shift-warn{
     background:#fdecea;border:1px solid #e0a09a;border-radius:8px;
@@ -280,7 +298,7 @@
   </div>
   <button type="button" class="new-btn" onclick="newReport()">+ Νέο δελτίο</button>
 
-  <div class="section-title" style="margin-top:0;">Βάρδια</div>
+  <div class="section-title" id="secVardia" style="margin-top:0;">Βάρδια</div>
   <div class="field">
     <span class="label">Ημερομηνία δελτίου</span>
     <input type="date" id="imerominia">
@@ -300,7 +318,7 @@
     <div id="shiftPairWarn" class="pair-warn" style="display:none;"></div>
   </div>
 
-  <div class="section-title">Όχημα</div>
+  <div class="section-title" id="secOxima">Όχημα</div>
   <div class="row2">
     <div>
       <span class="label">Κωδικός Περιπολικού</span>
@@ -353,20 +371,13 @@
     <div><span class="label">Χορηγ. Ορυκτέλαιο</span><input type="text" id="oryktelaio"></div>
   </div>
 
-  <div class="section-title">Πλήρωμα</div>
+  <div class="section-title" id="secPlirwma">Πλήρωμα</div>
   <div id="crewRecall"></div>
   <div class="field">
     <span class="label">Οδηγός</span>
     <div class="ac-wrapper">
       <input type="text" id="odigos" autocomplete="off">
       <div class="ac-list" id="odigosList"></div>
-    </div>
-  </div>
-  <div class="field">
-    <span class="label">Αρχηγός</span>
-    <div class="ac-wrapper">
-      <input type="text" id="arxigos" autocomplete="off">
-      <div class="ac-list" id="arxigosList"></div>
     </div>
   </div>
   <div class="field">
@@ -377,8 +388,18 @@
     </div>
     <div class="hint">Ο Συνοδός υπογράφει το δελτίο ως «Ο ΑΝΑΦΕΡΩΝ».</div>
   </div>
+  <button type="button" class="link-btn" id="tritosToggle">Προσθήκη τρίτου</button>
+  <div class="field" id="tritosField" style="display:none;">
+    <span class="label">Τρίτος</span>
+    <div class="ac-wrapper">
+      <input type="text" id="tritos" autocomplete="off">
+      <div class="ac-list" id="tritosList"></div>
+    </div>
+    <div class="hint">Συμπληρώστε το μόνο αν εργαστήκατε τρεις. Θα εμφανιστεί σε δική του γραμμή στο δελτίο.</div>
+  </div>
+  <input type="hidden" id="arxigos" value="">
 
-  <div class="section-title">Σήματα</div>
+  <div class="section-title" id="secSimata">Σήματα</div>
   <div class="hint" style="margin-bottom:10px;">Στις ώρες γράψτε μόνο αριθμούς, π.χ. 1120. Η άνω τελεία μπαίνει μόνη της.</div>
   <div id="signalsContainer"></div>
   <button type="button" class="add-btn" onclick="addSignal()">+ Προσθήκη σήματος</button>
@@ -561,6 +582,30 @@ function getResponsesFor(code){
 
 const DRAFTS_KEY = 'deltio_drafts_v1';
 const EMAIL_KEY = 'deltio_email_v1';
+const SENT_KEY = 'deltio_sent_v1';
+
+// Υπογραφή δελτίου, για να εντοπίζεται διπλή αποστολή του ίδιου.
+function reportSignature(d){
+  const f = d.fields;
+  return [f.code, f.ea, f.imerominia, f.oktaoro, f.startTime, f.endTime,
+          f.odigos, f.synodos, d.incidents.length].join('|');
+}
+
+function wasSent(sig){
+  try {
+    const list = JSON.parse(localStorage.getItem(SENT_KEY) || '[]');
+    return list.indexOf(sig) !== -1;
+  } catch(e){ return false; }
+}
+
+function markSent(sig){
+  try {
+    let list = JSON.parse(localStorage.getItem(SENT_KEY) || '[]');
+    list.push(sig);
+    if (list.length > 40) list = list.slice(-40);
+    localStorage.setItem(SENT_KEY, JSON.stringify(list));
+  } catch(e){ /* αγνοείται */ }
+}
 
 /* ===== Κύκλος βάρδιας Γ' Αλλαγής =====
    Τετραήμερος κύκλος με σημείο αναφοράς την 08/09/2026:
@@ -648,9 +693,13 @@ function initAutocompletes(){
   setupAutocomplete('tomeas',  'sectorList',  function(){ return LISTS.sectors; });
   setupAutocomplete('ea',      'eaList',      function(){ return LISTS.ea; });
   setupAutocomplete('odigos',  'odigosList',  function(){ return LISTS.personnel; });
-  setupAutocomplete('arxigos', 'arxigosList', function(){ return LISTS.personnel; });
   setupAutocomplete('synodos', 'synodosList', function(){ return LISTS.personnel; });
+  setupAutocomplete('tritos',  'tritosList',  function(){ return LISTS.personnel; });
   setupAutocomplete('orxos',   'orxosList',   function(){ return LISTS.depotNames; });
+  document.getElementById('tritosToggle').addEventListener('click', function(){
+    const f = document.getElementById('tritosField');
+    f.style.display = (f.style.display === 'none') ? 'block' : 'none';
+  });
   const eaEl = document.getElementById('ea');
   eaEl.addEventListener('input', autoFillDepot);
   eaEl.addEventListener('acpick', autoFillDepot);
@@ -716,11 +765,8 @@ function renderWho(){
 
 /* ===== Ανάκληση πληρώματος από την προηγούμενη φορά ===== */
 function saveCrew(){
-  const c = {
-    odigos: document.getElementById('odigos').value.trim(),
-    arxigos: document.getElementById('arxigos').value.trim()
-  };
-  if (c.odigos || c.arxigos) localStorage.setItem(CREW_KEY, JSON.stringify(c));
+  const c = { odigos: document.getElementById('odigos').value.trim() };
+  if (c.odigos) localStorage.setItem(CREW_KEY, JSON.stringify(c));
 }
 
 function getCrew(){
@@ -733,14 +779,10 @@ function renderCrewRecall(){
   if (!box) return;
   const c = getCrew();
   const od = document.getElementById('odigos').value.trim();
-  const ar = document.getElementById('arxigos').value.trim();
-  if (!c || (od && ar)){ box.innerHTML = ''; return; }
-  const label = [c.odigos ? 'Οδηγός: ' + c.odigos : '', c.arxigos ? 'Αρχηγός: ' + c.arxigos : '']
-    .filter(String).join('  ·  ');
-  box.innerHTML = '<button type="button" class="recall-btn" id="recallBtn">Ίδιο πλήρωμα με την προηγούμενη φορά<br><small>' + esc(label) + '</small></button>';
+  if (!c || !c.odigos || od){ box.innerHTML = ''; return; }
+  box.innerHTML = '<button type="button" class="recall-btn" id="recallBtn">Ίδιος οδηγός με την προηγούμενη φορά<br><small>' + esc(c.odigos) + '</small></button>';
   document.getElementById('recallBtn').addEventListener('click', function(){
-    if (c.odigos) document.getElementById('odigos').value = c.odigos;
-    if (c.arxigos) document.getElementById('arxigos').value = c.arxigos;
+    document.getElementById('odigos').value = c.odigos;
     box.innerHTML = '';
   });
 }
@@ -921,9 +963,14 @@ function addSignal(prefill){
   div.dataset.type = entryType;
   div.innerHTML = `
     <div class="signal-head">
-      <span>Εγγραφή ${id}</span>
-      <button type="button" class="del-btn" onclick="this.closest('.signal-card').remove()">Διαγραφή</button>
+      <span><span class="s-index"></span>Εγγραφή</span>
+      <span style="display:flex;gap:4px;align-items:center;">
+        <button type="button" class="fold-btn">Σύμπτυξη</button>
+        <button type="button" class="del-btn">Διαγραφή</button>
+      </span>
     </div>
+    <div class="signal-summary"></div>
+    <div class="signal-body">
     <div class="type-toggle">
       <button type="button" class="type-btn ${entryType==='signal'?'active':''}" data-type="signal">Σήμα</button>
       <button type="button" class="type-btn ${entryType==='incident'?'active':''}" data-type="incident">Περιστατικό</button>
@@ -950,6 +997,7 @@ function addSignal(prefill){
       <div class="suggest-panel signal-only" style="display:none;"></div>
       <textarea class="s-result" rows="4" style="margin-top:8px;">${esc(prefill.result||'')}</textarea>
     </div>
+    </div>
   `;
   document.getElementById('signalsContainer').appendChild(div);
 
@@ -964,6 +1012,16 @@ function addSignal(prefill){
   }
   typeButtons.forEach(btn => btn.addEventListener('click', () => applyType(btn.dataset.type)));
   applyType(entryType);
+
+  div.querySelector('.del-btn').addEventListener('click', function(){
+    if (!confirm('Διαγραφή αυτής της εγγραφής;')) return;
+    div.remove();
+    renumberSignals();
+    renderSectionMarks();
+  });
+  div.querySelector('.fold-btn').addEventListener('click', function(){
+    toggleFold(div);
+  });
 
   attachTimeInput(div.querySelector('.s-time'));
   attachTimeInput(div.querySelector('.s-arrival'));
@@ -1023,6 +1081,59 @@ function addSignal(prefill){
   suggestToggle.addEventListener('click', () => {
     suggestPanel.style.display = (suggestPanel.style.display === 'none') ? 'flex' : 'none';
   });
+
+  renumberSignals();
+  renderSectionMarks();
+}
+
+// Σύμπτυξη / ανάπτυξη κάρτας σήματος
+function toggleFold(card){
+  const collapsed = card.classList.toggle('collapsed');
+  card.querySelector('.fold-btn').textContent = collapsed ? 'Άνοιγμα' : 'Σύμπτυξη';
+  if (collapsed) updateSummary(card);
+}
+
+function updateSummary(card){
+  const t = card.querySelector('.s-time').value.trim();
+  const c = card.querySelector('.s-code').value.trim();
+  const d = card.querySelector('.s-desc').value.trim();
+  const a = card.querySelector('.s-address').value.trim();
+  const r = card.querySelector('.s-result').value.trim();
+  const isInc = (card.dataset.type === 'incident');
+  const num = card.querySelector('.s-index').textContent;
+  const main = isInc ? (r || '—') : [c, d].filter(String).join(' ');
+  card.querySelector('.signal-summary').innerHTML =
+    '<span class="s-num">(' + esc(num) + ')</span>' +
+    '<span class="s-time-lbl">' + esc(t || '--:--') + '</span>' +
+    esc(main || '—') +
+    (a ? '<span class="s-addr">' + esc(a) + '</span>' : '');
+}
+
+// Ξαναριθμεί τις κάρτες ώστε η αρίθμηση να είναι πάντα συνεχής
+function renumberSignals(){
+  const cards = document.querySelectorAll('#signalsContainer .signal-card');
+  cards.forEach(function(card, i){
+    card.querySelector('.s-index').textContent = (i + 1);
+    if (card.classList.contains('collapsed')) updateSummary(card);
+  });
+}
+
+// Ένδειξη ολοκλήρωσης δίπλα στους τίτλους ενοτήτων
+function renderSectionMarks(){
+  const f = collectData().fields;
+  const marks = {
+    secVardia: !!(f.imerominia && (f.oktaoro || (f.startTime && f.endTime))),
+    secOxima:  !!(f.code && f.ea && f.tomeas),
+    secPlirwma: !!(f.odigos && f.synodos),
+    secSimata: document.querySelectorAll('#signalsContainer .signal-card').length > 0
+  };
+  Object.keys(marks).forEach(function(id){
+    const el = document.getElementById(id);
+    if (!el) return;
+    let m = el.querySelector('.done-mark');
+    if (!m){ m = document.createElement('span'); m.className = 'done-mark'; el.appendChild(m); }
+    m.textContent = marks[id] ? '✓' : '';
+  });
 }
 
 function collectData(){
@@ -1038,6 +1149,7 @@ function collectData(){
     kmB: document.getElementById('kmB').value.trim(),
     odigos: document.getElementById('odigos').value.trim(),
     arxigos: document.getElementById('arxigos').value.trim(),
+    tritos: document.getElementById('tritos').value.trim(),
     synodos: document.getElementById('synodos').value.trim(),
     katastasi: document.getElementById('katastasi').value,
     venzini: document.getElementById('venzini').value.trim(),
@@ -1067,6 +1179,22 @@ function collectData(){
   return { fields: fields, incidents: incidents };
 }
 
+// Εντελώς κενή εγγραφή: δεν έχει νόημα να μπει στο δελτίο.
+function isIncidentEmpty(inc){
+  return (!inc.time || inc.time === '-') &&
+         !inc.signalCode && !inc.desc && !inc.address &&
+         (!inc.arrival || inc.arrival === '-') &&
+         (!inc.departure || inc.departure === '-') &&
+         !inc.result;
+}
+
+// Τα δεδομένα που στέλνονται πραγματικά: χωρίς τις κενές εγγραφές.
+function collectForSend(){
+  const d = collectData();
+  d.incidents = d.incidents.filter(function(i){ return !isIncidentEmpty(i); });
+  return d;
+}
+
 function populateForm(data){
   const f = data.fields;
   document.getElementById('code').value = f.code || '';
@@ -1080,6 +1208,8 @@ function populateForm(data){
   document.getElementById('kmB').value = f.kmB || '';
   document.getElementById('odigos').value = f.odigos || '';
   document.getElementById('arxigos').value = f.arxigos || '';
+  document.getElementById('tritos').value = f.tritos || '';
+  document.getElementById('tritosField').style.display = f.tritos ? 'block' : 'none';
   document.getElementById('synodos').value = f.synodos || '';
   setKatastasi(f.katastasi || 'ΚΑΛΗ');
   document.getElementById('venzini').value = f.venzini || '';
@@ -1098,7 +1228,7 @@ function populateForm(data){
 }
 
 function clearForm(){
-  ['code','ea','tomeas','orxos','startTime','endTime','kmA','kmB','odigos','arxigos','synodos','venzini','oryktelaio','imerominia']
+  ['code','ea','tomeas','orxos','startTime','endTime','kmA','kmB','odigos','arxigos','tritos','synodos','venzini','oryktelaio','imerominia']
     .forEach(id => document.getElementById(id).value = '');
   manualShift = false;
   setShift('', false);
@@ -1297,6 +1427,7 @@ function buildPreviewHtml(data){
           <span>Αρχηγός: ${esc(f.arxigos || '—')}</span>
           <span>Συνοδός: ${esc(f.synodos || '—')}</span>
         </div>
+        ${f.tritos ? `<div style="margin-bottom:4px;">Τρίτος: ${esc(f.tritos)}</div>` : ''}
         <div class="pv-grid pv-g3">
           <span>Κατάσταση: ${esc(f.katastasi || '—')}</span>
           <span>Χορ. Βενζίνη: ${esc(f.venzini || '—')}</span>
@@ -1313,8 +1444,15 @@ function buildPreviewHtml(data){
 }
 
 function reviewBeforeSend(){
-  const data = collectData();
+  const raw = collectData();
+  const data = collectForSend();
   const warnings = collectWarnings(data);
+  const emptyCount = raw.incidents.length - data.incidents.length;
+  if (emptyCount > 0){
+    warnings.unshift(emptyCount === 1
+      ? 'Μία κενή εγγραφή δεν θα συμπεριληφθεί στο δελτίο.'
+      : emptyCount + ' κενές εγγραφές δεν θα συμπεριληφθούν στο δελτίο.');
+  }
   const box = document.getElementById('confirmBox');
 
   const warnHtml = warnings.length
@@ -1348,6 +1486,9 @@ async function sendReport(){
     return;
   }
 
+  const sig = reportSignature(collectForSend());
+  if (wasSent(sig) && !confirm('Αυτό το δελτίο φαίνεται ότι έχει ήδη σταλεί.\n\nΝα σταλεί ξανά;')) return;
+
   btn.disabled = true;
   status.textContent = 'Αποστολή... (μπορεί να χρειαστεί 10-20 δευτερόλεπτα)';
   status.className = 'status';
@@ -1355,7 +1496,7 @@ async function sendReport(){
   const emailVal = document.getElementById('senderEmail').value.trim();
   if (emailVal) localStorage.setItem(EMAIL_KEY, emailVal);
 
-  const payload = JSON.stringify(collectData());
+  const payload = JSON.stringify(collectForSend());
 
   try {
     const resp = await fetch(API_URL, {
@@ -1394,14 +1535,18 @@ async function sendReport(){
       renderDraftsList();
     }
     currentDraftId = null;
+    markSent(sig);
     saveCrew();
     // Καθαρίζουμε τη φόρμα ώστε το επόμενο δελτίο να ξεκινά από την αρχή.
     clearForm();
     markSaved();
   } catch (err){
     btn.disabled = false;
+    // Αποθηκεύουμε αμέσως προσχέδιο, ώστε να μη χαθεί τίποτα αν κλείσει
+    // η εφαρμογή πριν ξαναδοκιμάσει ο χρήστης.
+    saveDraft(true);
     status.textContent = 'Σφάλμα: ' + (err && err.message ? err.message : err) +
-      ' — τα δεδομένα σας παραμένουν στη φόρμα. Δοκιμάστε ξανά ή αποθηκεύστε προσχέδιο.';
+      ' — το δελτίο αποθηκεύτηκε ως προσχέδιο και δεν χάθηκε. Δοκιμάστε ξανά όταν έχετε σήμα.';
     status.className = 'status error';
   }
 }
@@ -1612,12 +1757,45 @@ function isCardEmpty(card){
          !card.querySelector('.s-result').value.trim();
 }
 
+function draftLabel(d){
+  return (d.fields.code || '—') + ' · ' + (d.fields.imerominia || '—');
+}
+
+// Πριν τη μεταφορά: πού να μπουν οι νέες εγγραφές;
+function chooseTargetDraft(count){
+  const drafts = getDrafts();
+  const ids = Object.keys(drafts).sort(function(a,b){ return drafts[b].savedAt - drafts[a].savedAt; });
+  if (ids.length === 0) return null;                 // δεν υπάρχει προσχέδιο
+  if (currentDraftId && drafts[currentDraftId]) return null; // ήδη ανοιχτό
+
+  if (ids.length === 1){
+    const d = drafts[ids[0]];
+    return confirm('Να προστεθούν οι ' + count + ' νέες εγγραφές στο δελτίο ' +
+      draftLabel(d) + ';\n\nΆκυρο = νέο δελτίο.') ? ids[0] : null;
+  }
+
+  let msg = 'Πού να μπουν οι ' + count + ' νέες εγγραφές;\n\n';
+  ids.forEach(function(id, i){ msg += (i + 1) + '. ' + draftLabel(drafts[id]) + '\n'; });
+  msg += '\nΓράψτε τον αριθμό, ή αφήστε κενό για νέο δελτίο.';
+  const ans = prompt(msg, '1');
+  const n = parseInt(ans, 10);
+  return (n >= 1 && n <= ids.length) ? ids[n - 1] : null;
+}
+
 function transferQuickLog(){
   const log = getQuickLog();
   if (log.length === 0){
     switchTab('full');
     return;
   }
+
+  const target = chooseTargetDraft(log.length);
+  if (target){
+    const drafts = getDrafts();
+    currentDraftId = target;
+    populateForm(drafts[target]);
+  }
+
   const existingCards = document.querySelectorAll('#signalsContainer .signal-card');
   if (existingCards.length === 1 && isCardEmpty(existingCards[0])){
     existingCards[0].remove();
@@ -1641,6 +1819,8 @@ function transferQuickLog(){
   lastCapturedIndex = null;
   document.getElementById('undoBox').innerHTML = '';
   renderQuickLog();
+  renumberSignals();
+  renderSectionMarks();
   switchTab('full');
 
   // Πρόταση ημερομηνίας από την πρώτη καταγραφή της παρτίδας
@@ -1673,6 +1853,8 @@ function switchTab(tab){
 initShiftControls();
 initEmail();
 renderWho();
+document.getElementById('fullView').addEventListener('input', renderSectionMarks);
+document.getElementById('fullView').addEventListener('change', renderSectionMarks);
 setKatastasi('ΚΑΛΗ');
 renderShiftInfo();
 attachTimeInput(document.getElementById('startTime'));
