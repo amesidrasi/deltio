@@ -459,9 +459,9 @@ const FALLBACK_SECTORS = [
 const LISTS_KEY = 'deltio_lists_v1';
 const FALLBACK_DEPOTS = ["ΜΕΣΟΓΕΙΩΝ", "ΚΕΡΑΝΗ", "ΣΑΚΕΤΑ", "ΔΕΕ", "ΑΜΥΓΔΑΛΕΖΑ"];
 
-let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS, depotNames: FALLBACK_DEPOTS, responses: {}, depots: {} };
+let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS, depotNames: FALLBACK_DEPOTS, signalCodes: [], responses: {}, depots: {} };
 
-const SIGNAL_CODES = [
+const FALLBACK_SIGNAL_CODES = [
   {c:"Ε-1", n:"Πληροφορία"},
   {c:"Ε-2", n:"Προσαγωγή"},
   {c:"Ε-3", n:"Αρπαγή τσάντας"},
@@ -571,6 +571,10 @@ const FALLBACK_RESPONSES = {
     "Αναφέρω ότι μεταβήκαμε στην ανωτέρω διεύθυνση όπου το κατάστημα στο σημείο εξωτερικά και όσο δυνάμεθα είχε καλώς ασφαλισμένο. Ενημερώθηκε το ΚΑΔ και αποχωρήσαμε."
   ]
 };
+
+function getSignalCodes(){
+  return (LISTS.signalCodes && LISTS.signalCodes.length) ? LISTS.signalCodes : FALLBACK_SIGNAL_CODES;
+}
 
 function getResponsesFor(code){
   const key = String(code || '').trim().toUpperCase();
@@ -927,6 +931,7 @@ function applyLists(obj){
     codes:     obj.codes     && obj.codes.length     ? obj.codes     : FALLBACK_CODES,
     sectors:   obj.sectors   && obj.sectors.length   ? obj.sectors   : FALLBACK_SECTORS,
     depotNames: obj.depotNames && obj.depotNames.length ? obj.depotNames : FALLBACK_DEPOTS,
+    signalCodes: obj.signalCodes && obj.signalCodes.length ? obj.signalCodes : LISTS.signalCodes,
     responses: obj.responses || LISTS.responses,
     depots:    obj.depots    || LISTS.depots
   };
@@ -987,8 +992,8 @@ function addSignal(prefill){
     </div>
     <div class="field signal-only"><span class="label">Περιγραφή σήματος</span><input type="text" class="s-desc" placeholder="π.χ. σε οικία" value="${esc(prefill.desc||'')}"></div>
     <div class="field signal-only"><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="s-address" placeholder="π.χ. Βουλιαγμένης 45 - Γλυφάδα" value="${esc(prefill.address||'')}"></div>
-    <div class="row2 signal-only">
-      <div><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="π.χ. 1120" value="${esc(prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:'')}"></div>
+    <div class="row2">
+      <div class="signal-only"><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="π.χ. 1120" value="${esc(prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:'')}"></div>
       <div><span class="label">Ώρα λήξης</span><input type="text" class="s-departure" placeholder="π.χ. 1120" value="${esc(prefill.departure&&prefill.departure!=='-'?prefill.departure:'')}"></div>
     </div>
     <div class="field">
@@ -1034,8 +1039,8 @@ function addSignal(prefill){
   function renderCodes(filter){
     const f = filter.trim().toUpperCase();
     const matches = f
-      ? SIGNAL_CODES.filter(o => o.c.toUpperCase().includes(f) || o.n.toUpperCase().includes(f))
-      : SIGNAL_CODES;
+      ? getSignalCodes().filter(o => o.c.toUpperCase().includes(f) || o.n.toUpperCase().includes(f))
+      : getSignalCodes();
     if (matches.length === 0){ codeList.style.display='none'; codeList.innerHTML=''; return; }
     codeList.innerHTML = matches.slice(0,60)
       .map(o => `<div class="ac-item" data-code="${o.c}">${o.c} — ${o.n}</div>`).join('');
@@ -1370,6 +1375,7 @@ function collectWarnings(data){
     if (!inc.time || inc.time === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα.');
     if (inc.type === 'incident'){
       if (!inc.result) w.push('Εγγραφή ' + n + ': λείπει η περιγραφή.');
+      if (!inc.departure || inc.departure === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα λήξης.');
     } else {
       if (!inc.signalCode) w.push('Εγγραφή ' + n + ': λείπει ο κωδικός σήματος.');
       if (!inc.arrival || inc.arrival === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα άφιξης.');
@@ -1394,6 +1400,7 @@ function buildPreviewHtml(data){
     rows.push('<tr><td class="c1"></td><td class="c2"></td><td class="pv-center">(' + (i+1) + ')</td></tr>');
     if (inc.type === 'incident'){
       rows.push('<tr><td class="c1">' + esc(inc.time) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>' + esc(inc.result) + '</td></tr>');
+      rows.push('<tr><td class="c1">' + esc(inc.departure) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΛΗΞΗ.</td></tr>');
     } else {
       rows.push('<tr><td class="c1">' + esc(inc.time) + '</td><td class="c2">ΚΑΔ/' + esc(code) + '</td><td>' + esc(signalFirstLine(inc)) + '</td></tr>');
       rows.push('<tr><td class="c1">' + esc(inc.arrival) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΑΦΙΞΗ.</td></tr>');
@@ -1580,8 +1587,8 @@ function setupQuickAutocomplete(){
   function render(filter){
     const f = filter.trim().toUpperCase();
     const matches = f
-      ? SIGNAL_CODES.filter(o => o.c.toUpperCase().includes(f) || o.n.toUpperCase().includes(f))
-      : SIGNAL_CODES;
+      ? getSignalCodes().filter(o => o.c.toUpperCase().includes(f) || o.n.toUpperCase().includes(f))
+      : getSignalCodes();
     if (matches.length === 0){ list.style.display='none'; list.innerHTML=''; return; }
     list.innerHTML = matches.slice(0,60)
       .map(o => `<div class="ac-item" data-code="${o.c}">${o.c} — ${o.n}</div>`).join('');
