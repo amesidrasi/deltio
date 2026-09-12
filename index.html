@@ -229,6 +229,9 @@
     text-decoration:underline;padding:8px 6px;
   }
   .done-mark{color:#2f6e4e;font-weight:700;margin-left:6px;}
+  .autosave{
+    font-size:11px;color:#5c6773;text-align:center;margin-top:14px;
+  }
   .pair-warn{color:#a32d2d;font-size:12px;font-weight:600;margin-top:8px;line-height:1.4;}
   .shift-warn{
     background:#fdecea;border:1px solid #e0a09a;border-radius:8px;
@@ -326,7 +329,8 @@
   <div class="edit-hint">Πατήστε πάνω σε μια καταγραφή για να προσθέσετε ώρα άφιξης, λήξης, ή πρόχειρα στοιχεία για το αποτέλεσμα.</div>
   <div id="quickLogList"></div>
 
-  <button type="button" class="send-btn" style="margin-top:14px;" onclick="transferQuickLog()">Μεταφορά όλων στο Πλήρες Δελτίο</button>
+  <button type="button" class="send-btn" style="margin-top:14px;" onclick="transferQuickLog()">Μεταφορά και αποθήκευση</button>
+  <div id="transferMsg" class="status"></div>
 </div>
 
 <div class="section" id="fullView" style="display:none;">
@@ -452,8 +456,9 @@
     <div class="hint">Γράψτε το μία φορά. Θα λαμβάνετε αντίγραφο κάθε δελτίου που στέλνετε και δεν θα χρειαστεί να το ξαναγράψετε.</div>
   </div>
 
+  <div class="autosave" id="autosaveInfo">Αποθηκεύεται αυτόματα</div>
   <div class="btn-row">
-    <button type="button" class="save-btn" id="saveBtn" onclick="saveDraft()">Αποθήκευση Προσχεδίου</button>
+    <button type="button" class="save-btn" id="saveBtn" onclick="saveDraft()">Αποθήκευση τώρα</button>
     <button type="button" class="send-btn" id="sendBtn" onclick="reviewBeforeSend()">Αποστολή</button>
   </div>
   <div id="confirmBox"></div>
@@ -1466,7 +1471,8 @@ function markSaved(){ lastSavedSnapshot = snapshot(); }
 function isDirty(){ return lastSavedSnapshot !== snapshot(); }
 
 function newReport(){
-  if (isDirty() && !confirm('Έχετε συμπληρωμένα στοιχεία που δεν έχουν αποθηκευτεί.\n\nΝα ξεκινήσει νέο δελτίο; Ό,τι δεν έχει αποθηκευτεί θα χαθεί.')) return;
+  // Ό,τι υπάρχει έχει ήδη αποθηκευτεί αυτόματα.
+  autosaveNow();
   currentDraftId = null;
   clearForm();
   markSaved();
@@ -1509,6 +1515,42 @@ function renderDraftsList(){
   });
 }
 
+// Αυτόματη αποθήκευση: σώζει σιωπηλά όσο γράφετε.
+let autosaveTimer = null;
+
+function hasContent(d){
+  const f = d.fields;
+  if (f.code || f.ea || f.tomeas || f.imerominia || f.odigos || f.kmA) return true;
+  return d.incidents.some(function(i){ return !isIncidentEmpty(i); });
+}
+
+function autosave(){
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(function(){
+    const data = collectData();
+    if (!hasContent(data)) return;      // κενή φόρμα: δεν φτιάχνουμε άδειο προσχέδιο
+    if (!isDirty()) return;             // τίποτα δεν άλλαξε
+    saveDraft(true);
+    showAutosave();
+  }, 800);
+}
+
+// Άμεση αποθήκευση, πριν φύγουμε από το τρέχον δελτίο.
+function autosaveNow(){
+  clearTimeout(autosaveTimer);
+  const data = collectData();
+  if (hasContent(data) && isDirty()) saveDraft(true);
+}
+
+function showAutosave(){
+  const el = document.getElementById('autosaveInfo');
+  if (!el) return;
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  el.textContent = 'Αποθηκεύεται αυτόματα — τελευταία αποθήκευση ' + hh + ':' + mm;
+}
+
 function saveDraft(silent){
   const data = collectData();
   const drafts = getDrafts();
@@ -1519,6 +1561,7 @@ function saveDraft(silent){
   markSaved();
   renderDraftsList();
   if (silent !== true){
+    showAutosave();
     const status = document.getElementById('statusMsg');
     status.textContent = 'Αποθηκεύτηκε.';
     status.className = 'status';
@@ -1529,7 +1572,7 @@ function loadDraft(id){
   const drafts = getDrafts();
   const d = drafts[id];
   if (!d) return;
-  if (isDirty() && !confirm('Έχετε συμπληρωμένα στοιχεία που δεν έχουν αποθηκευτεί.\n\nΝα φορτωθεί το προσχέδιο; Ό,τι δεν έχει αποθηκευτεί θα χαθεί.')) return;
+  autosaveNow();
   currentDraftId = id;
   populateForm(d);
   markSaved();
@@ -1990,17 +2033,31 @@ function draftLabel(d){
   return (d.fields.code || '—') + ' · ' + (d.fields.imerominia || '—');
 }
 
-// Πριν τη μεταφορά: πού να μπουν οι νέες εγγραφές;
-function chooseTargetDraft(count){
+// Πού να μπουν οι νέες εγγραφές;
+// Σιωπηλή προσθήκη μόνο όταν το ανοιχτό δελτίο είναι της ίδιας ημέρας.
+function chooseTargetDraft(count, logDate){
   const drafts = getDrafts();
   const ids = Object.keys(drafts).sort(function(a,b){ return drafts[b].savedAt - drafts[a].savedAt; });
-  if (ids.length === 0) return null;                 // δεν υπάρχει προσχέδιο
-  if (currentDraftId && drafts[currentDraftId]) return null; // ήδη ανοιχτό
+  if (ids.length === 0) return null;
+
+  const openOk = currentDraftId && drafts[currentDraftId];
+  const openDate = openOk ? (drafts[currentDraftId].fields.imerominiaRaw || '') : '';
+
+  // Ανοιχτό δελτίο ίδιας ημερομηνίας: προσθέτουμε χωρίς ερώτηση.
+  if (openOk && (!logDate || !openDate || openDate === logDate)) return currentDraftId;
+
+  // Ανοιχτό αλλά άλλης ημέρας: ρωτάμε ρητά.
+  if (openOk){
+    const d = drafts[currentDraftId];
+    const shown = logDate ? logDate.split('-').reverse().join('/') : '';
+    return confirm('Οι καταγραφές είναι της ' + shown + ', ενώ το ανοιχτό δελτίο είναι της ' +
+      (d.fields.imerominia || '—') + '.\n\nΝα μπουν στο ανοιχτό δελτίο;\n\nΆκυρο = νέο δελτίο.')
+      ? currentDraftId : null;
+  }
 
   if (ids.length === 1){
-    const d = drafts[ids[0]];
     return confirm('Να προστεθούν οι ' + count + ' νέες εγγραφές στο δελτίο ' +
-      draftLabel(d) + ';\n\nΆκυρο = νέο δελτίο.') ? ids[0] : null;
+      draftLabel(drafts[ids[0]]) + ';\n\nΆκυρο = νέο δελτίο.') ? ids[0] : null;
   }
 
   let msg = 'Πού να μπουν οι ' + count + ' νέες εγγραφές;\n\n';
@@ -2018,11 +2075,14 @@ function transferQuickLog(){
     return;
   }
 
-  const target = chooseTargetDraft(log.length);
-  if (target){
+  const logDate = (log[0] && log[0].date) ? log[0].date : '';
+  const target = chooseTargetDraft(log.length, logDate);
+  if (target && target !== currentDraftId){
     const drafts = getDrafts();
     currentDraftId = target;
     populateForm(drafts[target]);
+  } else if (!target){
+    currentDraftId = null;
   }
 
   const existingCards = document.querySelectorAll('#signalsContainer .signal-card');
@@ -2050,25 +2110,27 @@ function transferQuickLog(){
   renderQuickLog();
   renumberSignals();
   renderSectionMarks();
-  switchTab('full');
 
   // Πρόταση ημερομηνίας από την πρώτη καταγραφή της παρτίδας
-  const firstDate = (log[0] && log[0].date) ? log[0].date : '';
   const dateEl = document.getElementById('imerominia');
-  if (firstDate && dateEl.value !== firstDate){
-    const p = firstDate.split('-');
+  if (logDate && dateEl.value !== logDate){
+    const p = logDate.split('-');
     const shown = p[2] + '/' + p[1] + '/' + p[0];
     if (confirm('Οι καταγραφές ξεκίνησαν στις ' + shown + '.\n\nΝα μπει αυτή η ημερομηνία στο δελτίο;')){
-      dateEl.value = firstDate;
+      dateEl.value = logDate;
       onDateChange();
     }
   }
 
-  // Αυτόματη αποθήκευση προσχεδίου, ώστε να μη μείνει τίποτα στον αέρα
+  // Αποθήκευση και ενημέρωση — μένουμε στη Γρήγορη Καταγραφή.
   saveDraft(true);
-  const status = document.getElementById('statusMsg');
-  status.textContent = 'Μεταφέρθηκαν ' + moved + ' ' + (moved === 1 ? 'εγγραφή' : 'εγγραφές') + ' και αποθηκεύτηκαν ως προσχέδιο.';
-  status.className = 'status';
+  showAutosave();
+  const label = draftLabel({ fields: collectData().fields });
+  const msg = document.getElementById('transferMsg');
+  msg.textContent = 'Μεταφέρθηκαν ' + moved + ' ' + (moved === 1 ? 'εγγραφή' : 'εγγραφές') +
+    ' στο δελτίο ' + label + ' και αποθηκεύτηκαν.';
+  msg.className = 'status';
+  setTimeout(function(){ msg.textContent = ''; }, 12000);
 }
 
 function switchTab(tab){
@@ -2081,8 +2143,8 @@ function switchTab(tab){
 
 initShiftControls();
 initEmail();
-document.getElementById('fullView').addEventListener('input', renderSectionMarks);
-document.getElementById('fullView').addEventListener('change', renderSectionMarks);
+document.getElementById('fullView').addEventListener('input', function(){ renderSectionMarks(); autosave(); });
+document.getElementById('fullView').addEventListener('change', function(){ renderSectionMarks(); autosave(); });
 setKatastasi('ΚΑΛΗ');
 renderShiftInfo();
 attachTimeInput(document.getElementById('startTime'));
