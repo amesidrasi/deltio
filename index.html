@@ -170,6 +170,31 @@
     background:#fff;border:1px solid #1f3a5f;color:#1f3a5f;border-radius:6px;
     text-align:left;line-height:1.4;
   }
+  .adv-box{margin-top:12px;padding-top:10px;border-top:1px dashed #ccc;}
+  .adv-toggle{
+    width:100%;padding:11px;font-size:13px;font-weight:600;
+    background:#eef1f4;border:1px solid #ccd4dc;color:#1f3a5f;border-radius:6px;
+    text-align:center;display:block;
+  }
+  .adv-panel .link-btn{
+    display:block;width:100%;padding:11px;margin-top:8px;font-size:13px;font-weight:600;
+    background:#fff;border:1px solid #1f3a5f;color:#1f3a5f;border-radius:6px;
+    text-decoration:none;text-align:center;
+  }
+  .call-row .link-btn{
+    display:inline-block;width:auto;margin:0 12px 0 0;padding:8px 0;
+    background:none;border:none;text-decoration:underline;font-weight:400;
+  }
+  .call-row{
+    background:#f4f3ee;border:1px solid #ddd;border-radius:8px;
+    padding:10px;margin-bottom:8px;
+  }
+  .call-row .call-head{
+    font-size:11px;font-weight:700;color:#1f3a5f;margin-bottom:6px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .call-row .link-btn{display:inline-block;margin-right:12px;}
+  .repeat-only{display:none;}
   .signal-card.collapsed .signal-body{display:none;}
   .signal-summary{
     display:none;font-size:13px;line-height:1.4;color:#1c2733;padding:2px 0;
@@ -584,6 +609,8 @@ function getResponsesFor(code){
   return match ? src[match] : null;
 }
 
+const DEFAULT_REPEAT_TEXT = 'Δεν κατέστη δυνατή η μετάβαση λόγω φόρτου εργασίας. Επαναχρεώθηκε στη Δ΄ Αλλαγή μέσω του 100.';
+
 const DRAFTS_KEY = 'deltio_drafts_v1';
 const EMAIL_KEY = 'deltio_email_v1';
 const SENT_KEY = 'deltio_sent_v1';
@@ -983,6 +1010,7 @@ function addSignal(prefill){
     <div class="type-toggle">
       <button type="button" class="type-btn ${entryType==='signal'?'active':''}" data-type="signal">Σήμα</button>
       <button type="button" class="type-btn ${entryType==='incident'?'active':''}" data-type="incident">Περιστατικό</button>
+      <button type="button" class="type-btn ${entryType==='repeat'?'active':''}" data-type="repeat">Επαναχρεώθηκε</button>
     </div>
     <div class="row2">
       <div><span class="label">Ώρα</span><input type="text" class="s-time" placeholder="π.χ. 1120" value="${esc(prefill.time||'')}"></div>
@@ -997,14 +1025,29 @@ function addSignal(prefill){
     <div class="field signal-only"><span class="label">Περιγραφή σήματος</span><input type="text" class="s-desc" placeholder="π.χ. σε οικία" value="${esc(prefill.desc||'')}"></div>
     <div class="field signal-only"><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="s-address" placeholder="π.χ. Βουλιαγμένης 45 - Γλυφάδα" value="${esc(prefill.address||'')}"></div>
     <div class="row2">
-      <div class="signal-only"><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="π.χ. 1120" value="${esc(prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:'')}"></div>
-      <div><span class="label">Ώρα λήξης</span><input type="text" class="s-departure" placeholder="π.χ. 1120" value="${esc(prefill.departure&&prefill.departure!=='-'?prefill.departure:'')}"></div>
+      <div class="signal-only visit-only"><span class="label">Ώρα άφιξης</span><input type="text" class="s-arrival" placeholder="π.χ. 1120" value="${esc(prefill.arrival&&prefill.arrival!=='-'?prefill.arrival:'')}"></div>
+      <div class="visit-only"><span class="label">Ώρα λήξης</span><input type="text" class="s-departure" placeholder="π.χ. 1120" value="${esc(prefill.departure&&prefill.departure!=='-'?prefill.departure:'')}"></div>
     </div>
     <div class="field">
       <span class="label s-result-label">${entryType==='incident'?'Περιγραφή':'Αποτέλεσμα'}</span>
       <button type="button" class="suggest-toggle signal-only" style="display:none;">Επιλογή έτοιμης απάντησης ▾</button>
       <div class="suggest-panel signal-only" style="display:none;"></div>
       <textarea class="s-result" rows="4" style="margin-top:8px;">${esc(prefill.result||'')}</textarea>
+    </div>
+    <div class="repeat-only">
+      <div class="field"><span class="label">Ώρα επαναχρέωσης</span><input type="text" class="s-rtime" inputmode="numeric" placeholder="π.χ. 2100" value="${esc(prefill.repeatTime||'')}"></div>
+      <div class="field">
+        <span class="label">Κείμενο επαναχρέωσης</span>
+        <textarea class="s-rtext" rows="3">${esc(prefill.repeatText || DEFAULT_REPEAT_TEXT)}</textarea>
+      </div>
+    </div>
+    <div class="adv-box">
+      <button type="button" class="adv-toggle">Περισσότερες επιλογές ▾</button>
+      <div class="adv-panel" style="display:none;">
+        <div class="extra-calls"></div>
+        <button type="button" class="link-btn add-call">Προσθήκη 2ης κλήσης</button>
+        <button type="button" class="link-btn merge-call">Ίδια κλήση με…</button>
+      </div>
     </div>
     </div>
   `;
@@ -1013,14 +1056,89 @@ function addSignal(prefill){
   const typeButtons = div.querySelectorAll('.type-btn');
   const signalOnlyEls = div.querySelectorAll('.signal-only');
   const resultLabel = div.querySelector('.s-result-label');
+  const repeatEls = div.querySelectorAll('.repeat-only');
+  const visitEls = div.querySelectorAll('.visit-only');
+  const resultField = resultLabel.closest('.field');
   function applyType(type){
     div.dataset.type = type;
     typeButtons.forEach(b => b.classList.toggle('active', b.dataset.type === type));
-    signalOnlyEls.forEach(el => { el.style.display = (type === 'incident') ? 'none' : ''; });
+    // Στο Περιστατικό κρύβονται κωδικός/περιγραφή/διεύθυνση/άφιξη.
+    // Στην Επαναχρέωση κρύβονται μόνο άφιξη και λήξη.
+    // Ένα πεδίο κρύβεται αν το αποκλείει είτε ο τύπος «Περιστατικό»
+    // (signal-only) είτε ο τύπος «Επαναχρεώθηκε» (visit-only).
+    const allFields = new Set([].concat(Array.from(signalOnlyEls), Array.from(visitEls)));
+    allFields.forEach(el => {
+      const hideInc = (type === 'incident') && el.classList.contains('signal-only');
+      const hideRep = (type === 'repeat') && el.classList.contains('visit-only');
+      el.style.display = (hideInc || hideRep) ? 'none' : '';
+    });
+    repeatEls.forEach(el => { el.style.display = (type === 'repeat') ? 'block' : 'none'; });
+    if (resultField) resultField.style.display = (type === 'repeat') ? 'none' : '';
     resultLabel.textContent = (type === 'incident') ? 'Περιγραφή' : 'Αποτέλεσμα';
   }
   typeButtons.forEach(btn => btn.addEventListener('click', () => applyType(btn.dataset.type)));
   applyType(entryType);
+
+  // ----- Επιπλέον κλήσεις -----
+  const extraBox = div.querySelector('.extra-calls');
+  const addCallBtn = div.querySelector('.add-call');
+
+  function callTemplate(c){
+    c = c || {};
+    const w = document.createElement('div');
+    w.className = 'call-row';
+    w.innerHTML = `
+      <div class="call-head"><span></span>
+        <button type="button" class="link-btn del-call" style="color:#993c1d;">Αφαίρεση</button>
+      </div>
+      <div class="row2">
+        <div><span class="label">Ώρα</span><input type="text" class="c-time" inputmode="numeric" placeholder="π.χ. 1330" value="${esc(c.time||'')}"></div>
+        <div><span class="label">Κωδικός σήματος</span><input type="text" class="c-code" value="${esc(c.signalCode||'')}"></div>
+      </div>
+      <div class="field"><span class="label">Περιγραφή</span><input type="text" class="c-desc" value="${esc(c.desc||'')}"></div>
+      <div class="field" style="margin-bottom:6px;"><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="c-address" value="${esc(c.address||'')}"></div>
+      <button type="button" class="link-btn same-signal">Ίδιο σήμα</button>
+    `;
+    attachTimeInput(w.querySelector('.c-time'));
+    w.querySelector('.del-call').addEventListener('click', function(){
+      w.remove();
+      renumberCalls();
+    });
+    w.querySelector('.same-signal').addEventListener('click', function(){
+      const rows = Array.from(extraBox.querySelectorAll('.call-row'));
+      const idx = rows.indexOf(w);
+      const prev = idx > 0 ? rows[idx - 1] : null;
+      w.querySelector('.c-code').value = prev ? prev.querySelector('.c-code').value : div.querySelector('.s-code').value;
+      w.querySelector('.c-desc').value = prev ? prev.querySelector('.c-desc').value : div.querySelector('.s-desc').value;
+      w.querySelector('.c-address').value = prev ? prev.querySelector('.c-address').value : div.querySelector('.s-address').value;
+    });
+    return w;
+  }
+
+  function renumberCalls(){
+    const rows = extraBox.querySelectorAll('.call-row');
+    rows.forEach(function(r, i){ r.querySelector('.call-head span').textContent = (i + 2) + 'η κλήση'; });
+    addCallBtn.textContent = 'Προσθήκη ' + (rows.length + 2) + 'ης κλήσης';
+  }
+
+  (prefill.extraCalls || []).forEach(function(c){ extraBox.appendChild(callTemplate(c)); });
+  renumberCalls();
+
+  addCallBtn.addEventListener('click', function(){
+    extraBox.appendChild(callTemplate());
+    renumberCalls();
+  });
+
+  div.querySelector('.adv-toggle').addEventListener('click', function(){
+    const panel = div.querySelector('.adv-panel');
+    const open = (panel.style.display === 'none');
+    panel.style.display = open ? 'block' : 'none';
+    div.querySelector('.adv-toggle').textContent = open ? 'Λιγότερες επιλογές ▴' : 'Περισσότερες επιλογές ▾';
+  });
+
+  div.querySelector('.merge-call').addEventListener('click', function(){ mergeCallInto(div); });
+
+  attachTimeInput(div.querySelector('.s-rtime'));
 
   div.querySelector('.del-btn').addEventListener('click', function(){
     if (!confirm('Διαγραφή αυτής της εγγραφής;')) return;
@@ -1100,6 +1218,55 @@ function addSignal(prefill){
   renderSectionMarks();
 }
 
+// Ένωση: η κάρτα αυτή γίνεται επιπλέον κλήση μιας άλλης.
+function mergeCallInto(card){
+  const all = Array.from(document.querySelectorAll('#signalsContainer .signal-card'))
+    .filter(function(c){ return c !== card; });
+  if (!all.length){ alert('Δεν υπάρχει άλλη εγγραφή για ένωση.'); return; }
+
+  let msg = 'Σε ποια εγγραφή ανήκει αυτή η κλήση;\n\n';
+  all.forEach(function(c, i){
+    const t = c.querySelector('.s-time').value.trim() || '--:--';
+    const k = c.querySelector('.s-code').value.trim();
+    const d = c.querySelector('.s-desc').value.trim();
+    msg += (i + 1) + '. ' + t + '  ' + [k, d].filter(String).join(' ') + '\n';
+  });
+  msg += '\nΓράψτε τον αριθμό.';
+  const ans = prompt(msg, '1');
+  const n = parseInt(ans, 10);
+  if (!(n >= 1 && n <= all.length)) return;
+
+  const target = all[n - 1];
+  const payload = {
+    time: card.querySelector('.s-time').value.trim(),
+    signalCode: card.querySelector('.s-code').value.trim(),
+    desc: card.querySelector('.s-desc').value.trim(),
+    address: card.querySelector('.s-address').value.trim()
+  };
+
+  const lost = card.querySelector('.s-arrival').value.trim() ||
+               card.querySelector('.s-departure').value.trim() ||
+               card.querySelector('.s-result').value.trim();
+  if (lost && !confirm('Η εγγραφή που ενώνετε έχει συμπληρωμένη άφιξη, λήξη ή αποτέλεσμα.\n\nΑυτά θα χαθούν και θα κρατηθούν μόνο της εγγραφής προορισμού. Συνέχεια;')) return;
+
+  // Μεταφέρουμε την κλήση στην κάρτα προορισμού
+  const box = target.querySelector('.extra-calls');
+  const addBtn = target.querySelector('.add-call');
+  addBtn.click();
+  const rows = box.querySelectorAll('.call-row');
+  const row = rows[rows.length - 1];
+  row.querySelector('.c-time').value = payload.time;
+  row.querySelector('.c-code').value = payload.signalCode;
+  row.querySelector('.c-desc').value = payload.desc;
+  row.querySelector('.c-address').value = payload.address;
+  target.querySelector('.adv-panel').style.display = 'block';
+  target.querySelector('.adv-toggle').textContent = 'Λιγότερες επιλογές ▴';
+
+  card.remove();
+  renumberSignals();
+  renderSectionMarks();
+}
+
 // Σύμπτυξη / ανάπτυξη κάρτας σήματος
 function toggleFold(card){
   const collapsed = card.classList.toggle('collapsed');
@@ -1115,7 +1282,9 @@ function updateSummary(card){
   const r = card.querySelector('.s-result').value.trim();
   const isInc = (card.dataset.type === 'incident');
   const num = card.querySelector('.s-index').textContent;
-  const main = isInc ? (r || '—') : [c, d].filter(String).join(' ');
+  const nCalls = card.querySelectorAll('.extra-calls .call-row').length;
+  const extra = nCalls ? ' (+' + nCalls + ' κλήσεις)' : '';
+  const main = (isInc ? (r || '—') : [c, d].filter(String).join(' ')) + extra;
   card.querySelector('.signal-summary').innerHTML =
     '<span class="s-num">(' + esc(num) + ')</span>' +
     '<span class="s-time-lbl">' + esc(t || '--:--') + '</span>' +
@@ -1187,7 +1356,17 @@ function collectData(){
       address: card.querySelector('.s-address').value.trim(),
       arrival: card.querySelector('.s-arrival').value.trim() || '-',
       departure: card.querySelector('.s-departure').value.trim() || '-',
-      result: card.querySelector('.s-result').value.trim()
+      result: card.querySelector('.s-result').value.trim(),
+      repeatTime: card.querySelector('.s-rtime').value.trim(),
+      repeatText: card.querySelector('.s-rtext').value.trim(),
+      extraCalls: Array.from(card.querySelectorAll('.extra-calls .call-row')).map(function(r){
+        return {
+          time: r.querySelector('.c-time').value.trim(),
+          signalCode: r.querySelector('.c-code').value.trim(),
+          desc: r.querySelector('.c-desc').value.trim(),
+          address: r.querySelector('.c-address').value.trim()
+        };
+      }).filter(function(c){ return c.time || c.signalCode || c.desc || c.address; })
     });
   });
   return { fields: fields, incidents: incidents };
@@ -1195,6 +1374,8 @@ function collectData(){
 
 // Εντελώς κενή εγγραφή: δεν έχει νόημα να μπει στο δελτίο.
 function isIncidentEmpty(inc){
+  if (inc.extraCalls && inc.extraCalls.length) return false;
+  if (inc.type === 'repeat') return (!inc.time || inc.time === '-') && !inc.signalCode && !inc.desc;
   return (!inc.time || inc.time === '-') &&
          !inc.signalCode && !inc.desc && !inc.address &&
          (!inc.arrival || inc.arrival === '-') &&
@@ -1385,6 +1566,10 @@ function collectWarnings(data){
     if (inc.type === 'incident'){
       if (!inc.result) w.push('Εγγραφή ' + n + ': λείπει η περιγραφή.');
       if (!inc.departure || inc.departure === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα λήξης.');
+    } else if (inc.type === 'repeat'){
+      if (!inc.signalCode) w.push('Εγγραφή ' + n + ': λείπει ο κωδικός σήματος.');
+      if (!inc.repeatTime) w.push('Εγγραφή ' + n + ': λείπει η ώρα επαναχρέωσης.');
+      if (!inc.repeatText) w.push('Εγγραφή ' + n + ': λείπει το κείμενο επαναχρέωσης.');
     } else {
       if (!inc.signalCode) w.push('Εγγραφή ' + n + ': λείπει ο κωδικός σήματος.');
       if (!inc.arrival || inc.arrival === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα άφιξης.');
@@ -1412,8 +1597,15 @@ function buildPreviewHtml(data){
       rows.push('<tr><td class="c1">' + esc(inc.departure) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΛΗΞΗ.</td></tr>');
     } else {
       rows.push('<tr><td class="c1">' + esc(inc.time) + '</td><td class="c2">ΚΑΔ/' + esc(code) + '</td><td>' + esc(signalFirstLine(inc)) + '</td></tr>');
-      rows.push('<tr><td class="c1">' + esc(inc.arrival) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΑΦΙΞΗ.</td></tr>');
-      rows.push('<tr><td class="c1">' + esc(inc.departure) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΛΗΞΗ.' + (inc.result ? ' ' + esc(inc.result) : '') + '</td></tr>');
+      (inc.extraCalls || []).forEach(function(c){
+        rows.push('<tr><td class="c1">' + esc(c.time || '-') + '</td><td class="c2">ΚΑΔ/' + esc(code) + '</td><td>' + esc(signalFirstLine(c)) + '</td></tr>');
+      });
+      if (inc.type === 'repeat'){
+        rows.push('<tr><td class="c1">' + esc(inc.repeatTime || '-') + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>' + esc(inc.repeatText || '') + '</td></tr>');
+      } else {
+        rows.push('<tr><td class="c1">' + esc(inc.arrival) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΑΦΙΞΗ.</td></tr>');
+        rows.push('<tr><td class="c1">' + esc(inc.departure) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΛΗΞΗ.' + (inc.result ? ' ' + esc(inc.result) : '') + '</td></tr>');
+      }
     }
   });
 
