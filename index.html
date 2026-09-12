@@ -181,6 +181,14 @@
     background:#fff;border:1px solid #1f3a5f;color:#1f3a5f;border-radius:6px;
     text-decoration:none;text-align:center;
   }
+  .call-row .same-signal{
+    width:100%;padding:11px;font-size:13px;font-weight:600;
+    background:#1f3a5f;color:#fff;border:none;border-radius:6px;
+  }
+  .call-row .del-call{
+    background:none;border:none;color:#993c1d;font-size:12px;
+    text-decoration:underline;padding:4px;
+  }
   .call-row .link-btn{
     display:inline-block;width:auto;margin:0 12px 0 0;padding:8px 0;
     background:none;border:none;text-decoration:underline;font-weight:400;
@@ -192,6 +200,14 @@
   .call-row .call-head{
     font-size:11px;font-weight:700;color:#1f3a5f;margin-bottom:6px;
     display:flex;justify-content:space-between;align-items:center;
+  }
+  .call-row .same-signal{
+    width:100%;padding:11px;font-size:13px;font-weight:600;
+    background:#1f3a5f;color:#fff;border:none;border-radius:6px;
+  }
+  .call-row .del-call{
+    background:none;border:none;color:#993c1d;font-size:12px;
+    text-decoration:underline;padding:4px;
   }
   .call-row .link-btn{display:inline-block;margin-right:12px;}
   .repeat-only{display:none;}
@@ -1089,29 +1105,34 @@ function addSignal(prefill){
     w.className = 'call-row';
     w.innerHTML = `
       <div class="call-head"><span></span>
-        <button type="button" class="link-btn del-call" style="color:#993c1d;">Αφαίρεση</button>
+        <button type="button" class="del-call">Αφαίρεση</button>
       </div>
-      <div class="row2">
+      <button type="button" class="same-signal">Ίδιο σήμα με την προηγούμενη</button>
+      <div class="row2" style="margin-top:10px;">
         <div><span class="label">Ώρα</span><input type="text" class="c-time" inputmode="numeric" placeholder="π.χ. 1330" value="${esc(c.time||'')}"></div>
         <div><span class="label">Κωδικός σήματος</span><input type="text" class="c-code" value="${esc(c.signalCode||'')}"></div>
       </div>
       <div class="field"><span class="label">Περιγραφή</span><input type="text" class="c-desc" value="${esc(c.desc||'')}"></div>
-      <div class="field" style="margin-bottom:6px;"><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="c-address" value="${esc(c.address||'')}"></div>
-      <button type="button" class="link-btn same-signal">Ίδιο σήμα</button>
+      <div class="field" style="margin-bottom:0;"><span class="label">Διεύθυνση - Δήμος</span><input type="text" class="c-address" value="${esc(c.address||'')}"></div>
     `;
     attachTimeInput(w.querySelector('.c-time'));
     w.querySelector('.del-call').addEventListener('click', function(){
       w.remove();
       renumberCalls();
     });
-    w.querySelector('.same-signal').addEventListener('click', function(){
+    const sameBtn = w.querySelector('.same-signal');
+    sameBtn.addEventListener('click', function(){
       const rows = Array.from(extraBox.querySelectorAll('.call-row'));
       const idx = rows.indexOf(w);
       const prev = idx > 0 ? rows[idx - 1] : null;
       w.querySelector('.c-code').value = prev ? prev.querySelector('.c-code').value : div.querySelector('.s-code').value;
       w.querySelector('.c-desc').value = prev ? prev.querySelector('.c-desc').value : div.querySelector('.s-desc').value;
       w.querySelector('.c-address').value = prev ? prev.querySelector('.c-address').value : div.querySelector('.s-address').value;
+      sameBtn.style.display = 'none';
+      w.querySelector('.c-time').focus();
     });
+    // Σε κλήση που φορτώνεται από προσχέδιο, το κουμπί δεν χρειάζεται.
+    if (c.signalCode || c.desc || c.address) sameBtn.style.display = 'none';
     return w;
   }
 
