@@ -633,6 +633,7 @@ function getResponsesFor(code){
 const DEFAULT_REPEAT_TEXT = 'Δεν κατέστη δυνατή η μετάβαση λόγω φόρτου εργασίας. Επαναχρεώθηκε στη Δ΄ Αλλαγή μέσω του 100.';
 
 const DRAFTS_KEY = 'deltio_drafts_v1';
+const QUICK_TARGET_KEY = 'deltio_quick_target_v1';
 const EMAIL_KEY = 'deltio_email_v1';
 const SENT_KEY = 'deltio_sent_v1';
 
@@ -2033,6 +2034,15 @@ function draftLabel(d){
   return (d.fields.code || '—') + ' · ' + (d.fields.imerominia || '—');
 }
 
+// Το προσχέδιο στο οποίο καταλήγουν οι γρήγορες καταγραφές.
+function getQuickTarget(){
+  try { return JSON.parse(localStorage.getItem(QUICK_TARGET_KEY) || 'null'); }
+  catch(e){ return null; }
+}
+function setQuickTarget(id, date){
+  localStorage.setItem(QUICK_TARGET_KEY, JSON.stringify({ id: id, date: date || '' }));
+}
+
 // Πού να μπουν οι νέες εγγραφές;
 // Σιωπηλή προσθήκη μόνο όταν το ανοιχτό δελτίο είναι της ίδιας ημέρας.
 function chooseTargetDraft(count, logDate){
@@ -2076,61 +2086,87 @@ function transferQuickLog(){
   }
 
   const logDate = (log[0] && log[0].date) ? log[0].date : '';
-  const target = chooseTargetDraft(log.length, logDate);
-  if (target && target !== currentDraftId){
-    const drafts = getDrafts();
-    currentDraftId = target;
-    populateForm(drafts[target]);
-  } else if (!target){
-    currentDraftId = null;
+  const drafts = getDrafts();
+
+  // Ό,τι γράφει ο χρήστης εκείνη τη στιγμή στη φόρμα δεν πρέπει να χαθεί.
+  autosaveNow();
+
+  // Βρίσκουμε το προσχέδιο της ίδιας ημέρας που τροφοδοτείται από τη
+  // γρήγορη καταγραφή. Αν δεν υπάρχει, φτιάχνουμε νέο.
+  const mem = getQuickTarget();
+  let targetId = null;
+  if (mem && drafts[mem.id] && (!logDate || !mem.date || mem.date === logDate)) targetId = mem.id;
+
+  let target = targetId ? drafts[targetId] : null;
+  if (!target){
+    target = {
+      fields: blankFields(logDate),
+      incidents: [],
+      savedAt: Date.now()
+    };
+    targetId = 'd' + Date.now();
   }
 
-  const existingCards = document.querySelectorAll('#signalsContainer .signal-card');
-  if (existingCards.length === 1 && isCardEmpty(existingCards[0])){
-    existingCards[0].remove();
-    signalCount = 0;
-  }
+  // Προσθέτουμε τις νέες εγγραφές στο προσχέδιο, χωρίς να ανοίξουμε τη φόρμα.
+  const moved = log.length;
   log.forEach(function(entry){
-    addSignal({
+    target.incidents.push({
       type: 'signal',
       time: entry.time,
       signalCode: entry.code,
       desc: entry.desc,
       address: entry.address || '',
-      arrival: entry.arrival || '',
-      departure: entry.departure || '',
-      result: entry.result || ''
+      arrival: entry.arrival || '-',
+      departure: entry.departure || '-',
+      result: entry.result || '',
+      repeatTime: '',
+      repeatText: DEFAULT_REPEAT_TEXT,
+      extraCalls: []
     });
   });
-  const moved = log.length;
+  target.savedAt = Date.now();
+
+  const all = getDrafts();
+  all[targetId] = target;
+  setDrafts(all);
+  setQuickTarget(targetId, logDate);
+
+  // Καθαρίζουμε τη γρήγορη λίστα και τη φόρμα.
   setQuickLog([]);
   expandedIndex = null;
   lastCapturedIndex = null;
   document.getElementById('undoBox').innerHTML = '';
   renderQuickLog();
-  renumberSignals();
-  renderSectionMarks();
+  renderDraftsList();
 
-  // Πρόταση ημερομηνίας από την πρώτη καταγραφή της παρτίδας
-  const dateEl = document.getElementById('imerominia');
-  if (logDate && dateEl.value !== logDate){
-    const p = logDate.split('-');
-    const shown = p[2] + '/' + p[1] + '/' + p[0];
-    if (confirm('Οι καταγραφές ξεκίνησαν στις ' + shown + '.\n\nΝα μπει αυτή η ημερομηνία στο δελτίο;')){
-      dateEl.value = logDate;
-      onDateChange();
-    }
-  }
+  currentDraftId = null;
+  clearForm();
+  markSaved();
 
-  // Αποθήκευση και ενημέρωση — μένουμε στη Γρήγορη Καταγραφή.
-  saveDraft(true);
-  showAutosave();
-  const label = draftLabel({ fields: collectData().fields });
   const msg = document.getElementById('transferMsg');
   msg.textContent = 'Μεταφέρθηκαν ' + moved + ' ' + (moved === 1 ? 'εγγραφή' : 'εγγραφές') +
-    ' στο δελτίο ' + label + ' και αποθηκεύτηκαν.';
+    ' στο δελτίο ' + draftLabel(target) + '. Θα το βρείτε στα προσχέδια.';
   msg.className = 'status';
   setTimeout(function(){ msg.textContent = ''; }, 12000);
+}
+
+// Κενά πεδία δελτίου, με την ημερομηνία των καταγραφών αν υπάρχει.
+function blankFields(isoDate){
+  const f = {
+    code: '', ea: '', tomeas: '', orxos: '', oktaoro: '',
+    startTime: '', endTime: '', kmA: '', kmB: '',
+    odigos: '', arxigos: '', tritos: '', synodos: getMe() || '',
+    katastasi: 'ΚΑΛΗ', venzini: '', oryktelaio: '',
+    imerominia: '', imerominiaRaw: isoDate || '',
+    senderEmail: localStorage.getItem(EMAIL_KEY) || ''
+  };
+  if (isoDate){
+    const p = isoDate.split('-');
+    f.imerominia = p[2] + '/' + p[1] + '/' + p[0];
+    const auto = shiftForDate(isoDate);
+    f.oktaoro = (auto === null) ? '' : auto;
+  }
+  return f;
 }
 
 function switchTab(tab){
