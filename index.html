@@ -2453,11 +2453,27 @@ function fullService(){
   return office ? (reportBase() + '/' + office) : reportBase();
 }
 
+// Το κλειδί στο φύλλο είναι το ΕΠΩΝΥΜΟ. Το βρίσκουμε μέσα στο
+// δηλωμένο όνομα του χρήστη, ώστε να μην απαιτείται ακριβής ταύτιση.
+function findReporterFor(name){
+  const up = String(name || '').toUpperCase();
+  if (!up) return '';
+  const rep = LISTS.reporters || {};
+  const keys = Object.keys(rep);
+  // Προτιμούμε το μακρύτερο επώνυμο που ταιριάζει, για ασφάλεια.
+  let best = '';
+  keys.forEach(function(k){
+    const ku = k.toUpperCase();
+    if (ku && up.indexOf(ku) !== -1 && ku.length > best.length) best = k;
+  });
+  return best ? rep[best] : '';
+}
+
 function prepareReport(){
   document.getElementById('rBase').textContent = reportBase();
   const rep = document.getElementById('rReporter');
   const me = getMe();
-  const full = me && LISTS.reporters ? LISTS.reporters[me] : '';
+  const full = findReporterFor(me);
   if (full && !rep.value.trim()) rep.value = full;
   const d = document.getElementById('rDate');
   if (!d.value){
