@@ -304,6 +304,7 @@
 <div class="top-tabs">
   <button type="button" class="top-tab active" id="tabQuickBtn" onclick="switchTab('quick')">Γρήγορη Καταγραφή</button>
   <button type="button" class="top-tab" id="tabFullBtn" onclick="switchTab('full')">Πλήρες Δελτίο</button>
+  <button type="button" class="top-tab" id="tabReportBtn" onclick="switchTab('report')">Αναφορά</button>
 </div>
 
 <div class="section" id="quickView">
@@ -468,6 +469,56 @@
   <div id="pdfDlBox"></div>
 </div>
 
+<div class="section" id="reportView" style="display:none;">
+  <div class="drafts-box">
+    <div class="dtitle">Ημιτελείς αναφορές</div>
+    <div id="rDraftsList"><span class="no-drafts">Δεν υπάρχουν ημιτελείς αναφορές.</span></div>
+  </div>
+  <button type="button" class="new-btn" onclick="newReportDoc()">+ Νέα αναφορά</button>
+
+  <div class="section-title" style="margin-top:0;">Αναφορά</div>
+
+  <div class="field">
+    <span class="label">Ημερομηνία</span>
+    <input type="date" id="rDate">
+  </div>
+
+  <div class="field">
+    <span class="label">Στοιχεία αναφέροντος</span>
+    <div class="ac-wrapper">
+      <input type="text" id="rReporter" autocomplete="off" placeholder="π.χ. Υ/Β΄ ΠΑΠΑΔΟΠΟΥΛΟΣ (123456) Γεώργιος του Νικολάου">
+      <div class="ac-list" id="rReporterList"></div>
+    </div>
+    <div class="hint">Συμπληρώνεται αυτόματα από το όνομά σας. Μπορείτε να αναζητήσετε και με αριθμό μητρώου ή επώνυμο.</div>
+  </div>
+
+  <div class="field">
+    <span class="label">Προς</span>
+    <div class="shift-info" id="rBase" style="margin-bottom:8px;">Δ.Α.Δ.Α./Α΄ Υποδιεύθυνση</div>
+    <div class="ac-wrapper">
+      <input type="text" id="rService" autocomplete="off" placeholder="π.χ. Γρ. Προσωπικού">
+      <div class="ac-list" id="rServiceList"></div>
+    </div>
+    <div class="hint">Η υπηρεσία από πάνω μπαίνει πάντα. Εδώ προσθέστε το γραφείο, αν χρειάζεται — ή αφήστε το κενό.</div>
+  </div>
+
+  <div class="field">
+    <span class="label">Κείμενο αναφοράς</span>
+    <textarea id="rText" rows="10" placeholder="Γράψτε εδώ την αναφορά σας."></textarea>
+    <div class="hint">Η κατακλείδα «Παρακαλώ για τις δικές σας ενέργειες.» και η υπογραφή μπαίνουν μόνες τους.</div>
+  </div>
+
+  <div class="autosave" id="rAutosaveInfo">Αποθηκεύεται αυτόματα</div>
+  <div class="btn-row">
+    <button type="button" class="save-btn" onclick="saveReportDraft()">Αποθήκευση</button>
+    <button type="button" class="save-btn" onclick="saveAndCloseReport()">Αποθήκευση και κλείσιμο</button>
+  </div>
+  <button type="button" class="send-btn" id="rSendBtn" style="width:100%;margin-top:10px;" onclick="reviewReport()">Αποστολή αναφοράς</button>
+  <div id="rConfirmBox"></div>
+  <div id="rStatus" class="status"></div>
+  <div id="rPdfBox"></div>
+</div>
+
 <script>
 /* =======================================================================
    ΡΥΘΜΙΣΗ — ΤΟ ΜΟΝΟ ΣΗΜΕΙΟ ΠΟΥ ΠΡΕΠΕΙ ΝΑ ΑΛΛΑΞΕΤΕ
@@ -507,7 +558,7 @@ const FALLBACK_SECTORS = [
 const LISTS_KEY = 'deltio_lists_v1';
 const FALLBACK_DEPOTS = ["ΜΕΣΟΓΕΙΩΝ", "ΚΕΡΑΝΗ", "ΣΑΚΕΤΑ", "ΔΕΕ", "ΑΜΥΓΔΑΛΕΖΑ"];
 
-let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS, depotNames: FALLBACK_DEPOTS, signalCodes: [], responses: {}, depots: {} };
+let LISTS = { personnel: [], ea: [], codes: FALLBACK_CODES, sectors: FALLBACK_SECTORS, depotNames: FALLBACK_DEPOTS, signalCodes: [], services: [], responses: {}, depots: {}, reporters: {}, settings: {} };
 
 const FALLBACK_SIGNAL_CODES = [
   {c:"Ε-1", n:"Πληροφορία"},
@@ -752,6 +803,10 @@ function initAutocompletes(){
   setupAutocomplete('synodos', 'synodosList', function(){ return LISTS.personnel; });
   setupAutocomplete('tritos',  'tritosList',  function(){ return LISTS.personnel; });
   setupAutocomplete('orxos',   'orxosList',   function(){ return LISTS.depotNames; });
+  setupAutocomplete('rService','rServiceList',function(){ return LISTS.services; });
+  setupAutocomplete('rReporter','rReporterList',function(){
+    return Object.keys(LISTS.reporters || {}).map(function(k){ return LISTS.reporters[k]; });
+  });
   document.getElementById('tritosToggle').addEventListener('click', function(){
     const f = document.getElementById('tritosField');
     f.style.display = (f.style.display === 'none') ? 'block' : 'none';
@@ -988,8 +1043,11 @@ function applyLists(obj){
     sectors:   obj.sectors   && obj.sectors.length   ? obj.sectors   : FALLBACK_SECTORS,
     depotNames: obj.depotNames && obj.depotNames.length ? obj.depotNames : FALLBACK_DEPOTS,
     signalCodes: obj.signalCodes && obj.signalCodes.length ? obj.signalCodes : LISTS.signalCodes,
+    services:  obj.services  && obj.services.length  ? obj.services  : LISTS.services,
     responses: obj.responses || LISTS.responses,
-    depots:    obj.depots    || LISTS.depots
+    depots:    obj.depots    || LISTS.depots,
+    reporters: obj.reporters || LISTS.reporters,
+    settings:  obj.settings  || LISTS.settings
   };
 }
 
@@ -2224,13 +2282,292 @@ function blankFields(isoDate){
 function switchTab(tab){
   document.getElementById('quickView').style.display = (tab === 'quick') ? 'block' : 'none';
   document.getElementById('fullView').style.display = (tab === 'full') ? 'block' : 'none';
+  document.getElementById('reportView').style.display = (tab === 'report') ? 'block' : 'none';
   document.getElementById('tabQuickBtn').classList.toggle('active', tab === 'quick');
   document.getElementById('tabFullBtn').classList.toggle('active', tab === 'full');
+  document.getElementById('tabReportBtn').classList.toggle('active', tab === 'report');
   if (tab === 'full') renderPendingNotice();
+  if (tab === 'report') prepareReport();
+}
+
+/* ===== Αναφορά ===== */
+/* ===== Ημιτελείς αναφορές ===== */
+const RDRAFTS_KEY = 'deltio_rdrafts_v1';
+let currentRDraftId = null;
+let rAutosaveTimer = null;
+let rLastSnapshot = null;
+
+function getRDrafts(){
+  try { return JSON.parse(localStorage.getItem(RDRAFTS_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function setRDrafts(d){ localStorage.setItem(RDRAFTS_KEY, JSON.stringify(d)); }
+
+function rSnapshot(){ return JSON.stringify(reportData()); }
+function rMarkSaved(){ rLastSnapshot = rSnapshot(); }
+function rIsDirty(){ return rLastSnapshot !== rSnapshot(); }
+
+function rHasContent(){
+  const r = reportData();
+  return !!(r.text || (r.reporter && r.reporter.trim()));
+}
+
+function rShowAutosave(){
+  const el = document.getElementById('rAutosaveInfo');
+  if (!el) return;
+  const d = new Date();
+  el.textContent = 'Αποθηκεύεται αυτόματα — τελευταία αποθήκευση ' +
+    String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+function saveReportDraft(silent){
+  const r = reportData();
+  const drafts = getRDrafts();
+  const id = currentRDraftId || ('r' + Date.now());
+  drafts[id] = {
+    date: document.getElementById('rDate').value,
+    reporter: document.getElementById('rReporter').value,
+    office: document.getElementById('rService').value,
+    text: document.getElementById('rText').value,
+    savedAt: Date.now()
+  };
+  setRDrafts(drafts);
+  currentRDraftId = id;
+  rMarkSaved();
+  renderRDrafts();
+  if (silent !== true){
+    rShowAutosave();
+    const st = document.getElementById('rStatus');
+    st.textContent = 'Αποθηκεύτηκε.';
+    st.className = 'status';
+  }
+}
+
+function rAutosave(){
+  clearTimeout(rAutosaveTimer);
+  rAutosaveTimer = setTimeout(function(){
+    if (!rHasContent() || !rIsDirty()) return;
+    saveReportDraft(true);
+    rShowAutosave();
+  }, 800);
+}
+
+function rAutosaveNow(){
+  clearTimeout(rAutosaveTimer);
+  if (rHasContent() && rIsDirty()) saveReportDraft(true);
+}
+
+function rDraftLabel(d){
+  const t = (d.text || '').trim().replace(/\s+/g, ' ');
+  const short = t ? (t.length > 32 ? t.slice(0, 32) + '…' : t) : '(χωρίς κείμενο)';
+  const dt = d.date ? d.date.split('-').reverse().join('/') : '—';
+  return dt + ' · ' + short;
+}
+
+function renderRDrafts(){
+  const box = document.getElementById('rDraftsList');
+  if (!box) return;
+  const drafts = getRDrafts();
+  const ids = Object.keys(drafts);
+  if (!ids.length){
+    box.innerHTML = '<span class="no-drafts">Δεν υπάρχουν ημιτελείς αναφορές.</span>';
+    return;
+  }
+  box.innerHTML = '';
+  ids.sort(function(a,b){ return drafts[b].savedAt - drafts[a].savedAt; }).forEach(function(id){
+    const row = document.createElement('div');
+    row.className = 'draft-item';
+    row.innerHTML = '<button type="button" class="load">' + esc(rDraftLabel(drafts[id])) +
+      '</button><button type="button" class="del">Διαγραφή</button>';
+    row.querySelector('.load').addEventListener('click', function(){ loadRDraft(id); });
+    row.querySelector('.del').addEventListener('click', function(){
+      if (!confirm('Διαγραφή αυτής της ημιτελούς αναφοράς;')) return;
+      const all = getRDrafts();
+      delete all[id];
+      setRDrafts(all);
+      if (currentRDraftId === id) currentRDraftId = null;
+      renderRDrafts();
+    });
+    box.appendChild(row);
+  });
+}
+
+function loadRDraft(id){
+  const d = getRDrafts()[id];
+  if (!d) return;
+  rAutosaveNow();
+  currentRDraftId = id;
+  document.getElementById('rDate').value = d.date || '';
+  document.getElementById('rReporter').value = d.reporter || '';
+  document.getElementById('rService').value = d.office || '';
+  document.getElementById('rText').value = d.text || '';
+  rMarkSaved();
+  document.getElementById('rConfirmBox').innerHTML = '';
+  document.getElementById('rStatus').textContent = 'Άνοιξε η αναφορά.';
+  document.getElementById('rStatus').className = 'status';
+}
+
+function clearReportForm(){
+  document.getElementById('rText').value = '';
+  document.getElementById('rService').value = '';
+  document.getElementById('rDate').value = '';
+  document.getElementById('rReporter').value = '';
+  currentRDraftId = null;
+  prepareReport();
+  rMarkSaved();
+}
+
+function newReportDoc(){
+  rAutosaveNow();
+  clearReportForm();
+  document.getElementById('rConfirmBox').innerHTML = '';
+  document.getElementById('rStatus').textContent = '';
+  document.getElementById('rPdfBox').innerHTML = '';
+}
+
+function saveAndCloseReport(){
+  if (!rHasContent()){
+    const st = document.getElementById('rStatus');
+    st.textContent = 'Δεν υπάρχει τίποτα να αποθηκευτεί.';
+    st.className = 'status error';
+    return;
+  }
+  saveReportDraft(true);
+  const label = rDraftLabel(getRDrafts()[currentRDraftId]);
+  clearReportForm();
+  document.getElementById('rConfirmBox').innerHTML = '';
+  document.getElementById('rPdfBox').innerHTML = '';
+  renderRDrafts();
+  const st = document.getElementById('rStatus');
+  st.textContent = 'Η αναφορά ' + label + ' αποθηκεύτηκε στις Ημιτελείς αναφορές.';
+  st.className = 'status';
+  setTimeout(function(){ st.textContent = ''; }, 12000);
+}
+
+function reportBase(){
+  return (LISTS.settings && LISTS.settings['Παραλήπτης']) || 'Δ.Α.Δ.Α./Α΄ Υποδιεύθυνση';
+}
+
+function fullService(){
+  const office = document.getElementById('rService').value.trim();
+  return office ? (reportBase() + '/' + office) : reportBase();
+}
+
+function prepareReport(){
+  document.getElementById('rBase').textContent = reportBase();
+  const rep = document.getElementById('rReporter');
+  const me = getMe();
+  const full = me && LISTS.reporters ? LISTS.reporters[me] : '';
+  if (full && !rep.value.trim()) rep.value = full;
+  const d = document.getElementById('rDate');
+  if (!d.value){
+    const t = new Date();
+    d.value = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+  }
+
+}
+
+function reportData(){
+  const raw = document.getElementById('rDate').value;
+  let shown = '';
+  if (raw){ const p = raw.split('-'); shown = p[2] + '/' + p[1] + '/' + p[0]; }
+  return {
+    reporter: document.getElementById('rReporter').value.trim(),
+    service: fullService(),
+    date: shown,
+    text: document.getElementById('rText').value.trim(),
+    shortName: getMe() || '',
+    senderEmail: (localStorage.getItem(EMAIL_KEY) || '').trim()
+  };
+}
+
+function reviewReport(){
+  const r = reportData();
+  const box = document.getElementById('rConfirmBox');
+  const w = [];
+  if (!r.reporter) w.push('Λείπουν τα στοιχεία του αναφέροντος.');
+  if (!r.date) w.push('Λείπει η ημερομηνία.');
+  if (!r.text) w.push('Λείπει το κείμενο της αναφοράς.');
+
+  const city = (LISTS.settings && LISTS.settings['Πόλη']) || 'Αθήνα';
+  const closing = (LISTS.settings && LISTS.settings['Κατακλείδα αναφοράς']) || 'Παρακαλώ για τις δικές σας ενέργειες.';
+
+  box.innerHTML = `
+    <div class="preview-wrap">
+      <h4>Προεπισκόπηση αναφοράς</h4>
+      ${w.length ? '<div class="pv-warn"><strong>Προσοχή — ελλείψεις:</strong><ul>' + w.map(function(x){return '<li>'+esc(x)+'</li>';}).join('') + '</ul></div>' : ''}
+      <div class="pv-doc" style="font-size:12px;line-height:1.7;">
+        <div style="text-align:right;">${esc(city)}, ${esc(r.date || '—')}</div>
+        <div style="text-align:center;font-weight:700;letter-spacing:.1em;margin:14px 0 10px;">ΑΝΑΦΟΡΑ</div>
+        <div style="text-align:center;">${esc(r.reporter || '—')}</div>
+        <div style="text-align:center;font-weight:700;margin:14px 0 2px;">ΠΡΟΣ</div>
+        <div style="text-align:center;">${esc(r.service || '—')}</div>
+        <div style="text-align:right;font-weight:700;">Ενταύθα</div>
+        <div style="margin-top:16px;white-space:pre-wrap;text-align:justify;">${esc(r.text || '')}</div>
+        <div style="margin-top:14px;">${esc(closing)}</div>
+        <div style="text-align:right;margin-top:24px;">-Ο-<br>Αναφέρων</div>
+      </div>
+      <div class="confirm-btns">
+        <button type="button" class="back-btn" onclick="document.getElementById('rConfirmBox').innerHTML=''">Πίσω για διόρθωση</button>
+        <button type="button" class="go-btn" onclick="sendReportDoc()">Επιβεβαίωση &amp; Αποστολή</button>
+      </div>
+    </div>`;
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+async function sendReportDoc(){
+  const btn = document.getElementById('rSendBtn');
+  const status = document.getElementById('rStatus');
+  document.getElementById('rConfirmBox').innerHTML = '';
+  document.getElementById('rPdfBox').innerHTML = '';
+
+  if (!API_URL || API_URL.indexOf('/exec') === -1){
+    status.textContent = 'Σφάλμα ρύθμισης: δεν έχει οριστεί το API_URL.';
+    status.className = 'status error';
+    return;
+  }
+
+  btn.disabled = true;
+  status.textContent = 'Αποστολή...';
+  status.className = 'status';
+
+  try {
+    const resp = await fetch(API_URL, { method:'POST',
+      body: new URLSearchParams({ action:'report', payload: JSON.stringify(reportData()) }) });
+    const out = JSON.parse(await resp.text());
+    if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα.');
+
+    btn.disabled = false;
+    status.textContent = '✅ Η αναφορά στάλθηκε.';
+    status.className = 'status';
+
+    if (out.pdfBase64){
+      const el = document.createElement('button');
+      el.type = 'button'; el.className = 'pdf-dl-btn';
+      el.textContent = '📄 Αποθήκευση ' + (out.pdfName || 'anafora.pdf');
+      el.onclick = function(){ downloadPdf(out.pdfBase64, out.pdfName || 'anafora.pdf'); };
+      document.getElementById('rPdfBox').appendChild(el);
+    }
+    if (currentRDraftId){
+      const all = getRDrafts();
+      delete all[currentRDraftId];
+      setRDrafts(all);
+      currentRDraftId = null;
+      renderRDrafts();
+    }
+    clearReportForm();
+  } catch(err){
+    btn.disabled = false;
+    status.textContent = 'Σφάλμα: ' + (err && err.message ? err.message : err);
+    status.className = 'status error';
+  }
 }
 
 initShiftControls();
 initEmail();
+document.getElementById('reportView').addEventListener('input', rAutosave);
+document.getElementById('reportView').addEventListener('change', rAutosave);
+renderRDrafts();
 document.getElementById('fullView').addEventListener('input', function(){ renderSectionMarks(); autosave(); });
 document.getElementById('fullView').addEventListener('change', function(){ renderSectionMarks(); autosave(); });
 setKatastasi('ΚΑΛΗ');
