@@ -211,6 +211,7 @@
   }
   .call-row .link-btn{display:inline-block;margin-right:12px;}
   .repeat-only{display:none;}
+  .cancel-only{display:none;}
   .signal-card.collapsed .signal-body{display:none;}
   .signal-summary{
     display:none;font-size:13px;line-height:1.4;color:#1c2733;padding:2px 0;
@@ -338,7 +339,7 @@
   <div id="pendingBox"></div>
 
   <div class="drafts-box">
-    <div class="dtitle">Αποθηκευμένα προσχέδια</div>
+    <div class="dtitle">Ημιτελή δελτία</div>
     <div id="draftsList"><span class="no-drafts">Κανένα προσχέδιο ακόμα.</span></div>
   </div>
   <button type="button" class="new-btn" onclick="newReport()">+ Νέο δελτίο</button>
@@ -458,9 +459,10 @@
 
   <div class="autosave" id="autosaveInfo">Αποθηκεύεται αυτόματα</div>
   <div class="btn-row">
-    <button type="button" class="save-btn" id="saveBtn" onclick="saveDraft()">Αποθήκευση τώρα</button>
-    <button type="button" class="send-btn" id="sendBtn" onclick="reviewBeforeSend()">Αποστολή</button>
+    <button type="button" class="save-btn" id="saveBtn" onclick="saveDraft()">Αποθήκευση</button>
+    <button type="button" class="save-btn" id="closeBtn" onclick="saveAndClose()">Αποθήκευση και κλείσιμο</button>
   </div>
+  <button type="button" class="send-btn" id="sendBtn" style="width:100%;margin-top:10px;" onclick="reviewBeforeSend()">Αποστολή</button>
   <div id="confirmBox"></div>
   <div id="statusMsg" class="status"></div>
   <div id="pdfDlBox"></div>
@@ -630,6 +632,7 @@ function getResponsesFor(code){
   return match ? src[match] : null;
 }
 
+const DEFAULT_CANCEL_TEXT = 'ΑΚΥΡΩΘΗΚΕ ΑΠΟ ΤΟ ΚΑΔ.';
 const DEFAULT_REPEAT_TEXT = 'Δεν κατέστη δυνατή η μετάβαση λόγω φόρτου εργασίας. Επαναχρεώθηκε στη Δ΄ Αλλαγή μέσω του 100.';
 
 const DRAFTS_KEY = 'deltio_drafts_v1';
@@ -1033,6 +1036,7 @@ function addSignal(prefill){
       <button type="button" class="type-btn ${entryType==='signal'?'active':''}" data-type="signal">Σήμα</button>
       <button type="button" class="type-btn ${entryType==='incident'?'active':''}" data-type="incident">Περιστατικό</button>
       <button type="button" class="type-btn ${entryType==='repeat'?'active':''}" data-type="repeat">Επαναχρεώθηκε</button>
+      <button type="button" class="type-btn ${entryType==='cancel'?'active':''}" data-type="cancel">Ακυρώθηκε</button>
     </div>
     <div class="row2">
       <div><span class="label">Ώρα</span><input type="text" class="s-time" placeholder="π.χ. 1120" value="${esc(prefill.time||'')}"></div>
@@ -1055,6 +1059,13 @@ function addSignal(prefill){
       <button type="button" class="suggest-toggle signal-only" style="display:none;">Επιλογή έτοιμης απάντησης ▾</button>
       <div class="suggest-panel signal-only" style="display:none;"></div>
       <textarea class="s-result" rows="4" style="margin-top:8px;">${esc(prefill.result||'')}</textarea>
+    </div>
+    <div class="cancel-only">
+      <div class="field"><span class="label">Ώρα ακύρωσης</span><input type="text" class="s-ctime" inputmode="numeric" placeholder="π.χ. 2055" value="${esc(prefill.cancelTime||'')}"></div>
+      <div class="field">
+        <span class="label">Κείμενο ακύρωσης</span>
+        <textarea class="s-ctext" rows="2">${esc(prefill.cancelText || DEFAULT_CANCEL_TEXT)}</textarea>
+      </div>
     </div>
     <div class="repeat-only">
       <div class="field"><span class="label">Ώρα επαναχρέωσης</span><input type="text" class="s-rtime" inputmode="numeric" placeholder="π.χ. 2100" value="${esc(prefill.repeatTime||'')}"></div>
@@ -1079,6 +1090,7 @@ function addSignal(prefill){
   const signalOnlyEls = div.querySelectorAll('.signal-only');
   const resultLabel = div.querySelector('.s-result-label');
   const repeatEls = div.querySelectorAll('.repeat-only');
+  const cancelEls = div.querySelectorAll('.cancel-only');
   const visitEls = div.querySelectorAll('.visit-only');
   const resultField = resultLabel.closest('.field');
   function applyType(type){
@@ -1088,14 +1100,16 @@ function addSignal(prefill){
     // Στην Επαναχρέωση κρύβονται μόνο άφιξη και λήξη.
     // Ένα πεδίο κρύβεται αν το αποκλείει είτε ο τύπος «Περιστατικό»
     // (signal-only) είτε ο τύπος «Επαναχρεώθηκε» (visit-only).
+    const noVisit = (type === 'repeat' || type === 'cancel');
     const allFields = new Set([].concat(Array.from(signalOnlyEls), Array.from(visitEls)));
     allFields.forEach(el => {
       const hideInc = (type === 'incident') && el.classList.contains('signal-only');
-      const hideRep = (type === 'repeat') && el.classList.contains('visit-only');
-      el.style.display = (hideInc || hideRep) ? 'none' : '';
+      const hideNoVisit = noVisit && el.classList.contains('visit-only');
+      el.style.display = (hideInc || hideNoVisit) ? 'none' : '';
     });
     repeatEls.forEach(el => { el.style.display = (type === 'repeat') ? 'block' : 'none'; });
-    if (resultField) resultField.style.display = (type === 'repeat') ? 'none' : '';
+    cancelEls.forEach(el => { el.style.display = (type === 'cancel') ? 'block' : 'none'; });
+    if (resultField) resultField.style.display = noVisit ? 'none' : '';
     resultLabel.textContent = (type === 'incident') ? 'Περιγραφή' : 'Αποτέλεσμα';
   }
   typeButtons.forEach(btn => btn.addEventListener('click', () => applyType(btn.dataset.type)));
@@ -1166,6 +1180,7 @@ function addSignal(prefill){
   div.querySelector('.merge-call').addEventListener('click', function(){ mergeCallInto(div); });
 
   attachTimeInput(div.querySelector('.s-rtime'));
+  attachTimeInput(div.querySelector('.s-ctime'));
 
   div.querySelector('.del-btn').addEventListener('click', function(){
     if (!confirm('Διαγραφή αυτής της εγγραφής;')) return;
@@ -1386,6 +1401,8 @@ function collectData(){
       result: card.querySelector('.s-result').value.trim(),
       repeatTime: card.querySelector('.s-rtime').value.trim(),
       repeatText: card.querySelector('.s-rtext').value.trim(),
+      cancelTime: card.querySelector('.s-ctime').value.trim(),
+      cancelText: card.querySelector('.s-ctext').value.trim(),
       extraCalls: Array.from(card.querySelectorAll('.extra-calls .call-row')).map(function(r){
         return {
           time: r.querySelector('.c-time').value.trim(),
@@ -1402,7 +1419,7 @@ function collectData(){
 // Εντελώς κενή εγγραφή: δεν έχει νόημα να μπει στο δελτίο.
 function isIncidentEmpty(inc){
   if (inc.extraCalls && inc.extraCalls.length) return false;
-  if (inc.type === 'repeat') return (!inc.time || inc.time === '-') && !inc.signalCode && !inc.desc;
+  if (inc.type === 'repeat' || inc.type === 'cancel') return (!inc.time || inc.time === '-') && !inc.signalCode && !inc.desc;
   return (!inc.time || inc.time === '-') &&
          !inc.signalCode && !inc.desc && !inc.address &&
          (!inc.arrival || inc.arrival === '-') &&
@@ -1493,7 +1510,7 @@ function renderDraftsList(){
   const container = document.getElementById('draftsList');
   const ids = Object.keys(drafts);
   if (ids.length === 0){
-    container.innerHTML = '<span class="no-drafts">Κανένα προσχέδιο ακόμα.</span>';
+    container.innerHTML = '<span class="no-drafts">Δεν υπάρχουν ημιτελή δελτία.</span>';
     return;
   }
   container.innerHTML = '';
@@ -1506,7 +1523,7 @@ function renderDraftsList(){
     row.innerHTML = `<button type="button" class="load">${esc(label)}</button><button type="button" class="del">Διαγραφή</button>`;
     row.querySelector('.load').addEventListener('click', ()=> loadDraft(id));
     row.querySelector('.del').addEventListener('click', ()=>{
-      if (!confirm('Διαγραφή αυτού του προσχεδίου;')) return;
+      if (!confirm('Διαγραφή αυτού του ημιτελούς δελτίου;')) return;
       const all = getDrafts();
       delete all[id];
       setDrafts(all);
@@ -1569,6 +1586,33 @@ function saveDraft(silent){
   }
 }
 
+// Αποθήκευση και κλείσιμο: το δελτίο πάει στα Ημιτελή και η φόρμα αδειάζει.
+function saveAndClose(){
+  const data = collectData();
+  if (!hasContent(data)){
+    const st = document.getElementById('statusMsg');
+    st.textContent = 'Δεν υπάρχει τίποτα να αποθηκευτεί.';
+    st.className = 'status error';
+    return;
+  }
+  saveDraft(true);
+  const label = draftLabel({ fields: data.fields });
+
+  currentDraftId = null;
+  clearForm();
+  markSaved();
+  document.getElementById('confirmBox').innerHTML = '';
+  document.getElementById('pdfDlBox').innerHTML = '';
+  document.getElementById('statusMsg').textContent = '';
+  renderDraftsList();
+  switchTab('quick');
+
+  const msg = document.getElementById('transferMsg');
+  msg.textContent = 'Το δελτίο ' + label + ' αποθηκεύτηκε στα Ημιτελή δελτία.';
+  msg.className = 'status';
+  setTimeout(function(){ msg.textContent = ''; }, 12000);
+}
+
 function loadDraft(id){
   const drafts = getDrafts();
   const d = drafts[id];
@@ -1578,7 +1622,7 @@ function loadDraft(id){
   populateForm(d);
   markSaved();
   document.getElementById('confirmBox').innerHTML = '';
-  document.getElementById('statusMsg').textContent = 'Φορτώθηκε προσχέδιο.';
+  document.getElementById('statusMsg').textContent = 'Άνοιξε το δελτίο.';
   document.getElementById('statusMsg').className = 'status';
 }
 
@@ -1631,6 +1675,10 @@ function collectWarnings(data){
     if (inc.type === 'incident'){
       if (!inc.result) w.push('Εγγραφή ' + n + ': λείπει η περιγραφή.');
       if (!inc.departure || inc.departure === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα λήξης.');
+    } else if (inc.type === 'cancel'){
+      if (!inc.signalCode) w.push('Εγγραφή ' + n + ': λείπει ο κωδικός σήματος.');
+      if (!inc.cancelTime) w.push('Εγγραφή ' + n + ': λείπει η ώρα ακύρωσης.');
+      if (!inc.cancelText) w.push('Εγγραφή ' + n + ': λείπει το κείμενο ακύρωσης.');
     } else if (inc.type === 'repeat'){
       if (!inc.signalCode) w.push('Εγγραφή ' + n + ': λείπει ο κωδικός σήματος.');
       if (!inc.repeatTime) w.push('Εγγραφή ' + n + ': λείπει η ώρα επαναχρέωσης.');
@@ -1667,6 +1715,8 @@ function buildPreviewHtml(data){
       });
       if (inc.type === 'repeat'){
         rows.push('<tr><td class="c1">' + esc(inc.repeatTime || '-') + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>' + esc(inc.repeatText || '') + '</td></tr>');
+      } else if (inc.type === 'cancel'){
+        rows.push('<tr><td class="c1">' + esc(inc.cancelTime || '-') + '</td><td class="c2">ΚΑΔ/' + esc(code) + '</td><td>' + esc(inc.cancelText || '') + '</td></tr>');
       } else {
         rows.push('<tr><td class="c1">' + esc(inc.arrival) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΑΦΙΞΗ.</td></tr>');
         rows.push('<tr><td class="c1">' + esc(inc.departure) + '</td><td class="c2">' + esc(code) + '/ΚΑΔ</td><td>ΛΗΞΗ.' + (inc.result ? ' ' + esc(inc.result) : '') + '</td></tr>');
@@ -2121,6 +2171,8 @@ function transferQuickLog(){
       result: entry.result || '',
       repeatTime: '',
       repeatText: DEFAULT_REPEAT_TEXT,
+      cancelTime: '',
+      cancelText: DEFAULT_CANCEL_TEXT,
       extraCalls: []
     });
   });
