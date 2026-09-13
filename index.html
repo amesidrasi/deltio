@@ -478,6 +478,11 @@
 
   <div class="section-title" style="margin-top:0;">Αναφορά</div>
 
+  <div class="choice-row" style="margin-bottom:14px;">
+    <button type="button" class="choice" id="rModeIn" data-rmode="in">Προς την Υπηρεσία μου</button>
+    <button type="button" class="choice" id="rModeOut" data-rmode="out">Προς άλλη υπηρεσία</button>
+  </div>
+
   <div class="field">
     <span class="label">Ημερομηνία</span>
     <input type="date" id="rDate">
@@ -499,7 +504,7 @@
       <input type="text" id="rService" autocomplete="off" placeholder="π.χ. Γρ. Προσωπικού">
       <div class="ac-list" id="rServiceList"></div>
     </div>
-    <div class="hint">Η υπηρεσία από πάνω μπαίνει πάντα. Εδώ προσθέστε το γραφείο, αν χρειάζεται — ή αφήστε το κενό.</div>
+    <div class="hint" id="rServiceHint">Η υπηρεσία από πάνω μπαίνει πάντα. Εδώ προσθέστε το γραφείο, αν χρειάζεται — ή αφήστε το κενό.</div>
   </div>
 
   <div class="field">
@@ -508,12 +513,23 @@
     <div class="hint">Η κατακλείδα «Παρακαλώ για τις δικές σας ενέργειες.» και η υπογραφή μπαίνουν μόνες τους.</div>
   </div>
 
+  <div id="rEmailBox">
+    <button type="button" class="link-btn" id="rEmailToggle">Αλλαγή email αντιγράφου</button>
+    <div class="field" id="rEmailField" style="display:none;">
+      <span class="label">Το email σας</span>
+      <input type="text" id="rEmail" placeholder="π.χ. onoma@gmail.com" inputmode="email">
+      <div class="hint">Είναι το ίδιο email που χρησιμοποιείται και στα δελτία.</div>
+    </div>
+    <div class="hint" id="rEmailInfo" style="margin-bottom:8px;"></div>
+  </div>
+
   <div class="autosave" id="rAutosaveInfo">Αποθηκεύεται αυτόματα</div>
   <div class="btn-row">
     <button type="button" class="save-btn" onclick="saveReportDraft()">Αποθήκευση</button>
     <button type="button" class="save-btn" onclick="saveAndCloseReport()">Αποθήκευση και κλείσιμο</button>
   </div>
   <button type="button" class="send-btn" id="rSendBtn" style="width:100%;margin-top:10px;" onclick="reviewReport()">Αποστολή αναφοράς</button>
+  <div class="hint" id="rOutHint" style="display:none;margin-top:8px;">Θα δημιουργηθεί το αρχείο και θα επιλέξετε μόνοι σας από πού θα το στείλετε.</div>
   <div id="rConfirmBox"></div>
   <div id="rStatus" class="status"></div>
   <div id="rPdfBox"></div>
@@ -2444,12 +2460,82 @@ function saveAndCloseReport(){
   setTimeout(function(){ st.textContent = ''; }, 12000);
 }
 
+// Κοινή χρήση του PDF μέσω του μενού της συσκευής. Όπου δεν
+// υποστηρίζεται, το αρχείο απλώς κατεβαίνει.
+async function sharePdf(base64, filename){
+  try {
+    const bin = atob(base64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    const file = new File([arr], filename, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file], title: filename });
+      return true;
+    }
+  } catch(e){ /* ακύρωση ή μη υποστήριξη */ }
+  downloadPdf(base64, filename);
+  return false;
+}
+
+/* ===== Τύπος αναφοράς: εσωτερική ή προς άλλη υπηρεσία ===== */
+const RMODE_KEY = 'deltio_rmode_v1';
+let reportMode = 'in';
+
+function setReportMode(m){
+  reportMode = (m === 'out') ? 'out' : 'in';
+  localStorage.setItem(RMODE_KEY, reportMode);
+  const out = (reportMode === 'out');
+
+  document.querySelectorAll('.choice[data-rmode]').forEach(function(b){
+    b.classList.toggle('active', b.dataset.rmode === reportMode);
+  });
+
+  document.getElementById('rBase').style.display = out ? 'none' : '';
+  document.getElementById('rService').placeholder = out ? 'π.χ. Α.Τ. Γλυφάδας' : 'π.χ. Γρ. Προσωπικού';
+  document.getElementById('rServiceHint').textContent = out
+    ? 'Γράψτε την υπηρεσία στην οποία απευθύνεται η αναφορά.'
+    : 'Η υπηρεσία από πάνω μπαίνει πάντα. Εδώ προσθέστε το γραφείο, αν χρειάζεται — ή αφήστε το κενό.';
+
+  document.getElementById('rEmailBox').style.display = out ? 'none' : '';
+  document.getElementById('rOutHint').style.display = out ? 'block' : 'none';
+  document.getElementById('rSendBtn').textContent = out
+    ? 'Δημιουργία PDF και κοινή χρήση'
+    : 'Αποστολή αναφοράς';
+  renderREmailInfo();
+}
+
+function renderREmailInfo(){
+  const el = document.getElementById('rEmailInfo');
+  if (!el) return;
+  const mail = (localStorage.getItem(EMAIL_KEY) || '').trim();
+  el.textContent = mail ? ('Θα λάβετε αντίγραφο στο ' + mail + '.')
+                        : 'Δεν έχετε ορίσει email — δεν θα λάβετε αντίγραφο.';
+}
+
+function initReportEmail(){
+  const field = document.getElementById('rEmailField');
+  const input = document.getElementById('rEmail');
+  input.value = localStorage.getItem(EMAIL_KEY) || '';
+  document.getElementById('rEmailToggle').addEventListener('click', function(){
+    field.style.display = (field.style.display === 'none') ? 'block' : 'none';
+  });
+  input.addEventListener('change', function(){
+    const v = input.value.trim();
+    localStorage.setItem(EMAIL_KEY, v);
+    const other = document.getElementById('senderEmail');
+    if (other) other.value = v;
+    renderREmailInfo();
+  });
+  if (!input.value) field.style.display = 'block';
+}
+
 function reportBase(){
   return (LISTS.settings && LISTS.settings['Παραλήπτης']) || 'Δ.Α.Δ.Α./Α΄ Υποδιεύθυνση';
 }
 
 function fullService(){
   const office = document.getElementById('rService').value.trim();
+  if (reportMode === 'out') return office;
   return office ? (reportBase() + '/' + office) : reportBase();
 }
 
@@ -2471,6 +2557,7 @@ function findReporterFor(name){
 
 function prepareReport(){
   document.getElementById('rBase').textContent = reportBase();
+  renderREmailInfo();
   const rep = document.getElementById('rReporter');
   const me = getMe();
   const full = findReporterFor(me);
@@ -2492,6 +2579,7 @@ function reportData(){
     service: fullService(),
     date: shown,
     text: document.getElementById('rText').value.trim(),
+    mode: reportMode,
     shortName: getMe() || '',
     senderEmail: (localStorage.getItem(EMAIL_KEY) || '').trim()
   };
@@ -2503,6 +2591,7 @@ function reviewReport(){
   const w = [];
   if (!r.reporter) w.push('Λείπουν τα στοιχεία του αναφέροντος.');
   if (!r.date) w.push('Λείπει η ημερομηνία.');
+  if (r.mode === 'out' && !r.service) w.push('Λείπει η υπηρεσία στην οποία απευθύνεται.');
   if (!r.text) w.push('Λείπει το κείμενο της αναφοράς.');
 
   const city = (LISTS.settings && LISTS.settings['Πόλη']) || 'Αθήνα';
@@ -2518,14 +2607,14 @@ function reviewReport(){
         <div style="text-align:center;">${esc(r.reporter || '—')}</div>
         <div style="text-align:center;font-weight:700;margin:14px 0 2px;">ΠΡΟΣ</div>
         <div style="text-align:center;">${esc(r.service || '—')}</div>
-        <div style="text-align:right;font-weight:700;">Ενταύθα</div>
+        ${r.mode === 'out' ? '' : '<div style="text-align:right;font-weight:700;">Ενταύθα</div>'}
         <div style="margin-top:16px;white-space:pre-wrap;text-align:justify;">${esc(r.text || '')}</div>
         <div style="margin-top:14px;">${esc(closing)}</div>
         <div style="text-align:right;margin-top:24px;">-Ο-<br>Αναφέρων</div>
       </div>
       <div class="confirm-btns">
         <button type="button" class="back-btn" onclick="document.getElementById('rConfirmBox').innerHTML=''">Πίσω για διόρθωση</button>
-        <button type="button" class="go-btn" onclick="sendReportDoc()">Επιβεβαίωση &amp; Αποστολή</button>
+        <button type="button" class="go-btn" onclick="sendReportDoc()">${r.mode === 'out' ? 'Δημιουργία PDF' : 'Επιβεβαίωση &amp; Αποστολή'}</button>
       </div>
     </div>`;
   box.scrollIntoView({ behavior:'smooth', block:'start' });
@@ -2543,8 +2632,9 @@ async function sendReportDoc(){
     return;
   }
 
+  const isOut = (reportMode === 'out');
   btn.disabled = true;
-  status.textContent = 'Αποστολή...';
+  status.textContent = isOut ? 'Δημιουργία PDF...' : 'Αποστολή...';
   status.className = 'status';
 
   try {
@@ -2554,14 +2644,18 @@ async function sendReportDoc(){
     if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα.');
 
     btn.disabled = false;
-    status.textContent = '✅ Η αναφορά στάλθηκε.';
+    status.textContent = isOut ? '✅ Το PDF δημιουργήθηκε.' : '✅ Η αναφορά στάλθηκε.';
     status.className = 'status';
 
     if (out.pdfBase64){
+      if (isOut) await sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf');
       const el = document.createElement('button');
       el.type = 'button'; el.className = 'pdf-dl-btn';
-      el.textContent = '📄 Αποθήκευση ' + (out.pdfName || 'anafora.pdf');
-      el.onclick = function(){ downloadPdf(out.pdfBase64, out.pdfName || 'anafora.pdf'); };
+      el.textContent = isOut ? ('📤 Κοινή χρήση ' + (out.pdfName || '')) : ('📄 Αποθήκευση ' + (out.pdfName || 'anafora.pdf'));
+      el.onclick = function(){
+        if (isOut) sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf');
+        else downloadPdf(out.pdfBase64, out.pdfName || 'anafora.pdf');
+      };
       document.getElementById('rPdfBox').appendChild(el);
     }
     if (currentRDraftId){
@@ -2581,6 +2675,11 @@ async function sendReportDoc(){
 
 initShiftControls();
 initEmail();
+initReportEmail();
+document.querySelectorAll('.choice[data-rmode]').forEach(function(b){
+  b.addEventListener('click', function(){ setReportMode(b.dataset.rmode); });
+});
+setReportMode(localStorage.getItem(RMODE_KEY) || 'in');
 document.getElementById('reportView').addEventListener('input', rAutosave);
 document.getElementById('reportView').addEventListener('change', rAutosave);
 renderRDrafts();
