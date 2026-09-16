@@ -343,6 +343,13 @@
     <div class="dtitle">Ημιτελή δελτία</div>
     <div id="draftsList"><span class="no-drafts">Κανένα προσχέδιο ακόμα.</span></div>
   </div>
+
+  <div class="drafts-box">
+    <div class="dtitle">Σταλμένα δελτία (για διόρθωση)</div>
+    <div class="hint" style="margin:-2px 0 8px;">Ανοίξτε ένα ήδη σταλμένο δελτίο για να το διορθώσετε. Θα σταλεί ξανά «εις το ορθόν».</div>
+    <div id="sentList"><span class="no-drafts">Δεν υπάρχουν σταλμένα δελτία.</span></div>
+  </div>
+
   <button type="button" class="new-btn" onclick="newReport()">+ Νέο δελτίο</button>
 
   <div class="section-title" id="secVardia" style="margin-top:0;">Βάρδια</div>
@@ -451,13 +458,6 @@
   <div id="signalsContainer"></div>
   <button type="button" class="add-btn" onclick="addSignal()">+ Προσθήκη σήματος</button>
 
-  <button type="button" class="link-btn" id="emailToggle" style="margin-top:14px;">Αλλαγή email αντιγράφου</button>
-  <div class="field" id="emailField">
-    <span class="label">Το email σας</span>
-    <input type="text" id="senderEmail" placeholder="π.χ. onoma@gmail.com" inputmode="email">
-    <div class="hint">Γράψτε το μία φορά. Θα λαμβάνετε αντίγραφο κάθε δελτίου που στέλνετε και δεν θα χρειαστεί να το ξαναγράψετε.</div>
-  </div>
-
   <div class="autosave" id="autosaveInfo">Αποθηκεύεται αυτόματα</div>
   <div class="btn-row">
     <button type="button" class="save-btn" id="saveBtn" onclick="saveDraft()">Αποθήκευση</button>
@@ -511,16 +511,6 @@
     <span class="label">Κείμενο αναφοράς</span>
     <textarea id="rText" rows="10" placeholder="Γράψτε εδώ την αναφορά σας."></textarea>
     <div class="hint">Η κατακλείδα «Παρακαλώ για τις δικές σας ενέργειες.» και η υπογραφή μπαίνουν μόνες τους.</div>
-  </div>
-
-  <div id="rEmailBox">
-    <button type="button" class="link-btn" id="rEmailToggle">Αλλαγή email αντιγράφου</button>
-    <div class="field" id="rEmailField" style="display:none;">
-      <span class="label">Το email σας</span>
-      <input type="text" id="rEmail" placeholder="π.χ. onoma@gmail.com" inputmode="email">
-      <div class="hint">Είναι το ίδιο email που χρησιμοποιείται και στα δελτία.</div>
-    </div>
-    <div class="hint" id="rEmailInfo" style="margin-bottom:8px;"></div>
   </div>
 
   <div class="autosave" id="rAutosaveInfo">Αποθηκεύεται αυτόματα</div>
@@ -704,8 +694,8 @@ const DEFAULT_REPEAT_TEXT = 'Δεν κατέστη δυνατή η μετάβα�
 
 const DRAFTS_KEY = 'deltio_drafts_v1';
 const QUICK_TARGET_KEY = 'deltio_quick_target_v1';
-const EMAIL_KEY = 'deltio_email_v1';
 const SENT_KEY = 'deltio_sent_v1';
+const SENT_REPORTS_KEY = 'deltio_sent_reports_v1';
 
 // Υπογραφή δελτίου, για να εντοπίζεται διπλή αποστολή του ίδιου.
 function reportSignature(d){
@@ -730,6 +720,69 @@ function markSent(sig){
   } catch(e){ /* αγνοείται */ }
 }
 
+// ===== Ιστορικό σταλμένων δελτίων (τοπικά, ανά συσκευή) =====
+// Επιτρέπει το άνοιγμα ενός ήδη σταλμένου δελτίου για διόρθωση
+// και επαναποστολή "εις το ορθόν".
+function generateReportId(){
+  return 'r' + Date.now() + Math.random().toString(36).slice(2, 8);
+}
+
+function getSentReports(){
+  try { return JSON.parse(localStorage.getItem(SENT_REPORTS_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function setSentReports(obj){ localStorage.setItem(SENT_REPORTS_KEY, JSON.stringify(obj)); }
+
+function saveSentReport(id, fields, incidents){
+  const all = getSentReports();
+  all[id] = { fields: fields, incidents: incidents, sentAt: Date.now() };
+  setSentReports(all);
+  renderSentList();
+}
+
+function renderSentList(){
+  const box = document.getElementById('sentList');
+  if (!box) return;
+  const all = getSentReports();
+  const ids = Object.keys(all);
+  if (ids.length === 0){
+    box.innerHTML = '<span class="no-drafts">Δεν υπάρχουν σταλμένα δελτία.</span>';
+    return;
+  }
+  box.innerHTML = '';
+  ids.sort((a,b) => all[b].sentAt - all[a].sentAt).forEach(id => {
+    const d = all[id];
+    const n = (d.incidents || []).length;
+    const label = `${d.fields.code || '—'} · ${d.fields.imerominia || '—'} · ${shiftLabel(d.fields)} (${n})`;
+    const row = document.createElement('div');
+    row.className = 'draft-item';
+    row.innerHTML = `<button type="button" class="load">${esc(label)}</button><button type="button" class="del">Διαγραφή</button>`;
+    row.querySelector('.load').addEventListener('click', () => loadSentReport(id));
+    row.querySelector('.del').addEventListener('click', () => {
+      if (!confirm('Διαγραφή αυτού του σταλμένου δελτίου από τη λίστα; (Δεν διαγράφεται από το αρχείο ασφαλείας.)')) return;
+      const cur = getSentReports();
+      delete cur[id];
+      setSentReports(cur);
+      renderSentList();
+    });
+    box.appendChild(row);
+  });
+}
+
+function loadSentReport(id){
+  const all = getSentReports();
+  const d = all[id];
+  if (!d) return;
+  autosaveNow();
+  currentDraftId = null;
+  currentSentId = id;
+  populateForm(d);
+  markSaved();
+  document.getElementById('confirmBox').innerHTML = '';
+  document.getElementById('statusMsg').textContent = 'Άνοιξε το σταλμένο δελτίο. Κάντε τις διορθώσεις και πατήστε Αποστολή — θα σταλεί "εις το ορθόν".';
+  document.getElementById('statusMsg').className = 'status';
+}
+
 /* ===== Κύκλος βάρδιας Γ' Αλλαγής =====
    Τετραήμερος κύκλος με σημείο αναφοράς την 08/09/2026:
    ημέρα 1 απόγευμα, ημέρα 2 νύχτα, ημέρα 3 αδιάθετο, ημέρα 4 πρωί. */
@@ -747,6 +800,7 @@ function shiftForDate(isoDate){
 }
 let signalCount = 0;
 let currentDraftId = null;
+let currentSentId = null;
 let lastSavedSnapshot = null;
 
 /* ===== Βοηθητικά ώρας / βάρδιας ===== */
@@ -1029,21 +1083,18 @@ function attachTimeInput(el){
   });
 }
 
-/* ===== Email αντιγράφου ===== */
-function initEmail(){
-  const field = document.getElementById('emailField');
-  const input = document.getElementById('senderEmail');
-  const saved = localStorage.getItem(EMAIL_KEY) || '';
-  if (saved){
-    input.value = saved;
-    field.style.display = 'none';
-  }
-  document.getElementById('emailToggle').addEventListener('click', function(){
-    field.style.display = (field.style.display === 'none') ? 'block' : 'none';
-  });
-  input.addEventListener('change', function(){
-    localStorage.setItem(EMAIL_KEY, input.value.trim());
-  });
+/* ===== Πεδία κειμένου: αυτόματη μεγέθυνση καθώς γράφετε ===== */
+function autoGrowTextarea(el){
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+function attachAutoGrow(el){
+  if (!el || el.dataset.autoGrowAttached) return;
+  el.dataset.autoGrowAttached = '1';
+  el.style.overflowY = 'hidden';
+  el.addEventListener('input', function(){ autoGrowTextarea(el); });
+  autoGrowTextarea(el);
 }
 
 /* ===== Λίστες από το Google Sheet =====
@@ -1159,6 +1210,10 @@ function addSignal(prefill){
     </div>
   `;
   document.getElementById('signalsContainer').appendChild(div);
+
+  attachAutoGrow(div.querySelector('.s-result'));
+  attachAutoGrow(div.querySelector('.s-ctext'));
+  attachAutoGrow(div.querySelector('.s-rtext'));
 
   const typeButtons = div.querySelectorAll('.type-btn');
   const signalOnlyEls = div.querySelectorAll('.signal-only');
@@ -1315,6 +1370,7 @@ function addSignal(prefill){
     suggestPanel.querySelectorAll('.suggest-card').forEach(card => {
       card.addEventListener('click', () => {
         resultInput.value = currentOptions[card.dataset.i];
+        autoGrowTextarea(resultInput);
         suggestPanel.style.display = 'none';
         suggestToggle.textContent = 'Επιλογή έτοιμης απάντησης ▾';
       });
@@ -1454,8 +1510,7 @@ function collectData(){
     venzini: document.getElementById('venzini').value.trim(),
     oryktelaio: document.getElementById('oryktelaio').value.trim(),
     imerominia: '',
-    imerominiaRaw: document.getElementById('imerominia').value,
-    senderEmail: document.getElementById('senderEmail').value.trim()
+    imerominiaRaw: document.getElementById('imerominia').value
   };
   const dateVal = fields.imerominiaRaw;
   if (dateVal){
@@ -1528,7 +1583,6 @@ function populateForm(data){
   document.getElementById('venzini').value = f.venzini || '';
   document.getElementById('oryktelaio').value = f.oryktelaio || '';
   document.getElementById('imerominia').value = f.imerominiaRaw || '';
-  document.getElementById('senderEmail').value = f.senderEmail || localStorage.getItem(EMAIL_KEY) || '';
   manualShift = false;
   renderShiftInfo();
   autoFillDepot();
@@ -1549,7 +1603,6 @@ function clearForm(){
   const me = getMe();
   if (me) document.getElementById('synodos').value = me;
   renderCrewRecall();
-  document.getElementById('senderEmail').value = localStorage.getItem(EMAIL_KEY) || '';
   document.getElementById('orxosField').style.display = 'none';
   lastAutoDepot = '';
   document.getElementById('signalsContainer').innerHTML = '';
@@ -1566,6 +1619,7 @@ function newReport(){
   // Ό,τι υπάρχει έχει ήδη αποθηκευτεί αυτόματα.
   autosaveNow();
   currentDraftId = null;
+  currentSentId = null;
   clearForm();
   markSaved();
   document.getElementById('statusMsg').textContent = '';
@@ -1622,7 +1676,7 @@ function autosave(){
     const data = collectData();
     if (!hasContent(data)) return;      // κενή φόρμα: δεν φτιάχνουμε άδειο προσχέδιο
     if (!isDirty()) return;             // τίποτα δεν άλλαξε
-    saveDraft(true);
+    saveDraftSilently();
     showAutosave();
   }, 800);
 }
@@ -1631,7 +1685,7 @@ function autosave(){
 function autosaveNow(){
   clearTimeout(autosaveTimer);
   const data = collectData();
-  if (hasContent(data) && isDirty()) saveDraft(true);
+  if (hasContent(data) && isDirty()) saveDraftSilently();
 }
 
 function showAutosave(){
@@ -1643,7 +1697,10 @@ function showAutosave(){
   el.textContent = 'Αποθηκεύεται αυτόματα — τελευταία αποθήκευση ' + hh + ':' + mm;
 }
 
-function saveDraft(silent){
+// Αθόρυβη αποθήκευση στο localStorage (χρησιμοποιείται από την αυτόματη
+// αποθήκευση και από το κουμπί «Αποθήκευση»). Δεν αλλάζει καρτέλα ούτε
+// αδειάζει τη φόρμα.
+function saveDraftSilently(){
   const data = collectData();
   const drafts = getDrafts();
   const id = currentDraftId || ('d' + Date.now());
@@ -1652,12 +1709,23 @@ function saveDraft(silent){
   currentDraftId = id;
   markSaved();
   renderDraftsList();
-  if (silent !== true){
-    showAutosave();
+}
+
+// Κουμπί «Αποθήκευση»: απλώς επιβεβαιώνει ότι όσα έχετε γράψει είναι
+// ήδη ασφαλή (η αυτόματη αποθήκευση το κάνει ήδη στο παρασκήνιο).
+function saveDraft(){
+  const data = collectData();
+  if (!hasContent(data)){
     const status = document.getElementById('statusMsg');
-    status.textContent = 'Αποθηκεύτηκε.';
+    status.textContent = 'Δεν υπάρχει τίποτα να αποθηκευτεί ακόμα.';
     status.className = 'status';
+    return;
   }
+  saveDraftSilently();
+  showAutosave();
+  const status = document.getElementById('statusMsg');
+  status.textContent = 'Είναι όλα αποθηκευμένα.';
+  status.className = 'status';
 }
 
 // Αποθήκευση και κλείσιμο: το δελτίο πάει στα Ημιτελή και η φόρμα αδειάζει.
@@ -1669,10 +1737,11 @@ function saveAndClose(){
     st.className = 'status error';
     return;
   }
-  saveDraft(true);
+  saveDraftSilently();
   const label = draftLabel({ fields: data.fields });
 
   currentDraftId = null;
+  currentSentId = null;
   clearForm();
   markSaved();
   document.getElementById('confirmBox').innerHTML = '';
@@ -1693,6 +1762,7 @@ function loadDraft(id){
   if (!d) return;
   autosaveNow();
   currentDraftId = id;
+  currentSentId = null;
   populateForm(d);
   markSaved();
   document.getElementById('confirmBox').innerHTML = '';
@@ -1712,6 +1782,23 @@ function downloadPdf(base64, filename){
   document.body.appendChild(a); a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// Κοινή χρήση του PDF μέσω του μενού της συσκευής. Όπου δεν
+// υποστηρίζεται, το αρχείο απλώς κατεβαίνει.
+async function sharePdf(base64, filename, shareTitle){
+  try {
+    const bin = atob(base64);
+    const arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    const file = new File([arr], filename, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      await navigator.share({ files: [file], title: shareTitle || filename });
+      return true;
+    }
+  } catch(e){ /* ακύρωση ή μη υποστήριξη */ }
+  downloadPdf(base64, filename);
+  return false;
 }
 
 /* ===== Προεπισκόπηση στη μορφή του εντύπου ===== */
@@ -1856,9 +1943,14 @@ function reviewBeforeSend(){
     ? '<div class="pv-warn"><strong>Προσοχή — ελλείψεις:</strong><ul>' + warnings.map(function(w){ return '<li>' + esc(w) + '</li>'; }).join('') + '</ul></div>'
     : '';
 
+  const correctionNote = currentSentId
+    ? '<div class="pv-warn" style="background:#eef1f4;border-color:#ccd4dc;"><strong>Διόρθωση σταλμένου δελτίου.</strong> Θα σταλεί ξανά "εις το ορθόν" και θα αντικαταστήσει τα στοιχεία του αρχικού στο αρχείο ασφαλείας.</div>'
+    : '';
+
   box.innerHTML = `
     <div class="preview-wrap">
       <h4>Προεπισκόπηση δελτίου</h4>
+      ${correctionNote}
       ${warnHtml}
       ${buildPreviewHtml(data)}
       <div class="confirm-btns">
@@ -1868,6 +1960,11 @@ function reviewBeforeSend(){
     </div>
   `;
   box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function deltioSubjectLine(d, isCorrection){
+  const base = 'Ημερήσιο Δελτίο ' + (d.code || '') + ' - ' + (d.imerominia || '') + ' - ' + shiftLabel(d);
+  return isCorrection ? ('ΕΙΣ ΤΟ ΟΡΘΟΝ - ' + base) : base;
 }
 
 /* ===== ΑΠΟΣΤΟΛΗ ΠΡΟΣ ΤΟ APPS SCRIPT ===== */
@@ -1883,17 +1980,19 @@ async function sendReport(){
     return;
   }
 
-  const sig = reportSignature(collectForSend());
+  const sendData = collectForSend();
+  const sig = reportSignature(sendData);
   if (wasSent(sig) && !confirm('Αυτό το δελτίο φαίνεται ότι έχει ήδη σταλεί.\n\nΝα σταλεί ξανά;')) return;
 
+  const isCorrection = !!currentSentId;
+  const reportId = currentSentId || generateReportId();
+
   btn.disabled = true;
-  status.textContent = 'Αποστολή... (μπορεί να χρειαστεί 10-20 δευτερόλεπτα)';
+  status.textContent = 'Αποστολή...';
   status.className = 'status';
 
-  const emailVal = document.getElementById('senderEmail').value.trim();
-  if (emailVal) localStorage.setItem(EMAIL_KEY, emailVal);
-
-  const payload = JSON.stringify(collectForSend());
+  const payloadObj = Object.assign({}, sendData, { reportId: reportId, isCorrection: isCorrection });
+  const payload = JSON.stringify(payloadObj);
 
   try {
     const resp = await fetch(API_URL, {
@@ -1911,18 +2010,30 @@ async function sendReport(){
     if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα στον διακομιστή.');
 
     btn.disabled = false;
-    status.innerHTML = '✅ Το δελτίο στάλθηκε (' + out.count + ' εγγραφές). Η φόρμα είναι έτοιμη για νέο δελτίο.';
+    status.innerHTML = '✅ Το δελτίο καταχωρήθηκε (' + out.count + ' εγγραφές). Επιλέξτε πώς θα το στείλετε.';
     status.className = 'status';
 
     const dlBox = document.getElementById('pdfDlBox');
     dlBox.innerHTML = '';
     if (out.pdfBase64){
+      const subjectLine = deltioSubjectLine(sendData.fields, isCorrection);
+      // Ανοίγει αυτόματα το μενού κοινής χρήσης, με το PDF ήδη συνημμένο.
+      sharePdf(out.pdfBase64, out.pdfName || 'deltio.pdf', subjectLine);
+
       const btnEl = document.createElement('button');
       btnEl.type = 'button';
       btnEl.className = 'pdf-dl-btn';
       btnEl.textContent = '📄 Αποθήκευση ' + (out.pdfName || 'deltio.pdf');
       btnEl.onclick = function(){ downloadPdf(out.pdfBase64, out.pdfName || 'deltio.pdf'); };
       dlBox.appendChild(btnEl);
+
+      const shareBtnEl = document.createElement('button');
+      shareBtnEl.type = 'button';
+      shareBtnEl.className = 'pdf-dl-btn';
+      shareBtnEl.style.background = '#1f3a5f';
+      shareBtnEl.textContent = '📤 Κοινή χρήση ξανά';
+      shareBtnEl.onclick = function(){ sharePdf(out.pdfBase64, out.pdfName || 'deltio.pdf', subjectLine); };
+      dlBox.appendChild(shareBtnEl);
     }
 
     if (currentDraftId){
@@ -1931,7 +2042,9 @@ async function sendReport(){
       setDrafts(drafts);
       renderDraftsList();
     }
+    saveSentReport(reportId, sendData.fields, sendData.incidents);
     currentDraftId = null;
+    currentSentId = null;
     markSent(sig);
     saveCrew();
     // Καθαρίζουμε τη φόρμα ώστε το επόμενο δελτίο να ξεκινά από την αρχή.
@@ -1941,7 +2054,7 @@ async function sendReport(){
     btn.disabled = false;
     // Αποθηκεύουμε αμέσως προσχέδιο, ώστε να μη χαθεί τίποτα αν κλείσει
     // η εφαρμογή πριν ξαναδοκιμάσει ο χρήστης.
-    saveDraft(true);
+    saveDraftSilently();
     status.textContent = 'Σφάλμα: ' + (err && err.message ? err.message : err) +
       ' — το δελτίο αποθηκεύτηκε ως προσχέδιο και δεν χάθηκε. Δοκιμάστε ξανά όταν έχετε σήμα.';
     status.className = 'status error';
@@ -2126,6 +2239,7 @@ function renderQuickLog(){
       attachTimeInput(row.querySelector('.qe-time'));
       attachTimeInput(row.querySelector('.qe-arrival'));
       attachTimeInput(row.querySelector('.qe-departure'));
+      attachAutoGrow(row.querySelector('.qe-result'));
       row.querySelector('.quick-save-btn').addEventListener('click', function(){ saveInlineEdit(i); });
     }
     container.appendChild(row);
@@ -2266,6 +2380,7 @@ function transferQuickLog(){
   renderDraftsList();
 
   currentDraftId = null;
+  currentSentId = null;
   clearForm();
   markSaved();
 
@@ -2283,8 +2398,7 @@ function blankFields(isoDate){
     startTime: '', endTime: '', kmA: '', kmB: '',
     odigos: '', arxigos: '', tritos: '', synodos: getMe() || '',
     katastasi: 'ΚΑΛΗ', venzini: '', oryktelaio: '',
-    imerominia: '', imerominiaRaw: isoDate || '',
-    senderEmail: localStorage.getItem(EMAIL_KEY) || ''
+    imerominia: '', imerominiaRaw: isoDate || ''
   };
   if (isoDate){
     const p = isoDate.split('-');
@@ -2417,6 +2531,8 @@ function loadRDraft(id){
   document.getElementById('rReporter').value = d.reporter || '';
   document.getElementById('rService').value = d.office || '';
   document.getElementById('rText').value = d.text || '';
+  attachAutoGrow(document.getElementById('rText'));
+  autoGrowTextarea(document.getElementById('rText'));
   rMarkSaved();
   document.getElementById('rConfirmBox').innerHTML = '';
   document.getElementById('rStatus').textContent = 'Άνοιξε η αναφορά.';
@@ -2460,23 +2576,6 @@ function saveAndCloseReport(){
   setTimeout(function(){ st.textContent = ''; }, 12000);
 }
 
-// Κοινή χρήση του PDF μέσω του μενού της συσκευής. Όπου δεν
-// υποστηρίζεται, το αρχείο απλώς κατεβαίνει.
-async function sharePdf(base64, filename){
-  try {
-    const bin = atob(base64);
-    const arr = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    const file = new File([arr], filename, { type: 'application/pdf' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })){
-      await navigator.share({ files: [file], title: filename });
-      return true;
-    }
-  } catch(e){ /* ακύρωση ή μη υποστήριξη */ }
-  downloadPdf(base64, filename);
-  return false;
-}
-
 /* ===== Τύπος αναφοράς: εσωτερική ή προς άλλη υπηρεσία ===== */
 const RMODE_KEY = 'deltio_rmode_v1';
 let reportMode = 'in';
@@ -2496,37 +2595,8 @@ function setReportMode(m){
     ? 'Γράψτε την υπηρεσία στην οποία απευθύνεται η αναφορά.'
     : 'Η υπηρεσία από πάνω μπαίνει πάντα. Εδώ προσθέστε το γραφείο, αν χρειάζεται — ή αφήστε το κενό.';
 
-  document.getElementById('rEmailBox').style.display = out ? 'none' : '';
-  document.getElementById('rOutHint').style.display = out ? 'block' : 'none';
-  document.getElementById('rSendBtn').textContent = out
-    ? 'Δημιουργία PDF και κοινή χρήση'
-    : 'Αποστολή αναφοράς';
-  renderREmailInfo();
-}
-
-function renderREmailInfo(){
-  const el = document.getElementById('rEmailInfo');
-  if (!el) return;
-  const mail = (localStorage.getItem(EMAIL_KEY) || '').trim();
-  el.textContent = mail ? ('Θα λάβετε αντίγραφο στο ' + mail + '.')
-                        : 'Δεν έχετε ορίσει email — δεν θα λάβετε αντίγραφο.';
-}
-
-function initReportEmail(){
-  const field = document.getElementById('rEmailField');
-  const input = document.getElementById('rEmail');
-  input.value = localStorage.getItem(EMAIL_KEY) || '';
-  document.getElementById('rEmailToggle').addEventListener('click', function(){
-    field.style.display = (field.style.display === 'none') ? 'block' : 'none';
-  });
-  input.addEventListener('change', function(){
-    const v = input.value.trim();
-    localStorage.setItem(EMAIL_KEY, v);
-    const other = document.getElementById('senderEmail');
-    if (other) other.value = v;
-    renderREmailInfo();
-  });
-  if (!input.value) field.style.display = 'block';
+  document.getElementById('rOutHint').style.display = 'block';
+  document.getElementById('rSendBtn').textContent = 'Δημιουργία PDF και κοινή χρήση';
 }
 
 function reportBase(){
@@ -2557,7 +2627,6 @@ function findReporterFor(name){
 
 function prepareReport(){
   document.getElementById('rBase').textContent = reportBase();
-  renderREmailInfo();
   const rep = document.getElementById('rReporter');
   const me = getMe();
   const full = findReporterFor(me);
@@ -2580,8 +2649,7 @@ function reportData(){
     date: shown,
     text: document.getElementById('rText').value.trim(),
     mode: reportMode,
-    shortName: getMe() || '',
-    senderEmail: (localStorage.getItem(EMAIL_KEY) || '').trim()
+    shortName: getMe() || ''
   };
 }
 
@@ -2614,7 +2682,7 @@ function reviewReport(){
       </div>
       <div class="confirm-btns">
         <button type="button" class="back-btn" onclick="document.getElementById('rConfirmBox').innerHTML=''">Πίσω για διόρθωση</button>
-        <button type="button" class="go-btn" onclick="sendReportDoc()">${r.mode === 'out' ? 'Δημιουργία PDF' : 'Επιβεβαίωση &amp; Αποστολή'}</button>
+        <button type="button" class="go-btn" onclick="sendReportDoc()">Δημιουργία PDF</button>
       </div>
     </div>`;
   box.scrollIntoView({ behavior:'smooth', block:'start' });
@@ -2632,9 +2700,8 @@ async function sendReportDoc(){
     return;
   }
 
-  const isOut = (reportMode === 'out');
   btn.disabled = true;
-  status.textContent = isOut ? 'Δημιουργία PDF...' : 'Αποστολή...';
+  status.textContent = 'Δημιουργία PDF...';
   status.className = 'status';
 
   try {
@@ -2644,19 +2711,22 @@ async function sendReportDoc(){
     if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα.');
 
     btn.disabled = false;
-    status.textContent = isOut ? '✅ Το PDF δημιουργήθηκε.' : '✅ Η αναφορά στάλθηκε.';
+    status.textContent = '✅ Το PDF δημιουργήθηκε. Επιλέξτε πώς θα το στείλετε.';
     status.className = 'status';
 
     if (out.pdfBase64){
-      if (isOut) await sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf');
+      sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf', 'Αναφορά - ' + (out.pdfName || ''));
       const el = document.createElement('button');
       el.type = 'button'; el.className = 'pdf-dl-btn';
-      el.textContent = isOut ? ('📤 Κοινή χρήση ' + (out.pdfName || '')) : ('📄 Αποθήκευση ' + (out.pdfName || 'anafora.pdf'));
-      el.onclick = function(){
-        if (isOut) sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf');
-        else downloadPdf(out.pdfBase64, out.pdfName || 'anafora.pdf');
-      };
+      el.textContent = '📄 Αποθήκευση ' + (out.pdfName || 'anafora.pdf');
+      el.onclick = function(){ downloadPdf(out.pdfBase64, out.pdfName || 'anafora.pdf'); };
       document.getElementById('rPdfBox').appendChild(el);
+
+      const shareEl = document.createElement('button');
+      shareEl.type = 'button'; shareEl.className = 'pdf-dl-btn'; shareEl.style.background = '#1f3a5f';
+      shareEl.textContent = '📤 Κοινή χρήση ξανά';
+      shareEl.onclick = function(){ sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf', 'Αναφορά - ' + (out.pdfName || '')); };
+      document.getElementById('rPdfBox').appendChild(shareEl);
     }
     if (currentRDraftId){
       const all = getRDrafts();
@@ -2674,8 +2744,6 @@ async function sendReportDoc(){
 }
 
 initShiftControls();
-initEmail();
-initReportEmail();
 document.querySelectorAll('.choice[data-rmode]').forEach(function(b){
   b.addEventListener('click', function(){ setReportMode(b.dataset.rmode); });
 });
@@ -2689,12 +2757,14 @@ setKatastasi('ΚΑΛΗ');
 renderShiftInfo();
 attachTimeInput(document.getElementById('startTime'));
 attachTimeInput(document.getElementById('endTime'));
+attachAutoGrow(document.getElementById('rText'));
 initAutocompletes();
 loadLists();
 renderWho();
 setupQuickAutocomplete();
 renderQuickLog();
 renderDraftsList();
+renderSentList();
 addSignal();
 (function(){
   const me = getMe();
