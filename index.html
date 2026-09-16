@@ -283,8 +283,8 @@
     font-size:11px;line-height:1.35;
   }
   .pv-doc th{background:#eee;font-weight:700;text-align:center;}
-  .pv-doc td.c1{width:52px;white-space:nowrap;}
-  .pv-doc td.c2{width:78px;white-space:nowrap;}
+  .pv-doc td.c1{width:38px;white-space:nowrap;}
+  .pv-doc td.c2{width:58px;white-space:nowrap;}
   .pv-center{text-align:center;font-weight:600;}
   .pv-sign{text-align:right;font-size:11px;margin-top:10px;line-height:1.6;}
   .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
@@ -1804,13 +1804,13 @@ async function sharePdf(base64, filename, shareTitle){
 /* ===== Προεπισκόπηση στη μορφή του εντύπου ===== */
 function serviceStartText(f){
   const orxos = String((f && f.orxos) || '').trim();
-  return 'Σας αναφέρω ότι το ανωτέρω όχημα παρελήφθη κανονικά από τον όρχο ' +
+  return 'Σας αναφέρω ότι το ανωτέρω όχημα παρελήφθη κανονικά από τον χώρο στάθμευσης ' +
     (orxos ? orxos + ' ' : '') +
     'με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.';
 }
 function serviceEndText(f){
   const orxos = String((f && f.orxos) || '').trim();
-  return 'Σας αναφέρω ότι το ανωτέρω όχημα αφέθη κανονικά στον όρχο ' +
+  return 'Σας αναφέρω ότι το ανωτέρω όχημα αφέθη κανονικά στον χώρο στάθμευσης ' +
     (orxos ? orxos + ' ' : '') +
     'με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.';
 }
