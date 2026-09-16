@@ -2017,8 +2017,18 @@ async function sendReport(){
     dlBox.innerHTML = '';
     if (out.pdfBase64){
       const subjectLine = deltioSubjectLine(sendData.fields, isCorrection);
-      // Ανοίγει αυτόματα το μενού κοινής χρήσης, με το PDF ήδη συνημμένο.
-      sharePdf(out.pdfBase64, out.pdfName || 'deltio.pdf', subjectLine);
+      // Οι browsers ανοίγουν το μενού κοινής χρήσης μόνο ως άμεση αντίδραση σε
+      // πάτημα του χρήστη — αν προσπαθήσουμε να το ανοίξουμε εμείς αυτόματα
+      // μετά την αναμονή της απάντησης, συχνά το μπλοκάρουν σιωπηλά και απλώς
+      // κατεβαίνει το αρχείο. Γι' αυτό δείχνουμε ένα καθαρό κουμπί: μόλις το
+      // πατήσετε, το μενού ανοίγει αμέσως, χωρίς καμία αναμονή.
+      const shareBtnEl = document.createElement('button');
+      shareBtnEl.type = 'button';
+      shareBtnEl.className = 'send-btn';
+      shareBtnEl.style.width = '100%';
+      shareBtnEl.textContent = '📤 Αποστολή δελτίου';
+      shareBtnEl.onclick = function(){ sharePdf(out.pdfBase64, out.pdfName || 'deltio.pdf', subjectLine); };
+      dlBox.appendChild(shareBtnEl);
 
       const btnEl = document.createElement('button');
       btnEl.type = 'button';
@@ -2027,13 +2037,7 @@ async function sendReport(){
       btnEl.onclick = function(){ downloadPdf(out.pdfBase64, out.pdfName || 'deltio.pdf'); };
       dlBox.appendChild(btnEl);
 
-      const shareBtnEl = document.createElement('button');
-      shareBtnEl.type = 'button';
-      shareBtnEl.className = 'pdf-dl-btn';
-      shareBtnEl.style.background = '#1f3a5f';
-      shareBtnEl.textContent = '📤 Κοινή χρήση ξανά';
-      shareBtnEl.onclick = function(){ sharePdf(out.pdfBase64, out.pdfName || 'deltio.pdf', subjectLine); };
-      dlBox.appendChild(shareBtnEl);
+      dlBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     if (currentDraftId){
@@ -2715,18 +2719,20 @@ async function sendReportDoc(){
     status.className = 'status';
 
     if (out.pdfBase64){
-      sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf', 'Αναφορά - ' + (out.pdfName || ''));
+      const shareTitle = 'Αναφορά - ' + (out.pdfName || '');
+      const shareEl = document.createElement('button');
+      shareEl.type = 'button'; shareEl.className = 'send-btn'; shareEl.style.width = '100%';
+      shareEl.textContent = '📤 Αποστολή αναφοράς';
+      shareEl.onclick = function(){ sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf', shareTitle); };
+      document.getElementById('rPdfBox').appendChild(shareEl);
+
       const el = document.createElement('button');
       el.type = 'button'; el.className = 'pdf-dl-btn';
       el.textContent = '📄 Αποθήκευση ' + (out.pdfName || 'anafora.pdf');
       el.onclick = function(){ downloadPdf(out.pdfBase64, out.pdfName || 'anafora.pdf'); };
       document.getElementById('rPdfBox').appendChild(el);
 
-      const shareEl = document.createElement('button');
-      shareEl.type = 'button'; shareEl.className = 'pdf-dl-btn'; shareEl.style.background = '#1f3a5f';
-      shareEl.textContent = '📤 Κοινή χρήση ξανά';
-      shareEl.onclick = function(){ sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf', 'Αναφορά - ' + (out.pdfName || '')); };
-      document.getElementById('rPdfBox').appendChild(shareEl);
+      document.getElementById('rPdfBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
     if (currentRDraftId){
       const all = getRDrafts();
