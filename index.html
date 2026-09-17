@@ -226,6 +226,9 @@
   .signal-summary .s-num{font-weight:700;color:#1f3a5f;margin-right:6px;}
   .signal-summary .s-time-lbl{font-weight:600;color:#1f3a5f;margin-right:6px;}
   .signal-summary .s-addr{display:block;color:#5c6773;font-size:12px;margin-top:2px;}
+  .signal-summary .s-times-row{display:flex;gap:14px;margin-top:6px;font-size:12px;}
+  .signal-summary .s-times-lbl{color:#5c6773;}
+  .signal-summary .s-times-val{font-weight:600;color:#1f3a5f;}
   .signal-head .s-index{font-weight:700;color:#1f3a5f;margin-right:6px;}
   .del-btn{
     background:#fff;border:1px solid #c9a09a;color:#993c1d;
@@ -827,6 +830,11 @@ function shiftForDate(isoDate){
 let signalCount = 0;
 let currentDraftId = null;
 let currentSentId = null;
+// Εμποδίζει διπλή αποστολή αν ο χρήστης πατήσει δύο φορές γρήγορα
+// (π.χ. διπλό tap σε κινητό) — χωρίς αυτό, κάθε πάτημα φτιάχνει δικό του
+// ID και καταλήγει σε δύο ξεχωριστές γραμμές στο αρχείο ασφαλείας.
+let isSendingReport = false;
+let isSendingReportDoc = false;
 let lastSavedSnapshot = null;
 
 /* ===== Βοηθητικά ώρας / βάρδιας ===== */
@@ -1190,7 +1198,7 @@ function addSignal(prefill){
       <button type="button" class="type-btn ${entryType==='cancel'?'active':''}" data-type="cancel">Ακυρώθηκε</button>
     </div>
     <div class="row2">
-      <div><span class="label">Ώρα</span><input type="text" class="s-time" placeholder="π.χ. 1120" value="${esc(prefill.time||'')}"></div>
+      <div><span class="label">Ώρα λήψης</span><input type="text" class="s-time" placeholder="π.χ. 1120" value="${esc(prefill.time||'')}"></div>
       <div class="signal-only">
         <span class="label">Κωδικός σήματος</span>
         <div class="ac-wrapper">
@@ -1479,16 +1487,23 @@ function updateSummary(card){
   const d = card.querySelector('.s-desc').value.trim();
   const a = card.querySelector('.s-address').value.trim();
   const r = card.querySelector('.s-result').value.trim();
+  const arr = card.querySelector('.s-arrival').value.trim();
+  const dep = card.querySelector('.s-departure').value.trim();
   const isInc = (card.dataset.type === 'incident');
   const num = card.querySelector('.s-index').textContent;
   const nCalls = card.querySelectorAll('.extra-calls .call-row').length;
   const extra = nCalls ? ' (+' + nCalls + ' κλήσεις)' : '';
   const main = (isInc ? (r || '—') : [c, d].filter(String).join(' ')) + extra;
+  const timesParts = [];
+  if (arr) timesParts.push('<span><span class="s-times-lbl">Άφιξη </span><span class="s-times-val">' + esc(arr) + '</span></span>');
+  if (dep) timesParts.push('<span><span class="s-times-lbl">Λήξη </span><span class="s-times-val">' + esc(dep) + '</span></span>');
+  const timesLine = timesParts.length ? '<span class="s-times-row">' + timesParts.join('') + '</span>' : '';
   card.querySelector('.signal-summary').innerHTML =
     '<span class="s-num">(' + esc(num) + ')</span>' +
     '<span class="s-time-lbl">' + esc(t || '--:--') + '</span>' +
     esc(main || '—') +
-    (a ? '<span class="s-addr">' + esc(a) + '</span>' : '');
+    (a ? '<span class="s-addr">' + esc(a) + '</span>' : '') +
+    timesLine;
 }
 
 // Ξαναριθμεί τις κάρτες ώστε η αρίθμηση να είναι πάντα συνεχής
@@ -2005,6 +2020,9 @@ function deltioSubjectLine(d, isCorrection){
 
 /* ===== ΑΠΟΣΤΟΛΗ ΠΡΟΣ ΤΟ APPS SCRIPT ===== */
 async function sendReport(){
+  if (isSendingReport) return; // εμποδίζει διπλό πάτημα να στείλει δύο φορές
+  isSendingReport = true;
+
   const btn = document.getElementById('sendBtn');
   const status = document.getElementById('statusMsg');
   document.getElementById('confirmBox').innerHTML = '';
@@ -2013,12 +2031,16 @@ async function sendReport(){
   if (!API_URL || API_URL.indexOf('ΕΠΙΚΟΛΛΗΣΤΕ') !== -1 || API_URL.indexOf('/exec') === -1){
     status.textContent = 'Σφάλμα ρύθμισης: δεν έχει οριστεί σωστά το API_URL (πρέπει να τελειώνει σε /exec).';
     status.className = 'status error';
+    isSendingReport = false;
     return;
   }
 
   const sendData = collectForSend();
   const sig = reportSignature(sendData);
-  if (wasSent(sig) && !confirm('Αυτό το δελτίο φαίνεται ότι έχει ήδη σταλεί.\n\nΝα σταλεί ξανά;')) return;
+  if (wasSent(sig) && !confirm('Αυτό το δελτίο φαίνεται ότι έχει ήδη σταλεί.\n\nΝα σταλεί ξανά;')){
+    isSendingReport = false;
+    return;
+  }
 
   const isCorrection = !!currentSentId;
   const reportId = currentSentId || generateReportId();
@@ -2079,6 +2101,8 @@ async function sendReport(){
     status.textContent = 'Σφάλμα: ' + (err && err.message ? err.message : err) +
       ' — το δελτίο αποθηκεύτηκε ως προσχέδιο και δεν χάθηκε. Δοκιμάστε ξανά όταν έχετε σήμα.';
     status.className = 'status error';
+  } finally {
+    isSendingReport = false;
   }
 }
 
@@ -2710,6 +2734,9 @@ function reviewReport(){
 }
 
 async function sendReportDoc(){
+  if (isSendingReportDoc) return; // εμποδίζει διπλό πάτημα να στείλει δύο φορές
+  isSendingReportDoc = true;
+
   const btn = document.getElementById('rSendBtn');
   const status = document.getElementById('rStatus');
   document.getElementById('rConfirmBox').innerHTML = '';
@@ -2718,6 +2745,7 @@ async function sendReportDoc(){
   if (!API_URL || API_URL.indexOf('/exec') === -1){
     status.textContent = 'Σφάλμα ρύθμισης: δεν έχει οριστεί το API_URL.';
     status.className = 'status error';
+    isSendingReportDoc = false;
     return;
   }
 
@@ -2750,6 +2778,8 @@ async function sendReportDoc(){
     btn.disabled = false;
     status.textContent = 'Σφάλμα: ' + (err && err.message ? err.message : err);
     status.className = 'status error';
+  } finally {
+    isSendingReportDoc = false;
   }
 }
 
