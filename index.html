@@ -138,6 +138,12 @@
   }
   .send-btn:disabled, .save-btn:disabled{opacity:.6;}
   .status{text-align:center;font-size:13px;margin-top:10px;color:#2f6e4e;}
+  .spinner{
+    display:inline-block;width:13px;height:13px;border:2px solid #ccd4dc;
+    border-top-color:#1f3a5f;border-radius:50%;vertical-align:-2px;margin-right:6px;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
   .status.error{color:#a32d2d;}
   .pdf-dl-btn{
     width:100%;margin-top:10px;padding:12px;background:#2f6e4e;color:#fff;border:none;
@@ -315,6 +321,7 @@
       <input type="text" id="quickCode" placeholder="π.χ. Ε-19" autocomplete="off">
       <div class="ac-list" id="quickCodeList"></div>
     </div>
+    <div class="hint">Η περιγραφή του κωδικού μπαίνει αυτόματα στο δελτίο — δεν χρειάζεται να την ξαναγράψετε.</div>
   </div>
   <div class="field" style="margin-top:10px;">
     <span class="label">Περιγραφή</span>
@@ -345,9 +352,11 @@
   </div>
 
   <div class="drafts-box">
-    <div class="dtitle">Σταλμένα δελτία (για διόρθωση)</div>
-    <div class="hint" style="margin:-2px 0 8px;">Ανοίξτε ένα ήδη σταλμένο δελτίο για να το διορθώσετε. Θα σταλεί ξανά «εις το ορθόν».</div>
-    <div id="sentList"><span class="no-drafts">Δεν υπάρχουν σταλμένα δελτία.</span></div>
+    <button type="button" class="link-btn" id="sentToggle" style="font-weight:600;">Σταλμένα δελτία (για διόρθωση) ▾</button>
+    <div id="sentWrap" style="display:none;">
+      <div class="hint" style="margin:8px 0 8px;">Ανοίξτε ένα ήδη σταλμένο δελτίο για να το διορθώσετε. Θα σταλεί ξανά «εις το ορθόν».</div>
+      <div id="sentList"><span class="no-drafts">Δεν υπάρχουν σταλμένα δελτία.</span></div>
+    </div>
   </div>
 
   <button type="button" class="new-btn" onclick="newReport()">+ Νέο δελτίο</button>
@@ -740,6 +749,9 @@ function saveSentReport(id, fields, incidents){
   renderSentList();
 }
 
+const GREEK_MONTHS = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος',
+  'Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+
 function renderSentList(){
   const box = document.getElementById('sentList');
   if (!box) return;
@@ -750,22 +762,36 @@ function renderSentList(){
     return;
   }
   box.innerHTML = '';
-  ids.sort((a,b) => all[b].sentAt - all[a].sentAt).forEach(id => {
-    const d = all[id];
-    const n = (d.incidents || []).length;
-    const label = `${d.fields.code || '—'} · ${d.fields.imerominia || '—'} · ${shiftLabel(d.fields)} (${n})`;
-    const row = document.createElement('div');
-    row.className = 'draft-item';
-    row.innerHTML = `<button type="button" class="load">${esc(label)}</button><button type="button" class="del">Διαγραφή</button>`;
-    row.querySelector('.load').addEventListener('click', () => loadSentReport(id));
-    row.querySelector('.del').addEventListener('click', () => {
-      if (!confirm('Διαγραφή αυτού του σταλμένου δελτίου από τη λίστα; (Δεν διαγράφεται από το αρχείο ασφαλείας.)')) return;
-      const cur = getSentReports();
-      delete cur[id];
-      setSentReports(cur);
-      renderSentList();
+  // Ομαδοποίηση ανά μήνα/έτος αποστολής, πιο πρόσφατος μήνας πρώτος.
+  const groups = {};
+  ids.forEach(id => {
+    const dt = new Date(all[id].sentAt);
+    const key = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
+    (groups[key] = groups[key] || []).push(id);
+  });
+  Object.keys(groups).sort().reverse().forEach(key => {
+    const [y, m] = key.split('-').map(Number);
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:11px;font-weight:700;color:#1f3a5f;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px;';
+    header.textContent = GREEK_MONTHS[m - 1] + ' ' + y;
+    box.appendChild(header);
+    groups[key].sort((a, b) => all[b].sentAt - all[a].sentAt).forEach(id => {
+      const d = all[id];
+      const n = (d.incidents || []).length;
+      const label = `${d.fields.code || '—'} · ${d.fields.imerominia || '—'} · ${shiftLabel(d.fields)} (${n})`;
+      const row = document.createElement('div');
+      row.className = 'draft-item';
+      row.innerHTML = `<button type="button" class="load">${esc(label)}</button><button type="button" class="del">Διαγραφή</button>`;
+      row.querySelector('.load').addEventListener('click', () => loadSentReport(id));
+      row.querySelector('.del').addEventListener('click', () => {
+        if (!confirm('Διαγραφή αυτού του σταλμένου δελτίου από τη λίστα; (Δεν διαγράφεται από το αρχείο ασφαλείας.)')) return;
+        const cur = getSentReports();
+        delete cur[id];
+        setSentReports(cur);
+        renderSentList();
+      });
+      box.appendChild(row);
     });
-    box.appendChild(row);
   });
 }
 
@@ -1171,6 +1197,7 @@ function addSignal(prefill){
           <input type="text" class="s-code" placeholder="π.χ. Ε-19" autocomplete="off" value="${esc(prefill.signalCode||'')}">
           <div class="ac-list s-code-list"></div>
         </div>
+        <div class="hint">Η περιγραφή του κωδικού (π.χ. «Συναγερμός») μπαίνει αυτόματα στο δελτίο — δεν χρειάζεται να την ξαναγράψετε.</div>
       </div>
     </div>
     <div class="field signal-only"><span class="label">Περιγραφή σήματος</span><input type="text" class="s-desc" placeholder="π.χ. σε οικία" value="${esc(prefill.desc||'')}"></div>
@@ -1815,8 +1842,17 @@ function serviceEndText(f){
     'με όλα τα δημόσια είδη και το δελτίο καυσίμων. Ενημερώθηκε το ΚΑΔ.';
 }
 
+function signalCodeName(code){
+  const key = String(code || '').trim().toUpperCase();
+  if (!key) return '';
+  const found = getSignalCodes().find(o => o.c.toUpperCase() === key);
+  return found ? found.n : '';
+}
+
 function signalFirstLine(inc){
-  const base = [inc.signalCode, inc.desc].filter(String).join(' ');
+  const codeName = signalCodeName(inc.signalCode);
+  const codePart = [inc.signalCode, codeName].filter(String).join(' ');
+  const base = [codePart, inc.desc].filter(String).join(' - ');
   if (!inc.address) return base;
   return base ? (base + ', ' + inc.address) : inc.address;
 }
@@ -1988,7 +2024,7 @@ async function sendReport(){
   const reportId = currentSentId || generateReportId();
 
   btn.disabled = true;
-  status.textContent = 'Αποστολή...';
+  status.innerHTML = '<span class="spinner"></span>Δημιουργείται το δελτίο...';
   status.className = 'status';
 
   const payloadObj = Object.assign({}, sendData, { reportId: reportId, isCorrection: isCorrection });
@@ -2686,7 +2722,7 @@ async function sendReportDoc(){
   }
 
   btn.disabled = true;
-  status.textContent = 'Δημιουργία PDF...';
+  status.innerHTML = '<span class="spinner"></span>Δημιουργία PDF...';
   status.className = 'status';
 
   try {
@@ -2739,6 +2775,12 @@ setupQuickAutocomplete();
 renderQuickLog();
 renderDraftsList();
 renderSentList();
+document.getElementById('sentToggle').addEventListener('click', function(){
+  const w = document.getElementById('sentWrap');
+  const open = (w.style.display === 'none');
+  w.style.display = open ? 'block' : 'none';
+  this.textContent = 'Σταλμένα δελτία (για διόρθωση) ' + (open ? '▴' : '▾');
+});
 addSignal();
 (function(){
   const me = getMe();
