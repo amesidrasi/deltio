@@ -1117,6 +1117,26 @@ function attachTimeInput(el){
   });
 }
 
+/* ===== Κενά προτύπου (……): πάτημα πάνω τους τα επιλέγει όλα μαζί =====
+   Έτσι ό,τι γράψει ο χρήστης αντικαθιστά τις τελείες, χωρίς να τις σβήσει. */
+const BLANK_RE = /…+|\.{3,}/g;
+function selectBlankAtCaret(el){
+  if (el.selectionStart !== el.selectionEnd) return; // ήδη επιλογή από τον χρήστη
+  const v = el.value;
+  const pos = el.selectionStart;
+  BLANK_RE.lastIndex = 0;
+  let m;
+  while ((m = BLANK_RE.exec(v)) !== null){
+    const a = m.index, b = m.index + m[0].length;
+    if (pos >= a && pos <= b){ el.setSelectionRange(a, b); return; }
+  }
+}
+function attachBlankSelect(el){
+  if (!el || el.dataset.blankSelectAttached) return;
+  el.dataset.blankSelectAttached = '1';
+  el.addEventListener('click', function(){ setTimeout(function(){ selectBlankAtCaret(el); }, 0); });
+}
+
 /* ===== Πεδία κειμένου: αυτόματη μεγέθυνση καθώς γράφετε ===== */
 function autoGrowTextarea(el){
   if (!el) return;
@@ -1216,7 +1236,7 @@ function addSignal(prefill){
     </div>
     <div class="field">
       <span class="label s-result-label">${entryType==='incident'?'Περιγραφή':'Αποτέλεσμα'}</span>
-      <button type="button" class="suggest-toggle signal-only" style="display:none;">Επιλογή έτοιμης απάντησης ▾</button>
+      <button type="button" class="suggest-toggle signal-only" style="display:none;">Έτοιμη απάντηση / Πρότυπο γραφής ▾</button>
       <div class="suggest-panel signal-only" style="display:none;"></div>
       <textarea class="s-result" rows="4" style="margin-top:8px;">${esc(prefill.result||'')}</textarea>
     </div>
@@ -1247,6 +1267,7 @@ function addSignal(prefill){
   document.getElementById('signalsContainer').appendChild(div);
 
   attachAutoGrow(div.querySelector('.s-result'));
+  attachBlankSelect(div.querySelector('.s-result'));
   attachAutoGrow(div.querySelector('.s-ctext'));
   attachAutoGrow(div.querySelector('.s-rtext'));
 
@@ -1399,7 +1420,7 @@ function addSignal(prefill){
     suggestToggle.style.display = 'block';
     // Το πάνελ μένει κλειστό μέχρι να το ζητήσει ο χρήστης.
     suggestPanel.style.display = 'none';
-    suggestPanel.innerHTML = currentOptions.map((txt, i) =>
+    suggestPanel.innerHTML = '<div class="hint" style="margin:0;">Τα κενά …… συμπληρώνονται από εσάς. Πατήστε πάνω στις τελείες για να επιλεγούν όλες μαζί και γράψτε κατευθείαν.</div>' + currentOptions.map((txt, i) =>
       `<button type="button" class="suggest-card" data-i="${i}">${esc(txt)}</button>`
     ).join('');
     suggestPanel.querySelectorAll('.suggest-card').forEach(card => {
@@ -1407,7 +1428,7 @@ function addSignal(prefill){
         resultInput.value = currentOptions[card.dataset.i];
         autoGrowTextarea(resultInput);
         suggestPanel.style.display = 'none';
-        suggestToggle.textContent = 'Επιλογή έτοιμης απάντησης ▾';
+        suggestToggle.textContent = 'Έτοιμη απάντηση / Πρότυπο γραφής ▾';
       });
     });
   }
@@ -1418,7 +1439,7 @@ function addSignal(prefill){
   suggestToggle.addEventListener('click', () => {
     const open = (suggestPanel.style.display === 'none');
     suggestPanel.style.display = open ? 'flex' : 'none';
-    suggestToggle.textContent = open ? 'Απόκρυψη έτοιμων απαντήσεων ▴' : 'Επιλογή έτοιμης απάντησης ▾';
+    suggestToggle.textContent = open ? 'Απόκρυψη ▴' : 'Έτοιμη απάντηση / Πρότυπο γραφής ▾';
   });
 
   renumberSignals();
@@ -1884,6 +1905,11 @@ function collectWarnings(data){
   data.incidents.forEach(function(inc, i){
     const n = i + 1;
     if (!inc.time || inc.time === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα.');
+    if (inc.type !== 'repeat' && inc.type !== 'cancel' && inc.result){
+      BLANK_RE.lastIndex = 0;
+      if (BLANK_RE.test(inc.result)) w.push('Εγγραφή ' + n + ': υπάρχουν ακόμα κενά (……) στο κείμενο του αποτελέσματος.');
+      BLANK_RE.lastIndex = 0;
+    }
     if (inc.type === 'incident'){
       if (!inc.result) w.push('Εγγραφή ' + n + ': λείπει η περιγραφή.');
       if (!inc.departure || inc.departure === '-') w.push('Εγγραφή ' + n + ': λείπει η ώρα λήξης.');
@@ -2285,6 +2311,7 @@ function renderQuickLog(){
       attachTimeInput(row.querySelector('.qe-arrival'));
       attachTimeInput(row.querySelector('.qe-departure'));
       attachAutoGrow(row.querySelector('.qe-result'));
+      attachBlankSelect(row.querySelector('.qe-result'));
       row.querySelector('.quick-save-btn').addEventListener('click', function(){ saveInlineEdit(i); });
     }
     container.appendChild(row);
