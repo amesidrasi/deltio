@@ -883,7 +883,7 @@ function setupAutocomplete(inputId, listId, getOptions){
     const f = filter.trim().toUpperCase();
     const matches = f ? options.filter(o => o.toUpperCase().includes(f)) : options;
     if (matches.length === 0){ list.style.display = 'none'; list.innerHTML = ''; return; }
-    list.innerHTML = matches.slice(0, 60).map(o => `<div class="ac-item">${o}</div>`).join('');
+    list.innerHTML = matches.slice(0, 300).map(o => `<div class="ac-item">${o}</div>`).join('');
     list.style.display = 'block';
     list.querySelectorAll('.ac-item').forEach(item => {
       item.addEventListener('mousedown', function(e){
@@ -1391,7 +1391,7 @@ function addSignal(prefill){
       ? getSignalCodes().filter(o => o.c.toUpperCase().includes(f) || o.n.toUpperCase().includes(f))
       : getSignalCodes();
     if (matches.length === 0){ codeList.style.display='none'; codeList.innerHTML=''; return; }
-    codeList.innerHTML = matches.slice(0,60)
+    codeList.innerHTML = matches.slice(0,300)
       .map(o => `<div class="ac-item" data-code="${o.c}">${o.c} — ${o.n}</div>`).join('');
     codeList.style.display = 'block';
     codeList.querySelectorAll('.ac-item').forEach(item => {
@@ -2164,7 +2164,7 @@ function setupQuickAutocomplete(){
       ? getSignalCodes().filter(o => o.c.toUpperCase().includes(f) || o.n.toUpperCase().includes(f))
       : getSignalCodes();
     if (matches.length === 0){ list.style.display='none'; list.innerHTML=''; return; }
-    list.innerHTML = matches.slice(0,60)
+    list.innerHTML = matches.slice(0,300)
       .map(o => `<div class="ac-item" data-code="${o.c}">${o.c} — ${o.n}</div>`).join('');
     list.style.display = 'block';
     list.querySelectorAll('.ac-item').forEach(item => {
