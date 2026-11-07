@@ -486,6 +486,15 @@
     <div class="dtitle">Ημιτελείς αναφορές</div>
     <div id="rDraftsList"><span class="no-drafts">Δεν υπάρχουν ημιτελείς αναφορές.</span></div>
   </div>
+
+  <div class="drafts-box">
+    <button type="button" class="link-btn" id="rSentToggle" style="font-weight:600;">Σταλμένες αναφορές (για διόρθωση) ▾</button>
+    <div id="rSentWrap" style="display:none;">
+      <div class="hint" style="margin:8px 0 8px;">Ανοίξτε μια ήδη σταλμένη αναφορά για να την διορθώσετε και να την ξαναστείλετε.</div>
+      <div id="rSentList"><span class="no-drafts">Δεν υπάρχουν σταλμένες αναφορές.</span></div>
+    </div>
+  </div>
+
   <button type="button" class="new-btn" onclick="newReportDoc()">+ Νέα αναφορά</button>
 
   <div class="section-title" style="margin-top:0;">Αναφορά</div>
@@ -2495,7 +2504,87 @@ function switchTab(tab){
 /* ===== Αναφορά ===== */
 /* ===== Ημιτελείς αναφορές ===== */
 const RDRAFTS_KEY = 'deltio_rdrafts_v1';
+const SENT_RDOCS_KEY = 'deltio_sent_reportdocs_v1';
 let currentRDraftId = null;
+let currentSentRId = null;   // ≠ null όταν διορθώνω ήδη σταλμένη αναφορά
+
+// ===== Ιστορικό σταλμένων αναφορών (τοπικά, ανά συσκευή) =====
+function getSentRDocs(){
+  try { return JSON.parse(localStorage.getItem(SENT_RDOCS_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function setSentRDocs(o){ localStorage.setItem(SENT_RDOCS_KEY, JSON.stringify(o)); }
+
+function saveSentRDoc(id, snap){
+  const all = getSentRDocs();
+  all[id] = Object.assign({}, snap, { sentAt: Date.now() });
+  setSentRDocs(all);
+  renderSentRList();
+}
+
+function renderSentRList(){
+  const box = document.getElementById('rSentList');
+  if (!box) return;
+  const all = getSentRDocs();
+  const ids = Object.keys(all);
+  if (!ids.length){
+    box.innerHTML = '<span class="no-drafts">Δεν υπάρχουν σταλμένες αναφορές.</span>';
+    return;
+  }
+  box.innerHTML = '';
+  // Ομαδοποίηση ανά μήνα αποστολής, πιο πρόσφατος μήνας πρώτος.
+  const groups = {};
+  ids.forEach(id => {
+    const dt = new Date(all[id].sentAt);
+    const key = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
+    (groups[key] = groups[key] || []).push(id);
+  });
+  Object.keys(groups).sort().reverse().forEach(key => {
+    const [y, m] = key.split('-').map(Number);
+    const header = document.createElement('div');
+    header.style.cssText = 'font-size:11px;font-weight:700;color:#1f3a5f;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px;';
+    header.textContent = GREEK_MONTHS[m - 1] + ' ' + y;
+    box.appendChild(header);
+    groups[key].sort((a, b) => all[b].sentAt - all[a].sentAt).forEach(id => {
+      const d = all[id];
+      const row = document.createElement('div');
+      row.className = 'draft-item';
+      row.innerHTML = '<button type="button" class="load">' + esc(rDraftLabel(d)) +
+        (d.mode === 'out' ? ' · προς άλλη υπηρεσία' : '') +
+        '</button><button type="button" class="del">Διαγραφή</button>';
+      row.querySelector('.load').addEventListener('click', () => loadSentRDoc(id));
+      row.querySelector('.del').addEventListener('click', () => {
+        if (!confirm('Διαγραφή αυτής της σταλμένης αναφοράς από τη λίστα;')) return;
+        const cur = getSentRDocs();
+        delete cur[id];
+        setSentRDocs(cur);
+        renderSentRList();
+      });
+      box.appendChild(row);
+    });
+  });
+}
+
+function loadSentRDoc(id){
+  const d = getSentRDocs()[id];
+  if (!d) return;
+  rAutosaveNow();
+  currentRDraftId = null;
+  currentSentRId = id;
+  setReportMode(d.mode || 'in');
+  document.getElementById('rDate').value = d.date || '';
+  document.getElementById('rReporter').value = d.reporter || '';
+  document.getElementById('rService').value = d.office || '';
+  document.getElementById('rText').value = d.text || '';
+  attachAutoGrow(document.getElementById('rText'));
+  autoGrowTextarea(document.getElementById('rText'));
+  rMarkSaved();
+  document.getElementById('rConfirmBox').innerHTML = '';
+  document.getElementById('rPdfBox').innerHTML = '';
+  const st = document.getElementById('rStatus');
+  st.textContent = 'Άνοιξε η σταλμένη αναφορά. Κάντε τις διορθώσεις και ξαναστείλτε την.';
+  st.className = 'status';
+}
 let rAutosaveTimer = null;
 let rLastSnapshot = null;
 
@@ -2599,6 +2688,7 @@ function loadRDraft(id){
   if (!d) return;
   rAutosaveNow();
   currentRDraftId = id;
+  currentSentRId = null;
   document.getElementById('rDate').value = d.date || '';
   document.getElementById('rReporter').value = d.reporter || '';
   document.getElementById('rService').value = d.office || '';
@@ -2617,6 +2707,7 @@ function clearReportForm(){
   document.getElementById('rDate').value = '';
   document.getElementById('rReporter').value = '';
   currentRDraftId = null;
+  currentSentRId = null;
   prepareReport();
   rMarkSaved();
 }
@@ -2740,6 +2831,7 @@ function reviewReport(){
   box.innerHTML = `
     <div class="preview-wrap">
       <h4>Προεπισκόπηση αναφοράς</h4>
+      ${currentSentRId ? '<div class="pv-warn" style="background:#eef1f4;border-color:#ccd4dc;"><strong>Διόρθωση σταλμένης αναφοράς.</strong> Θα δημιουργηθεί νέο PDF και το θέμα του email θα ξεκινά «ΕΙΣ ΤΟ ΟΡΘΟΝ».</div>' : ''}
       ${w.length ? '<div class="pv-warn"><strong>Προσοχή — ελλείψεις:</strong><ul>' + w.map(function(x){return '<li>'+esc(x)+'</li>';}).join('') + '</ul></div>' : ''}
       <div class="pv-doc" style="font-size:12px;line-height:1.7;">
         <div style="text-align:right;">${esc(city)}, ${esc(r.date || '—')}</div>
@@ -2776,13 +2868,24 @@ async function sendReportDoc(){
     return;
   }
 
+  // Στιγμιότυπο των πεδίων πριν σταλεί, ώστε να αποθηκευτεί στις σταλμένες.
+  const isCorrection = !!currentSentRId;
+  const rid = currentSentRId || generateReportId();
+  const snap = {
+    date: document.getElementById('rDate').value,
+    reporter: document.getElementById('rReporter').value,
+    office: document.getElementById('rService').value,
+    text: document.getElementById('rText').value,
+    mode: reportMode
+  };
+
   btn.disabled = true;
   status.innerHTML = '<span class="spinner"></span>Δημιουργία PDF...';
   status.className = 'status';
 
   try {
     const resp = await fetch(API_URL, { method:'POST',
-      body: new URLSearchParams({ action:'report', payload: JSON.stringify(reportData()) }) });
+      body: new URLSearchParams({ action:'report', payload: JSON.stringify(Object.assign(reportData(), { reportId: rid, isCorrection: isCorrection })) }) });
     const out = JSON.parse(await resp.text());
     if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα.');
 
@@ -2791,8 +2894,11 @@ async function sendReportDoc(){
     status.className = 'status';
 
     if (out.pdfBase64){
-      sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf', 'Αναφορά - ' + (out.pdfName || ''));
+      const shareTitle = (isCorrection ? 'ΕΙΣ ΤΟ ΟΡΘΟΝ - ' : '') + 'Αναφορά - ' + (out.pdfName || '');
+      sharePdf(out.pdfBase64, out.pdfName || 'anafora.pdf', shareTitle);
     }
+    saveSentRDoc(rid, snap);
+    currentSentRId = null;
     if (currentRDraftId){
       const all = getRDrafts();
       delete all[currentRDraftId];
@@ -2818,6 +2924,13 @@ setReportMode(localStorage.getItem(RMODE_KEY) || 'in');
 document.getElementById('reportView').addEventListener('input', rAutosave);
 document.getElementById('reportView').addEventListener('change', rAutosave);
 renderRDrafts();
+renderSentRList();
+document.getElementById('rSentToggle').addEventListener('click', function(){
+  const w = document.getElementById('rSentWrap');
+  const open = (w.style.display === 'none');
+  w.style.display = open ? 'block' : 'none';
+  this.textContent = 'Σταλμένες αναφορές (για διόρθωση) ' + (open ? '▴' : '▾');
+});
 document.getElementById('fullView').addEventListener('input', function(){ renderSectionMarks(); autosave(); });
 document.getElementById('fullView').addEventListener('change', function(){ renderSectionMarks(); autosave(); });
 setKatastasi('ΚΑΛΗ');
