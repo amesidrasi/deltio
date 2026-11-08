@@ -64,7 +64,7 @@
   .type-btn.active{background:#1f3a5f;color:#fff;}
   .top-tabs{display:flex;gap:0;background:#e3e1d8;}
   .top-tab{
-    flex:1;padding:12px;font-size:13px;font-weight:600;background:none;border:none;
+    flex:1;padding:12px 4px;font-size:12px;font-weight:600;background:none;border:none;
     color:#5c6773;border-bottom:3px solid transparent;
   }
   .top-tab.active{color:#1f3a5f;border-bottom-color:#1f3a5f;background:#f4f3ee;}
@@ -299,6 +299,32 @@
   .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
   .confirm-btns .back-btn{padding:12px;background:#fff;border:1px solid #999;color:#333;border-radius:6px;font-size:13px;}
   .confirm-btns .go-btn{padding:12px;background:#1f3a5f;border:none;color:#fff;border-radius:6px;font-size:13px;font-weight:600;}
+  /* ===== Απόδοση ===== */
+  .ap-count{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:7px 0;border-bottom:1px solid #e6e4dc;font-size:13px;line-height:1.3;}
+  .ap-count:last-child{border-bottom:none;}
+  .ap-step{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+  .ap-step button{width:36px;height:36px;padding:0;font-size:18px;line-height:1;
+    border:1px solid #1f3a5f;background:#fff;color:#1f3a5f;border-radius:6px;}
+  .ap-step input{width:52px;text-align:center;padding:7px 2px;font-weight:600;}
+  .ap-step input.has-val{border-color:#1f3a5f;background:#eef1f4;color:#1f3a5f;}
+  details.ap-sec{background:#fff;border:1px solid #ddd;border-radius:8px;margin-top:12px;}
+  details.ap-sec > summary{padding:12px;font-size:13px;font-weight:600;color:#1f3a5f;
+    cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px;}
+  details.ap-sec > summary::-webkit-details-marker{display:none;}
+  details.ap-sec > summary::after{content:'▾';}
+  details.ap-sec[open] > summary::after{content:'▴';}
+  details.ap-sec .ap-sec-body{padding:0 12px 12px;}
+  .ap-sec .ap-badge{font-weight:400;color:#5c6773;font-size:12px;margin-left:auto;margin-right:6px;}
+  .ap-block{background:#f4f3ee;border:1px solid #ddd;border-radius:8px;padding:10px;margin-bottom:10px;}
+  .ap-block-head{display:flex;justify-content:space-between;align-items:center;
+    font-size:12px;font-weight:700;color:#1f3a5f;margin-bottom:8px;}
+  .ap-block .field:last-child{margin-bottom:0;}
+  .ap-radio{display:flex;flex-wrap:wrap;gap:6px;}
+  .ap-radio .choice{flex:1 1 auto;padding:9px 6px;font-size:12px;}
+  .ap-confirm{background:#fff;border:1px solid #1f3a5f;border-radius:8px;padding:12px;margin-top:12px;
+    font-size:13px;line-height:1.5;}
+  .ap-confirm ul{margin:6px 0 0;padding-left:18px;}
 </style>
 </head>
 <body>
@@ -314,6 +340,7 @@
   <button type="button" class="top-tab active" id="tabQuickBtn" onclick="switchTab('quick')">Γρήγορη Καταγραφή</button>
   <button type="button" class="top-tab" id="tabFullBtn" onclick="switchTab('full')">Πλήρες Δελτίο</button>
   <button type="button" class="top-tab" id="tabReportBtn" onclick="switchTab('report')">Αναφορά</button>
+  <button type="button" class="top-tab" id="tabApodosiBtn" onclick="switchTab('apodosi')">Απόδοση</button>
 </div>
 
 <div class="section" id="quickView">
@@ -544,6 +571,66 @@
   <div id="rConfirmBox"></div>
   <div id="rStatus" class="status"></div>
   <div id="rPdfBox"></div>
+</div>
+
+<div class="section" id="apodosiView" style="display:none;">
+  <div class="section-title" style="margin-top:0;">Απόδοση βάρδιας</div>
+  <div class="hint" style="margin:-4px 0 10px;">Η απόδοση στέλνεται στη φόρμα «e-apodosi», όπως αν τη συμπληρώνατε από εκεί.</div>
+
+  <div class="field">
+    <span class="label">Κωδικός περιπολικού</span>
+    <select id="apKodikos"></select>
+  </div>
+  <div class="field">
+    <span class="label">Σήματα ΚΑΔ</span>
+    <input type="text" id="apKad" inputmode="numeric" placeholder="π.χ. 15">
+  </div>
+
+  <div class="section-title">Έλεγχοι και προσαγωγές</div>
+  <div id="apElegxoi"></div>
+
+  <div class="section-title">Κλήσεις και μηνύσεις</div>
+  <div id="apKliseis"></div>
+
+  <details class="ap-sec" id="apSecPros">
+    <summary>Ανάλυση προσαγωγών<span class="ap-badge" id="apBadgePros"></span></summary>
+    <div class="ap-sec-body">
+      <div class="hint" style="margin:0 0 8px;">Μόνο αν υπήρξαν προσαγωγές (ημεδαπών και αλλοδαπών). Έως 7.</div>
+      <div id="apProsList"></div>
+      <button type="button" class="add-btn" id="apProsAdd">+ Προσθήκη προσαγωγής</button>
+    </div>
+  </details>
+
+  <details class="ap-sec" id="apSecSyl">
+    <summary>Ανάλυση συλλήψεων<span class="ap-badge" id="apBadgeSyl"></span></summary>
+    <div class="ap-sec-body">
+      <div class="hint" style="margin:0 0 8px;">Μόνο αν υπήρξαν συλλήψεις. Αν η αιτία δεν υπάρχει στη λίστα, επιλέξτε «Άλλο» και γράψτε την. Έως 6.</div>
+      <div id="apSylList"></div>
+      <button type="button" class="add-btn" id="apSylAdd">+ Προσθήκη σύλληψης</button>
+    </div>
+  </details>
+
+  <details class="ap-sec" id="apSecAnef">
+    <summary>Ανευρέσεις κλεμμένων<span class="ap-badge" id="apBadgeAnef"></span></summary>
+    <div class="ap-sec-body">
+      <div id="apAnefCounts"></div>
+      <div id="apAnefList" style="margin-top:10px;"></div>
+      <button type="button" class="add-btn" id="apAnefAdd">+ Προσθήκη ανεύρεσης</button>
+    </div>
+  </details>
+
+  <details class="ap-sec" id="apSecLoipa">
+    <summary>Λοιπά στοιχεία (προαιρετικά)<span class="ap-badge" id="apBadgeLoipa"></span></summary>
+    <div class="ap-sec-body">
+      <div id="apLoipa"></div>
+    </div>
+  </details>
+
+  <div class="autosave">Αποθηκεύεται αυτόματα μέχρι να σταλεί</div>
+  <button type="button" class="send-btn" id="apSendBtn" style="width:100%;margin-top:10px;" onclick="apReview()">Αποστολή απόδοσης</button>
+  <button type="button" class="link-btn" style="margin:10px auto 0;text-align:center;" onclick="apClearAsk()">Καθαρισμός φόρμας</button>
+  <div id="apConfirmBox"></div>
+  <div id="apStatus" class="status"></div>
 </div>
 
 <script>
@@ -2497,6 +2584,9 @@ function switchTab(tab){
   document.getElementById('tabQuickBtn').classList.toggle('active', tab === 'quick');
   document.getElementById('tabFullBtn').classList.toggle('active', tab === 'full');
   document.getElementById('tabReportBtn').classList.toggle('active', tab === 'report');
+  document.getElementById('apodosiView').style.display = (tab === 'apodosi') ? 'block' : 'none';
+  document.getElementById('tabApodosiBtn').classList.toggle('active', tab === 'apodosi');
+  if (tab === 'apodosi') prepareApodosi();
   if (tab === 'full') renderPendingNotice();
   if (tab === 'report') prepareReport();
 }
@@ -2959,6 +3049,354 @@ addSignal();
   renderCrewRecall();
 })();
 markSaved();
+
+/* =======================================================================
+   ΑΠΟΔΟΣΗ — στέλνεται στη φόρμα Google «e-apodosi new version»
+   μέσω του Apps Script (action=apodosi). Οι αντιστοιχίες με τα πεδία της
+   φόρμας βρίσκονται στο Code.gs· εδώ υπάρχουν μόνο οι ετικέτες.
+   ======================================================================= */
+const AP_KEY = 'deltio_apodosi_v1';
+const AP_LAST_CODE_KEY = 'deltio_apodosi_code_v1';
+const AP_CODES = ['Α 1-1','Α 1-2','Α 1-3','Α 1-4','Α 1-5','Α 1-6','Α 2-1','Α 2-2','Α 2-3','Α 2-4','Α 2-5',
+  'Α 3-1','Α 3-2','Α 3-3','Α 3-4','Α 3-5','Α 3-6','Α 4-1','Α 4-2','Α 4-3','Α 4-4',
+  'Α 5-1','Α 5-2','Α 5-3','Α 5-4','Α 5-5','Α 5-6','Α 5-7','Α 6-1','Α 6-2','Α 6-3','Α 6-4',
+  'Α 7-1','Α 7-2','Α 7-3','Α 7-4','Α 7-5','Α 8-1','Α 8-2','Α 8-3','Α 8-4','Α 9-1','Α 9-2','Α 9-3',
+  'Β 1-1','Β 1-2','Β 1-3','Β 1-4','Β 2-1','Β 2-2','Β 2-3','Β 2-4','Β 3-1','Β 3-2','Β 3-3','Β 3-4','Β 3-5',
+  'Β 4-1','Β 4-2','Β 4-3','Β 4-4','Β 4-5','Β 4-6','Β 5-1','Β 5-3','Β 5-4','Β 6-1','Β 6-2','Β 6-3','Β 6-4','Β 6-5',
+  'Β 7-1','Β 7-2','Β 7-3','Β 7-4','Β 7-5','Β 8-1','Β 8-2','Β 8-3','Β 8-4','Β 8-5','Β 8-6',
+  'Β 9-1','Β 9-2','Β 9-3','Β 9-4','Β 9-5'];
+// [κλειδί, ετικέτα, μέγιστο (null = χωρίς όριο)]
+const AP_ELEGXOI = [['oxim','Έλεγχοι οχημάτων'],['imed','Έλεγχοι ημεδαπών'],['allod','Έλεγχοι αλλοδαπών'],
+  ['prosImed','Προσαγωγές ημεδαπών'],['prosAllod','Προσαγωγές αλλοδαπών'],['syll','Συλλήψεις ημεδαπών και αλλοδαπών']];
+const AP_KLISEIS = [['genika','Μηνύσεις γενικά'],['kok','Μηνύσεις ΚΟΚ'],['seso','Κλήσεις ΣΕΣΟ'],
+  ['stath','Κλήσεις στάθμευσης'],['loipes','Λοιπές κλήσεις'],['covid','Παραβάσεις COVID']];
+const AP_ANEF = [['auto','Αυτοκίνητα (ΙΧΦ)',6],['diky','Δίκυκλα',6]];
+const AP_LOIPA = [['genika','Έλεγχοι καταστημάτων (γενικά)'],['diatElegxoi','Έλεγχοι για διατάραξη'],
+  ['diatMinyseis','Μηνύσεις για διατάραξη'],['diatAftofora','Αυτόφωρα για διατάραξη'],
+  ['diatSfragiseis','Σφραγίσεις καταστημάτων για διατάραξη'],['rampes','Παραβάσεις ΚΟΚ για ράμπες ΑΜΕΑ'],
+  ['covidKatElegxoi','Έλεγχοι καταστημάτων για COVID'],['covidKatAtoma','Έλεγχοι ατόμων σε καταστήματα για COVID'],
+  ['covidKatParav','Παραβάσεις COVID σε καταστήματα'],['covidMmmElegxoi','Έλεγχοι ατόμων για COVID σε ΜΜΜ'],
+  ['covidMmmParav','Παραβάσεις COVID σε ΜΜΜ'],['covidLoipaElegxoi','Έλεγχοι ατόμων για COVID σε λοιπά σημεία'],
+  ['covidLoipaParav','Παραβάσεις COVID σε λοιπά σημεία'],['voitheia','Παροχή βοήθειας σε ιδιώτες',10]];
+const AP_AITIES = ['ΛΗΣΤΕΙΑ','ΑΡΠΑΓΗ ΤΣΑΝΤΑΣ','ΚΑΤΟΧΗ ΟΠΛΩΝ κλπ','ΚΑΤΟΧΗ ΝΑΡΚΩΤΙΚΩΝ','ΚΛΟΠΕΣ-ΔΙΑΡΡΗΞΕΙΣ (ΓΕΝΙΚΑ)',
+  'ΚΛΟΠΕΣ ΟΧΗΜΑΤΩΝ','ΕΠΑΙΤΕΙΑ','ΑΠΑΣΧΟΛΗΣΗ ΛΑΘΡΟΜΕΤΑΝΑΣΤΩΝ','ΕΛΛΕΙΨΗ ΤΑΞΙΔΙΩΤΙΚΩΝ ΕΓΓΡΑΦΩΝ',
+  'ΑΛΛΟ ( ΣΥΜΠΛΗΡΩΣΕ ΣΤΟ ΕΠΟΜΕΝΟ ΚΟΥΤΙ ΤΗΝ ΑΙΤΙΑ )'];
+const AP_AITIA_ALLO = AP_AITIES[AP_AITIES.length - 1];
+const AP_TYPOI = ['ΑΥΤΟΚΙΝΗΤΟ-ΙΧΦ','ΔΙΚΥΚΛΟ'];
+const AP_TROPOI = ['ΠΕΡΙΠΟΛΙΑ-ΕΛΕΓΧΟΣ','ΣΗΜΑ Κ.Α.Δ.','ΚΑΤΑΔΙΩΞΗ'];
+const AP_LIMIT = { pros: 7, syl: 6, anefList: 3 };
+
+function apEmpty(){
+  return { id:'', kodikos:'', kad:'', el:{}, kl:{}, anef:{}, loipa:{}, pros:[], syl:[], anefList:[] };
+}
+function apLoad(){
+  try {
+    const o = JSON.parse(localStorage.getItem(AP_KEY) || 'null');
+    if (o && typeof o === 'object') return Object.assign(apEmpty(), o);
+  } catch(e){}
+  return apEmpty();
+}
+let AP = apLoad();
+let apSending = false;
+function apSave(){ try { localStorage.setItem(AP_KEY, JSON.stringify(AP)); } catch(e){} }
+function apNum(v){ const n = parseInt(v, 10); return (isNaN(n) || n < 0) ? 0 : n; }
+
+/* ----- Μετρητές ----- */
+function apCounterHtml(group, def){
+  const v = apNum((AP[group] || {})[def[0]]);
+  const max = def[2] || '';
+  return '<div class="ap-count"><span>' + esc(def[1]) + '</span><div class="ap-step">' +
+    '<button type="button" data-ap-step="-1" data-g="' + group + '" data-k="' + def[0] + '" aria-label="Μείον">−</button>' +
+    '<input type="text" inputmode="numeric" placeholder="0" data-ap-count="1" data-g="' + group + '" data-k="' + def[0] + '"' +
+    (max ? ' data-max="' + max + '"' : '') + ' value="' + (v ? v : '') + '" class="' + (v ? 'has-val' : '') + '">' +
+    '<button type="button" data-ap-step="1" data-g="' + group + '" data-k="' + def[0] + '" aria-label="Συν">+</button>' +
+    '</div></div>';
+}
+function apRenderCounters(){
+  document.getElementById('apElegxoi').innerHTML = AP_ELEGXOI.map(function(d){ return apCounterHtml('el', d); }).join('');
+  document.getElementById('apKliseis').innerHTML = AP_KLISEIS.map(function(d){ return apCounterHtml('kl', d); }).join('');
+  document.getElementById('apAnefCounts').innerHTML = AP_ANEF.map(function(d){ return apCounterHtml('anef', d); }).join('');
+  document.getElementById('apLoipa').innerHTML = AP_LOIPA.map(function(d){ return apCounterHtml('loipa', d); }).join('');
+}
+function apSetCount(input, n){
+  const max = parseInt(input.dataset.max || '0', 10);
+  if (n < 0) n = 0;
+  if (max && n > max) n = max;
+  const g = input.dataset.g, k = input.dataset.k;
+  const before = apNum(AP[g][k]);
+  if (n) AP[g][k] = n; else delete AP[g][k];
+  input.value = n ? n : '';
+  input.classList.toggle('has-val', !!n);
+  apAfterCountChange(g, k, before, n);
+}
+// Όταν δηλώνεται η πρώτη προσαγωγή ή σύλληψη, ανοίγει μόνη της η ανάλυσή της.
+function apAfterCountChange(g, k, before, after){
+  if (g !== 'el' || before > 0 || after === 0) return;
+  if (k === 'prosImed' || k === 'prosAllod'){
+    if (!AP.pros.length){ AP.pros.push({}); apRenderList('pros'); }
+    document.getElementById('apSecPros').open = true;
+  }
+  if (k === 'syll'){
+    if (!AP.syl.length){ AP.syl.push({}); apRenderList('syl'); }
+    document.getElementById('apSecSyl').open = true;
+  }
+}
+
+/* ----- Αναλυτικές καταχωρίσεις ----- */
+function apField(kind, i, f, label, inner){
+  return '<div class="field"><span class="label">' + label + '</span>' + inner + '</div>';
+}
+function apText(kind, i, f, ph, extra){
+  const v = (AP[kind][i] || {})[f] || '';
+  return '<input type="text" data-ap-kind="' + kind + '" data-i="' + i + '" data-f="' + f + '"' +
+    (ph ? ' placeholder="' + esc(ph) + '"' : '') + (extra || '') + ' value="' + esc(v) + '">';
+}
+function apSelect(kind, i, f, opts, emptyLabel){
+  const v = (AP[kind][i] || {})[f] || '';
+  return '<select data-ap-kind="' + kind + '" data-i="' + i + '" data-f="' + f + '">' +
+    '<option value="">' + esc(emptyLabel || '—') + '</option>' +
+    opts.map(function(o){ return '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') +
+    '</select>';
+}
+function apChoices(kind, i, f, opts){
+  const v = (AP[kind][i] || {})[f] || '';
+  return '<div class="ap-radio">' + opts.map(function(o){
+    return '<button type="button" class="choice' + (o === v ? ' active' : '') + '" data-ap-choice="1" data-ap-kind="' + kind +
+      '" data-i="' + i + '" data-f="' + f + '" data-v="' + esc(o) + '">' + esc(o) + '</button>';
+  }).join('') + '</div>';
+}
+const AP_NUMS_21 = Array.from({ length: 21 }, function(_, n){ return String(n + 1); });
+const AP_TITLES = { pros: 'Προσαγωγή', syl: 'Σύλληψη', anefList: 'Ανεύρεση' };
+
+function apBlockHtml(kind, i){
+  const r = AP[kind][i] || {};
+  const time = 'inputmode="numeric" data-ap-time="1"';
+  let body = '';
+  if (kind === 'pros'){
+    body =
+      '<div class="row2">' + apField(kind, i, 'time', 'Ώρα', apText(kind, i, 'time', 'π.χ. 2215', ' ' + time)) +
+      apField(kind, i, 'arithmos', 'Αριθμός προσαχθέντων', apSelect(kind, i, 'arithmos', AP_NUMS_21)) + '</div>' +
+      apField(kind, i, 'tmima', 'Τμήμα προσαγωγής', apText(kind, i, 'tmima', 'π.χ. Α.Τ. Γλυφάδας')) +
+      apField(kind, i, 'ethn', 'Εθνικότητα', apText(kind, i, 'ethn', 'π.χ. ΕΛΛΗΝΙΚΗ'));
+  } else if (kind === 'syl'){
+    body =
+      '<div class="row2">' + apField(kind, i, 'time', 'Ώρα', apText(kind, i, 'time', 'π.χ. 2215', ' ' + time)) +
+      apField(kind, i, 'arithmos', 'Αριθμός συλληφθέντων', apSelect(kind, i, 'arithmos', AP_NUMS_21)) + '</div>' +
+      apField(kind, i, 'tmima', 'Τμήμα σύλληψης', apText(kind, i, 'tmima', 'π.χ. Α.Τ. Αχαρνών')) +
+      apField(kind, i, 'ethn', 'Εθνικότητα συλληφθέντων', apText(kind, i, 'ethn', 'π.χ. ΑΛΒΑΝΙΚΗ')) +
+      apField(kind, i, 'aitia', 'Αιτία σύλληψης', apSelect(kind, i, 'aitia', AP_AITIES)) +
+      (r.aitia === AP_AITIA_ALLO ? apField(kind, i, 'allo', 'Άλλη αιτία', apText(kind, i, 'allo', 'Γράψτε την αιτία')) : '') +
+      apField(kind, i, 'perigrafi', 'Περιγραφή σύλληψης',
+        '<textarea data-ap-kind="syl" data-i="' + i + '" data-f="perigrafi" placeholder="π.χ. 1 ΣΥΛΛΗΨΗ ΑΛΛΟΔΑΠΟΥ ΝΑΡΚΩΤΙΚΑ ... Τ.Α. ΑΧΑΡΝΩΝ. ΣΥΝΕΛΗΦΘΗ Ο ...">' +
+        esc(r.perigrafi || '') + '</textarea>');
+  } else {
+    body =
+      '<div class="row2">' + apField(kind, i, 'time', 'Ώρα', apText(kind, i, 'time', 'π.χ. 0310', ' ' + time)) +
+      apField(kind, i, 'ak', 'Αριθμός κυκλοφορίας', apText(kind, i, 'ak', 'π.χ. ΖΜΚ-0707')) + '</div>' +
+      apField(kind, i, 'odos', 'Οδός, αριθμός, οικείο ΑΤ ή ΤΑ', apText(kind, i, 'odos', 'π.χ. Θησέως 12 - Α.Τ. Καλλιθέας')) +
+      apField(kind, i, 'typos', 'Τύπος οχήματος', apChoices(kind, i, 'typos', AP_TYPOI)) +
+      apField(kind, i, 'tropos', 'Τρόπος ανεύρεσης', apChoices(kind, i, 'tropos', AP_TROPOI));
+  }
+  return '<div class="ap-block"><div class="ap-block-head"><span>' + AP_TITLES[kind] + ' ' + (i + 1) + '</span>' +
+    '<button type="button" class="del-call" style="background:none;border:none;color:#993c1d;font-size:12px;text-decoration:underline;" ' +
+    'data-ap-del="' + kind + '" data-i="' + i + '">διαγραφή</button></div>' + body + '</div>';
+}
+const AP_LIST_IDS = { pros: ['apProsList','apProsAdd'], syl: ['apSylList','apSylAdd'], anefList: ['apAnefList','apAnefAdd'] };
+function apRenderList(kind){
+  const ids = AP_LIST_IDS[kind];
+  const box = document.getElementById(ids[0]);
+  box.innerHTML = AP[kind].map(function(_, i){ return apBlockHtml(kind, i); }).join('');
+  box.querySelectorAll('[data-ap-time]').forEach(attachTimeInput);
+  box.querySelectorAll('textarea').forEach(function(t){ if (typeof attachAutoGrow === 'function') attachAutoGrow(t); });
+  document.getElementById(ids[1]).style.display = (AP[kind].length >= AP_LIMIT[kind]) ? 'none' : 'block';
+}
+function apAdd(kind){
+  if (AP[kind].length >= AP_LIMIT[kind]) return;
+  AP[kind].push({});
+  apSave();
+  apRenderList(kind);
+  apBadges();
+}
+
+/* ----- Σήμανση πλήθους στις κλειστές ενότητες ----- */
+function apFilled(o){ return Object.keys(o || {}).some(function(k){ return String(o[k] || '').trim() !== ''; }); }
+function apBadges(){
+  function cnt(kind){ return AP[kind].filter(apFilled).length; }
+  const p = cnt('pros'), s = cnt('syl'), a = cnt('anefList');
+  const an = apNum(AP.anef.auto) + apNum(AP.anef.diky);
+  const lo = Object.keys(AP.loipa).filter(function(k){ return apNum(AP.loipa[k]) > 0; }).length;
+  document.getElementById('apBadgePros').textContent = p ? p + ' καταχωρ.' : '';
+  document.getElementById('apBadgeSyl').textContent = s ? s + ' καταχωρ.' : '';
+  document.getElementById('apBadgeAnef').textContent = (an || a) ? (an + ' οχήματα') : '';
+  document.getElementById('apBadgeLoipa').textContent = lo ? lo + ' συμπληρωμένα' : '';
+}
+
+/* ----- Αρχική απεικόνιση ----- */
+function prepareApodosi(){
+  const sel = document.getElementById('apKodikos');
+  if (!sel.options.length){
+    sel.innerHTML = '<option value="">— Επιλέξτε —</option>' +
+      AP_CODES.map(function(c){ return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
+  }
+  if (!AP.kodikos) AP.kodikos = localStorage.getItem(AP_LAST_CODE_KEY) || '';
+  sel.value = AP.kodikos;
+  document.getElementById('apKad').value = AP.kad || '';
+  apRenderCounters();
+  apRenderList('pros'); apRenderList('syl'); apRenderList('anefList');
+  apBadges();
+}
+
+/* ----- Συμβάντα (μία φορά, με ανάθεση στο apodosiView) ----- */
+(function(){
+  const view = document.getElementById('apodosiView');
+  view.addEventListener('click', function(e){
+    const t = e.target.closest('button');
+    if (!t) return;
+    if (t.dataset.apStep){
+      const input = t.parentNode.querySelector('input');
+      apSetCount(input, apNum(input.value) + parseInt(t.dataset.apStep, 10));
+    } else if (t.dataset.apChoice){
+      const r = AP[t.dataset.apKind][+t.dataset.i];
+      r[t.dataset.f] = (r[t.dataset.f] === t.dataset.v) ? '' : t.dataset.v;  // δεύτερο πάτημα = ακύρωση
+      t.parentNode.querySelectorAll('.choice').forEach(function(b){ b.classList.toggle('active', b.dataset.v === r[t.dataset.f]); });
+    } else if (t.dataset.apDel){
+      const kind = t.dataset.apDel, i = +t.dataset.i;
+      if (apFilled(AP[kind][i]) && !confirm('Διαγραφή της καταχώρισης ' + (i + 1) + ';')) return;
+      AP[kind].splice(i, 1);
+      apRenderList(kind);
+    } else return;
+    apSave(); apBadges();
+  });
+  view.addEventListener('input', function(e){
+    const t = e.target;
+    if (t.id === 'apKad'){ t.value = t.value.replace(/[^0-9]/g, '').slice(0, 3); AP.kad = t.value; }
+    else if (t.dataset.apCount){
+      t.value = t.value.replace(/[^0-9]/g, '').slice(0, 3);
+      apSetCount(t, apNum(t.value));
+    }
+    else if (t.dataset.apKind){ AP[t.dataset.apKind][+t.dataset.i][t.dataset.f] = t.value; }
+    else return;
+    apSave(); apBadges();
+  });
+  view.addEventListener('change', function(e){
+    const t = e.target;
+    if (t.id === 'apKodikos'){ AP.kodikos = t.value; }
+    else if (t.tagName === 'SELECT' && t.dataset.apKind){
+      AP[t.dataset.apKind][+t.dataset.i][t.dataset.f] = t.value;
+      if (t.dataset.f === 'aitia') apRenderList(t.dataset.apKind);  // εμφάνιση/απόκρυψη «Άλλη αιτία»
+    } else return;
+    apSave(); apBadges();
+  });
+  // Οι ώρες διορθώνονται (π.χ. 915 → 09:15) όταν φύγει ο κέρσορας από το πεδίο.
+  view.addEventListener('focusout', function(e){
+    const t = e.target;
+    if (!t.dataset || !t.dataset.apTime) return;
+    setTimeout(function(){ AP[t.dataset.apKind][+t.dataset.i].time = t.value; apSave(); }, 0);
+  });
+  document.getElementById('apProsAdd').addEventListener('click', function(){ apAdd('pros'); });
+  document.getElementById('apSylAdd').addEventListener('click', function(){ apAdd('syl'); });
+  document.getElementById('apAnefAdd').addEventListener('click', function(){ apAdd('anefList'); });
+})();
+
+/* ----- Έλεγχος και επιβεβαίωση πριν την αποστολή ----- */
+function apSummaryLines(){
+  const out = [];
+  function counts(defs, group){
+    defs.forEach(function(d){ const n = apNum(AP[group][d[0]]); if (n) out.push(d[1] + ': ' + n); });
+  }
+  counts(AP_ELEGXOI, 'el');
+  counts(AP_KLISEIS, 'kl');
+  const p = AP.pros.filter(apFilled).length, s = AP.syl.filter(apFilled).length;
+  if (p) out.push('Ανάλυση προσαγωγών: ' + p);
+  if (s) out.push('Ανάλυση συλλήψεων: ' + s);
+  counts(AP_ANEF, 'anef');
+  const a = AP.anefList.filter(apFilled).length;
+  if (a) out.push('Αναλυτικές ανευρέσεις: ' + a);
+  counts(AP_LOIPA, 'loipa');
+  return out;
+}
+function apWarnings(){
+  const w = [];
+  const pros = apNum(AP.el.prosImed) + apNum(AP.el.prosAllod);
+  if (pros && !AP.pros.some(apFilled)) w.push('Δηλώσατε προσαγωγές, αλλά δεν συμπληρώσατε την ανάλυσή τους.');
+  if (apNum(AP.el.syll) && !AP.syl.some(apFilled)) w.push('Δηλώσατε συλλήψεις, αλλά δεν συμπληρώσατε την ανάλυσή τους.');
+  AP.syl.forEach(function(r, i){
+    if (r.aitia === AP_AITIA_ALLO && !String(r.allo || '').trim()) w.push('Σύλληψη ' + (i + 1) + ': επιλέξατε «Άλλο» χωρίς να γράψετε την αιτία.');
+  });
+  ['pros','syl','anefList'].forEach(function(kind){
+    AP[kind].forEach(function(r, i){
+      if (r.time && !/^\d{2}:\d{2}$/.test(r.time)) w.push(AP_TITLES[kind] + ' ' + (i + 1) + ': η ώρα δεν είναι σωστή και δεν θα σταλεί.');
+    });
+  });
+  return w;
+}
+function apReview(){
+  const status = document.getElementById('apStatus');
+  status.textContent = ''; status.className = 'status';
+  if (!AP.kodikos){
+    status.textContent = 'Επιλέξτε κωδικό περιπολικού.';
+    status.className = 'status error';
+    document.getElementById('apKodikos').focus();
+    return;
+  }
+  const lines = apSummaryLines();
+  const warns = apWarnings();
+  document.getElementById('apConfirmBox').innerHTML =
+    '<div class="ap-confirm"><b>Αποστολή απόδοσης για ' + esc(AP.kodikos) + '</b>' +
+    (AP.kad !== '' ? '<div>Σήματα ΚΑΔ: ' + esc(AP.kad) + '</div>' : '') +
+    (lines.length ? '<ul>' + lines.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>'
+                  : '<div class="hint">Δεν έχετε συμπληρώσει κανέναν αριθμό.</div>') +
+    (warns.length ? '<div class="pv-warn" style="margin-top:10px;">' + warns.map(esc).join('<br>') + '</div>' : '') +
+    '<div class="confirm-btns"><button type="button" class="back-btn" onclick="apCloseConfirm()">Πίσω</button>' +
+    '<button type="button" class="go-btn" onclick="apSend()">Αποστολή</button></div></div>';
+  document.getElementById('apConfirmBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function apCloseConfirm(){ document.getElementById('apConfirmBox').innerHTML = ''; }
+
+async function apSend(){
+  if (apSending) return;
+  apSending = true;
+  apCloseConfirm();
+  const btn = document.getElementById('apSendBtn');
+  const status = document.getElementById('apStatus');
+  // Σταθερό αναγνωριστικό: αν η αποστολή ξαναγίνει μετά από σφάλμα δικτύου,
+  // ο διακομιστής το αναγνωρίζει και δεν καταχωρεί την απόδοση δύο φορές.
+  if (!AP.id){ AP.id = 'AP-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7); apSave(); }
+  btn.disabled = true;
+  status.innerHTML = '<span class="spinner"></span>Αποστολή στη φόρμα...';
+  status.className = 'status';
+  try {
+    const resp = await fetch(API_URL, { method: 'POST',
+      body: new URLSearchParams({ action: 'apodosi', payload: JSON.stringify({ apodosiId: AP.id, sender: getMe() || '', ap: AP }) }) });
+    const out = JSON.parse(await resp.text());
+    if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα.');
+    localStorage.setItem(AP_LAST_CODE_KEY, AP.kodikos);
+    const code = AP.kodikos;
+    AP = apEmpty();
+    apSave();
+    prepareApodosi();
+    document.querySelectorAll('#apodosiView details.ap-sec').forEach(function(d){ d.open = false; });
+    status.textContent = '✅ Η απόδοση για ' + code + ' καταχωρήθηκε στη φόρμα.';
+    status.className = 'status';
+  } catch(err){
+    status.textContent = 'Σφάλμα: ' + (err && err.message ? err.message : err) + ' Τα στοιχεία σας παραμένουν αποθηκευμένα.';
+    status.className = 'status error';
+  } finally {
+    btn.disabled = false;
+    apSending = false;
+  }
+}
+function apClearAsk(){
+  if (!confirm('Να καθαριστούν όλα τα πεδία της απόδοσης;')) return;
+  const code = AP.kodikos;
+  AP = apEmpty();
+  AP.kodikos = code;
+  apSave();
+  prepareApodosi();
+  apCloseConfirm();
+  document.getElementById('apStatus').textContent = '';
+}
+prepareApodosi();
 </script>
 
 </body>
