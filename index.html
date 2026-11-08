@@ -322,6 +322,8 @@
   .ap-block .field:last-child{margin-bottom:0;}
   .ap-radio{display:flex;flex-wrap:wrap;gap:6px;}
   .ap-radio .choice{flex:1 1 auto;padding:9px 6px;font-size:12px;}
+  textarea.ap-perigrafi{min-height:230px;font-size:14px;}
+  textarea.ap-perigrafi::placeholder{color:#9aa3ad;}
   .ap-confirm{background:#fff;border:1px solid #1f3a5f;border-radius:8px;padding:12px;margin-top:12px;
     font-size:13px;line-height:1.5;}
   .ap-confirm ul{margin:6px 0 0;padding-left:18px;}
@@ -575,7 +577,6 @@
 
 <div class="section" id="apodosiView" style="display:none;">
   <div class="section-title" style="margin-top:0;">Απόδοση βάρδιας</div>
-  <div class="hint" style="margin:-4px 0 10px;">Η απόδοση στέλνεται στη φόρμα «e-apodosi», όπως αν τη συμπληρώνατε από εκεί.</div>
 
   <div class="field">
     <span class="label">Κωδικός περιπολικού</span>
@@ -595,7 +596,7 @@
   <details class="ap-sec" id="apSecPros">
     <summary>Ανάλυση προσαγωγών<span class="ap-badge" id="apBadgePros"></span></summary>
     <div class="ap-sec-body">
-      <div class="hint" style="margin:0 0 8px;">Μόνο αν υπήρξαν προσαγωγές (ημεδαπών και αλλοδαπών). Έως 7.</div>
+      <div class="hint" style="margin:0 0 8px;">Μόνο αν υπήρξαν προσαγωγές (ημεδαπών και αλλοδαπών).</div>
       <div id="apProsList"></div>
       <button type="button" class="add-btn" id="apProsAdd">+ Προσθήκη προσαγωγής</button>
     </div>
@@ -604,7 +605,7 @@
   <details class="ap-sec" id="apSecSyl">
     <summary>Ανάλυση συλλήψεων<span class="ap-badge" id="apBadgeSyl"></span></summary>
     <div class="ap-sec-body">
-      <div class="hint" style="margin:0 0 8px;">Μόνο αν υπήρξαν συλλήψεις. Αν η αιτία δεν υπάρχει στη λίστα, επιλέξτε «Άλλο» και γράψτε την. Έως 6.</div>
+      <div class="hint" style="margin:0 0 8px;">Μόνο αν υπήρξαν συλλήψεις. Αν η αιτία δεν υπάρχει στη λίστα, επιλέξτε «Άλλο» και γράψτε την.</div>
       <div id="apSylList"></div>
       <button type="button" class="add-btn" id="apSylAdd">+ Προσθήκη σύλληψης</button>
     </div>
@@ -620,7 +621,7 @@
   </details>
 
   <details class="ap-sec" id="apSecLoipa">
-    <summary>Λοιπά στοιχεία (προαιρετικά)<span class="ap-badge" id="apBadgeLoipa"></span></summary>
+    <summary>Λοιπά στοιχεία<span class="ap-badge" id="apBadgeLoipa"></span></summary>
     <div class="ap-sec-body">
       <div id="apLoipa"></div>
     </div>
@@ -3131,7 +3132,9 @@ function apSetCount(input, n){
 }
 // Όταν δηλώνεται η πρώτη προσαγωγή ή σύλληψη, ανοίγει μόνη της η ανάλυσή της.
 function apAfterCountChange(g, k, before, after){
-  if (g !== 'el' || before > 0 || after === 0) return;
+  if (before > 0 || after === 0) return;
+  if (g === 'anef' && !AP.anefList.length){ AP.anefList.push({}); apRenderList('anefList'); return; }
+  if (g !== 'el') return;
   if (k === 'prosImed' || k === 'prosAllod'){
     if (!AP.pros.length){ AP.pros.push({}); apRenderList('pros'); }
     document.getElementById('apSecPros').open = true;
@@ -3166,6 +3169,11 @@ function apChoices(kind, i, f, opts){
   }).join('') + '</div>';
 }
 const AP_NUMS_21 = Array.from({ length: 21 }, function(_, n){ return String(n + 1); });
+const AP_PERIGRAFI_PH =
+  '1ο παράδειγμα: 1 ΣΥΛΛΗΨΗ ΑΛΛΟΔΑΠΟΥ ΝΑΡΚΩΤΙΚΑ ΑΡΧΑΙΟΥ ΘΕΑΤΡΟΥ 35 Τ.Α. ΑΧΑΡΝΩΝ\n' +
+  'ΣΥΝΕΛΗΦΘΗ Ο KUCUKI NESTOR TOY ARDIAN ΓΕΝ.1995 ΑΛΒΑΝΙΑ ΓΙΑ ΚΑΤΟΧΗ 17,4 ΓΡ. ΗΡΩΪΝΗΣ.\n\n' +
+  '2ο παράδειγμα: 2 ΣΥΛΛΗΨΕΙΣ ΗΜΕΔΑΠΩΝ ΠΡΙΓΚΗΠΟΣ ΠΕΤΡΟΥ 35 ΔΙΩΚΤΙΚΑ Τ.Α. ΓΛΥΦΑΔΑΣ\n' +
+  'ΣΥΝΕΛΗΦΘΗΣΑΝ Ο ΚΑΜΠΟΥΡΗΣ ΠΑΝΤΕΛΕΗΜΩΝ ΤΟΥ ΒΑΣΙΛΕΙΟΥ ΓΕΝ. 1980 ΣΤΗΝ ΑΘΗΝΑ ΚΑΙ Ο ΠΑΠΑΔΟΠΟΥΛΟΣ ΙΩΑΝΝΗΣ ΤΟΥ ΣΠΥΡΙΔΩΝΑ ΓΕΝ 1991 ΣΤΗΝ ΠΑΤΡΑ ΓΙΑ ΔΙΩΚΤΙΚΑ.';
 const AP_TITLES = { pros: 'Προσαγωγή', syl: 'Σύλληψη', anefList: 'Ανεύρεση' };
 
 function apBlockHtml(kind, i){
@@ -3187,7 +3195,7 @@ function apBlockHtml(kind, i){
       apField(kind, i, 'aitia', 'Αιτία σύλληψης', apSelect(kind, i, 'aitia', AP_AITIES)) +
       (r.aitia === AP_AITIA_ALLO ? apField(kind, i, 'allo', 'Άλλη αιτία', apText(kind, i, 'allo', 'Γράψτε την αιτία')) : '') +
       apField(kind, i, 'perigrafi', 'Περιγραφή σύλληψης',
-        '<textarea data-ap-kind="syl" data-i="' + i + '" data-f="perigrafi" placeholder="π.χ. 1 ΣΥΛΛΗΨΗ ΑΛΛΟΔΑΠΟΥ ΝΑΡΚΩΤΙΚΑ ... Τ.Α. ΑΧΑΡΝΩΝ. ΣΥΝΕΛΗΦΘΗ Ο ...">' +
+        '<textarea class="ap-perigrafi" data-ap-kind="syl" data-i="' + i + '" data-f="perigrafi" placeholder="' + esc(AP_PERIGRAFI_PH) + '">' +
         esc(r.perigrafi || '') + '</textarea>');
   } else {
     body =
@@ -3315,20 +3323,51 @@ function apSummaryLines(){
   counts(AP_LOIPA, 'loipa');
   return out;
 }
-function apWarnings(){
-  const w = [];
-  const pros = apNum(AP.el.prosImed) + apNum(AP.el.prosAllod);
-  if (pros && !AP.pros.some(apFilled)) w.push('Δηλώσατε προσαγωγές, αλλά δεν συμπληρώσατε την ανάλυσή τους.');
-  if (apNum(AP.el.syll) && !AP.syl.some(apFilled)) w.push('Δηλώσατε συλλήψεις, αλλά δεν συμπληρώσατε την ανάλυσή τους.');
-  AP.syl.forEach(function(r, i){
-    if (r.aitia === AP_AITIA_ALLO && !String(r.allo || '').trim()) w.push('Σύλληψη ' + (i + 1) + ': επιλέξατε «Άλλο» χωρίς να γράψετε την αιτία.');
+// Υποχρεωτικά πεδία ανά καταχώριση: [πεδίο, όνομα για το μήνυμα]
+const AP_REQUIRED = {
+  pros: [['time','η ώρα'],['arithmos','ο αριθμός προσαχθέντων'],['tmima','το τμήμα'],['ethn','η εθνικότητα']],
+  syl: [['time','η ώρα'],['arithmos','ο αριθμός συλληφθέντων'],['tmima','το τμήμα'],['ethn','η εθνικότητα'],
+        ['aitia','η αιτία'],['perigrafi','η περιγραφή']],
+  anefList: [['time','η ώρα'],['ak','ο αριθμός κυκλοφορίας'],['odos','η οδός / ΑΤ'],['typos','ο τύπος οχήματος'],['tropos','ο τρόπος ανεύρεσης']]
+};
+const AP_SEC_OF = { pros: 'apSecPros', syl: 'apSecSyl', anefList: 'apSecAnef' };
+function apBlockComplete(kind, r){ return apMissing(kind, r).length === 0; }
+function apMissing(kind, r){
+  const miss = [];
+  AP_REQUIRED[kind].forEach(function(q){
+    const v = String((r || {})[q[0]] || '').trim();
+    if (!v) miss.push(q[1]);
+    else if (q[0] === 'time' && !/^\d{2}:\d{2}$/.test(v)) miss.push('σωστή ώρα (π.χ. 22:15)');
   });
+  if (kind === 'syl' && r && r.aitia === AP_AITIA_ALLO && !String(r.allo || '').trim()) miss.push('η «άλλη αιτία»');
+  return miss;
+}
+// Επιστρέφει τα λάθη που εμποδίζουν την αποστολή. Μια καταχώριση είναι
+// υποχρεωτική μόνο όταν υπάρχει το περιστατικό· κενές καταχωρίσεις αγνοούνται.
+function apErrors(){
+  const errs = [];
+  const bad = {};
   ['pros','syl','anefList'].forEach(function(kind){
     AP[kind].forEach(function(r, i){
-      if (r.time && !/^\d{2}:\d{2}$/.test(r.time)) w.push(AP_TITLES[kind] + ' ' + (i + 1) + ': η ώρα δεν είναι σωστή και δεν θα σταλεί.');
+      if (!apFilled(r)) return;
+      const m = apMissing(kind, r);
+      if (m.length){ errs.push(AP_TITLES[kind] + ' ' + (i + 1) + ': λείπει ' + m.join(', ') + '.'); bad[kind] = true; }
     });
   });
-  return w;
+  function need(kind, count, msg){
+    if (count > 0 && !AP[kind].some(function(r){ return apFilled(r) && apBlockComplete(kind, r); }) && !bad[kind]){
+      errs.push(msg); bad[kind] = true;
+    }
+  }
+  need('pros', apNum(AP.el.prosImed) + apNum(AP.el.prosAllod), 'Δηλώσατε προσαγωγές: συμπληρώστε την ανάλυση τουλάχιστον μίας προσαγωγής.');
+  need('syl', apNum(AP.el.syll), 'Δηλώσατε συλλήψεις: συμπληρώστε την ανάλυση τουλάχιστον μίας σύλληψης.');
+  need('anefList', apNum(AP.anef.auto) + apNum(AP.anef.diky), 'Δηλώσατε ανευρέσεις: συμπληρώστε τα στοιχεία τουλάχιστον μίας ανεύρεσης.');
+  // Ανοίγουμε τις ενότητες με λάθη, για να φαίνεται αμέσως τι λείπει.
+  Object.keys(bad).forEach(function(kind){
+    document.getElementById(AP_SEC_OF[kind]).open = true;
+    if (!AP[kind].length){ AP[kind].push({}); apRenderList(kind); }
+  });
+  return errs;
 }
 function apReview(){
   const status = document.getElementById('apStatus');
@@ -3339,14 +3378,21 @@ function apReview(){
     document.getElementById('apKodikos').focus();
     return;
   }
+  const errs = apErrors();
+  if (errs.length){
+    document.getElementById('apConfirmBox').innerHTML =
+      '<div class="ap-confirm" style="border-color:#a32d2d;"><b style="color:#a32d2d;">Η απόδοση δεν μπορεί να σταλεί ακόμα:</b><ul>' +
+      errs.map(function(e){ return '<li>' + esc(e) + '</li>'; }).join('') + '</ul>' +
+      '<button type="button" class="back-btn" style="width:100%;margin-top:10px;" onclick="apCloseConfirm()">Εντάξει</button></div>';
+    document.getElementById('apConfirmBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   const lines = apSummaryLines();
-  const warns = apWarnings();
   document.getElementById('apConfirmBox').innerHTML =
     '<div class="ap-confirm"><b>Αποστολή απόδοσης για ' + esc(AP.kodikos) + '</b>' +
     (AP.kad !== '' ? '<div>Σήματα ΚΑΔ: ' + esc(AP.kad) + '</div>' : '') +
     (lines.length ? '<ul>' + lines.map(function(l){ return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>'
                   : '<div class="hint">Δεν έχετε συμπληρώσει κανέναν αριθμό.</div>') +
-    (warns.length ? '<div class="pv-warn" style="margin-top:10px;">' + warns.map(esc).join('<br>') + '</div>' : '') +
     '<div class="confirm-btns"><button type="button" class="back-btn" onclick="apCloseConfirm()">Πίσω</button>' +
     '<button type="button" class="go-btn" onclick="apSend()">Αποστολή</button></div></div>';
   document.getElementById('apConfirmBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
