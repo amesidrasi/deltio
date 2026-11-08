@@ -324,6 +324,30 @@
   .ap-radio .choice{flex:1 1 auto;padding:9px 6px;font-size:12px;}
   textarea.ap-perigrafi{min-height:230px;font-size:14px;}
   textarea.ap-perigrafi::placeholder{color:#9aa3ad;}
+  .tab-dot{display:none;width:8px;height:8px;border-radius:50%;background:#d93025;
+    margin-left:4px;vertical-align:middle;}
+  .tab-dot.on{display:inline-block;}
+  .ap-up{text-transform:uppercase;}
+  .ap-up::placeholder{text-transform:none;}
+  .ap-sugg{display:none;border:1px solid #c9ced6;border-radius:6px;background:#fff;margin-top:4px;
+    max-height:230px;overflow-y:auto;}
+  .ap-sugg.open{display:block;}
+  .ap-sugg button{display:block;width:100%;text-align:left;background:none;border:none;
+    border-bottom:1px solid #eef0f3;padding:10px;font-size:13px;color:#222;}
+  .ap-sugg button:last-child{border-bottom:none;}
+  .ap-sugg button.ap-sugg-new{color:#1f3a5f;font-weight:600;}
+  .ap-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border:1px solid #c9ced6;
+    border-radius:6px;background:#fff;padding:6px;}
+  .ap-chip{display:inline-flex;align-items:center;gap:4px;background:#1f3a5f;color:#fff;
+    border-radius:14px;padding:4px 4px 4px 10px;font-size:12px;font-weight:600;}
+  .ap-chip button{background:rgba(255,255,255,.25);border:none;color:#fff;width:20px;height:20px;
+    border-radius:50%;padding:0;font-size:13px;line-height:1;}
+  .ap-chips input{flex:1 1 120px;border:none !important;outline:none;padding:6px 2px;min-width:100px;
+    text-transform:uppercase;background:transparent;}
+  .ap-chips input::placeholder{text-transform:none;}
+  .ap-last{margin-top:12px;text-align:center;}
+  .ap-last button{background:#fff;border:1px solid #1f3a5f;color:#1f3a5f;border-radius:8px;
+    padding:10px 12px;font-size:13px;font-weight:600;width:100%;}
   .ap-confirm{background:#fff;border:1px solid #1f3a5f;border-radius:8px;padding:12px;margin-top:12px;
     font-size:13px;line-height:1.5;}
   .ap-confirm ul{margin:6px 0 0;padding-left:18px;}
@@ -342,7 +366,7 @@
   <button type="button" class="top-tab active" id="tabQuickBtn" onclick="switchTab('quick')">Γρήγορη Καταγραφή</button>
   <button type="button" class="top-tab" id="tabFullBtn" onclick="switchTab('full')">Πλήρες Δελτίο</button>
   <button type="button" class="top-tab" id="tabReportBtn" onclick="switchTab('report')">Αναφορά</button>
-  <button type="button" class="top-tab" id="tabApodosiBtn" onclick="switchTab('apodosi')">Απόδοση</button>
+  <button type="button" class="top-tab" id="tabApodosiBtn" onclick="switchTab('apodosi')">Απόδοση<span class="tab-dot" id="apDot"></span></button>
 </div>
 
 <div class="section" id="quickView">
@@ -630,6 +654,7 @@
   <div class="autosave">Αποθηκεύεται αυτόματα μέχρι να σταλεί</div>
   <button type="button" class="send-btn" id="apSendBtn" style="width:100%;margin-top:10px;" onclick="apReview()">Αποστολή απόδοσης</button>
   <button type="button" class="link-btn" style="margin:10px auto 0;text-align:center;" onclick="apClearAsk()">Καθαρισμός φόρμας</button>
+  <div id="apLastBox" class="ap-last"></div>
   <div id="apConfirmBox"></div>
   <div id="apStatus" class="status"></div>
 </div>
@@ -1265,7 +1290,8 @@ function applyLists(obj){
     responses: obj.responses || LISTS.responses,
     depots:    obj.depots    || LISTS.depots,
     reporters: obj.reporters || LISTS.reporters,
-    settings:  obj.settings  || LISTS.settings
+    settings:  obj.settings  || LISTS.settings,
+    tmimata:   obj.tmimata && obj.tmimata.length ? obj.tmimata : (LISTS.tmimata || [])
   };
 }
 
@@ -3086,6 +3112,72 @@ const AP_AITIA_ALLO = AP_AITIES[AP_AITIES.length - 1];
 const AP_TYPOI = ['ΑΥΤΟΚΙΝΗΤΟ-ΙΧΦ','ΔΙΚΥΚΛΟ'];
 const AP_TROPOI = ['ΠΕΡΙΠΟΛΙΑ-ΕΛΕΓΧΟΣ','ΣΗΜΑ Κ.Α.Δ.','ΚΑΤΑΔΙΩΞΗ'];
 const AP_LIMIT = { pros: 7, syl: 6, anefList: 3 };
+const AP_LAST_KEY = 'deltio_apodosi_last_v1';
+
+// Εθνικότητες: οι πιο συχνές πρώτα (εμφανίζονται πρώτες στις προτάσεις).
+const AP_ETHN = ['ΕΛΛΗΝΙΚΗ','ΑΛΒΑΝΙΚΗ','ΑΦΓΑΝΙΚΗ','ΠΑΚΙΣΤΑΝΙΚΗ','ΓΕΩΡΓΙΑΝΗ','ΣΥΡΙΑΚΗ','ΙΡΑΚΙΝΗ','ΑΛΓΕΡΙΝΗ',
+  'ΜΑΡΟΚΙΝΗ','ΑΙΓΥΠΤΙΑΚΗ','ΒΟΥΛΓΑΡΙΚΗ','ΡΟΥΜΑΝΙΚΗ','ΜΠΑΓΚΛΑΝΤΕΣΙΑΝΗ','ΙΝΔΙΚΗ','ΝΙΓΗΡΙΑΝΗ','ΟΥΚΡΑΝΙΚΗ',
+  'ΡΩΣΙΚΗ','ΤΟΥΡΚΙΚΗ',
+  'ΒΟΡΕΙΟΜΑΚΕΔΟΝΙΚΗ','ΣΕΡΒΙΚΗ','ΜΑΥΡΟΒΟΥΝΙΑ','ΒΟΣΝΙΑΚΗ','ΚΡΟΑΤΙΚΗ','ΣΛΟΒΕΝΙΚΗ','ΚΟΣΟΒΑΡΙΚΗ','ΜΟΛΔΑΒΙΚΗ',
+  'ΠΟΛΩΝΙΚΗ','ΤΣΕΧΙΚΗ','ΣΛΟΒΑΚΙΚΗ','ΟΥΓΓΡΙΚΗ','ΛΕΥΚΟΡΩΣΙΚΗ','ΛΙΘΟΥΑΝΙΚΗ','ΛΕΤΟΝΙΚΗ','ΕΣΘΟΝΙΚΗ','ΚΥΠΡΙΑΚΗ',
+  'ΙΤΑΛΙΚΗ','ΓΑΛΛΙΚΗ','ΓΕΡΜΑΝΙΚΗ','ΙΣΠΑΝΙΚΗ','ΠΟΡΤΟΓΑΛΙΚΗ','ΒΡΕΤΑΝΙΚΗ','ΙΡΛΑΝΔΙΚΗ','ΟΛΛΑΝΔΙΚΗ','ΒΕΛΓΙΚΗ',
+  'ΑΥΣΤΡΙΑΚΗ','ΕΛΒΕΤΙΚΗ','ΣΟΥΗΔΙΚΗ','ΝΟΡΒΗΓΙΚΗ','ΔΑΝΙΚΗ','ΦΙΝΛΑΝΔΙΚΗ','ΑΡΜΕΝΙΚΗ','ΑΖΕΡΙΚΗ',
+  'ΙΡΑΝΙΚΗ','ΠΑΛΑΙΣΤΙΝΙΑΚΗ','ΛΙΒΑΝΕΖΙΚΗ','ΙΟΡΔΑΝΙΚΗ','ΚΟΥΡΔΙΚΗ','ΙΣΡΑΗΛΙΝΗ','ΣΑΟΥΔΑΡΑΒΙΚΗ','ΥΕΜΕΝΙΚΗ',
+  'ΚΟΥΒΕΪΤΙΑΝΗ','ΝΕΠΑΛΕΖΙΚΗ','ΣΡΙΛΑΝΚΕΖΙΚΗ','ΚΙΝΕΖΙΚΗ','ΦΙΛΙΠΠΙΝΕΖΙΚΗ','ΒΙΕΤΝΑΜΕΖΙΚΗ','ΤΑΪΛΑΝΔΙΚΗ',
+  'ΙΝΔΟΝΗΣΙΑΚΗ','ΙΑΠΩΝΙΚΗ','ΚΟΡΕΑΤΙΚΗ','ΟΥΖΜΠΕΚΙΚΗ','ΚΑΖΑΚΙΚΗ','ΤΑΤΖΙΚΙΚΗ','ΚΙΡΓΙΖΙΚΗ','ΤΟΥΡΚΜΕΝΙΚΗ',
+  'ΤΥΝΗΣΙΑΚΗ','ΛΙΒΥΚΗ','ΣΟΥΔΑΝΙΚΗ','ΣΟΜΑΛΙΚΗ','ΕΡΥΘΡΑΙΑ','ΑΙΘΙΟΠΙΚΗ','ΣΕΝΕΓΑΛΕΖΙΚΗ','ΓΚΑΝΕΖΙΚΗ',
+  'ΚΑΜΕΡΟΥΝΙΑΝΗ','ΚΟΝΓΚΟΛΕΖΙΚΗ','ΓΟΥΙΝΕΑ','ΣΙΕΡΑ ΛΕΟΝΕ','ΑΚΤΗΣ ΕΛΕΦΑΝΤΟΣΤΟΥ','ΜΑΛΙΑΝΗ','ΓΚΑΜΠΙΑΝΗ',
+  'ΚΕΝΥΑΤΙΚΗ','ΝΟΤΙΟΑΦΡΙΚΑΝΙΚΗ',
+  'ΑΜΕΡΙΚΑΝΙΚΗ','ΚΑΝΑΔΙΚΗ','ΒΡΑΖΙΛΙΑΝΗ','ΑΡΓΕΝΤΙΝΗ','ΚΟΛΟΜΒΙΑΝΗ','ΒΕΝΕΖΟΥΕΛΑΝΙΚΗ','ΔΟΜΙΝΙΚΑΝΗ','ΚΟΥΒΑΝΙΚΗ',
+  'ΜΕΞΙΚΑΝΙΚΗ','ΑΥΣΤΡΑΛΙΑΝΗ','ΑΓΝΩΣΤΗ','ΑΠΑΤΡΙΣ'];
+
+// Τμήματα: η λίστα έρχεται από τη στήλη «Τμήματα» του φύλλου «Λίστες».
+// Αυτή εδώ χρησιμοποιείται μόνο αν το φύλλο δεν έχει φορτωθεί ακόμα.
+const AP_TMIMATA_DEFAULT = ["Α.Τ. ΑΓΙΟΥ ΔΗΜΗΤΡΙΟΥ", "Α.Τ. ΑΓΙΟΥ ΠΑΝΤΕΛΕΗΜΟΝΑ", "Α.Τ. ΑΚΡΟΠΟΛΕΩΣ", "Α.Τ. ΑΜΠΕΛΟΚΗΠΩΝ", "Α.Τ. ΒΥΡΩΝΑ", "Α.Τ. ΓΑΛΑΤΣΙΟΥ", "Α.Τ. ΔΑΦΝΗΣ - ΥΜΗΤΤΟΥ", "Α.Τ. ΕΞΑΡΧΕΙΩΝ", "Α.Τ. ΖΩΓΡΑΦΟΥ", "Α.Τ. ΚΑΙΣΑΡΙΑΝΗΣ", "Α.Τ. ΚΑΛΛΙΘΕΑΣ", "Α.Τ. ΚΟΛΩΝΟΥ", "Α.Τ. ΚΥΨΕΛΗΣ", "Α.Τ. ΝΕΑΣ ΣΜΥΡΝΗΣ", "Α.Τ. ΟΜΟΝΟΙΑΣ", "Α.Τ. ΠΑΓΚΡΑΤΙΟΥ", "Α.Τ. ΠΑΛΑΙΟΥ ΦΑΛΗΡΟΥ", "Α.Τ. ΠΑΤΗΣΙΩΝ", "Α.Τ. ΣΥΝΤΑΓΜΑΤΟΣ", "Α.Τ. ΑΓΙΑΣ ΠΑΡΑΣΚΕΥΗΣ", "Α.Τ. ΑΜΑΡΟΥΣΙΟΥ", "Α.Τ. ΑΥΛΩΝΟΣ", "Α.Τ. ΒΡΙΛΗΣΣΙΩΝ", "Α.Τ. ΔΙΟΝΥΣΟΥ", "Α.Τ. ΗΡΑΚΛΕΙΟΥ", "Α.Τ. ΚΗΦΙΣΙΑΣ", "Α.Τ. ΜΑΡΑΘΩΝΟΣ", "Α.Τ. ΜΕΤΑΜΟΡΦΩΣΗΣ", "Α.Τ. ΝΕΑΣ ΙΩΝΙΑΣ", "Α.Τ. ΝΕΑΣ ΦΙΛΑΔΕΛΦΕΙΑΣ - ΝΕΑΣ ΧΑΛΚΗΔΟΝΑΣ", "Α.Τ. Ο.Α.Κ.Α.", "Α.Τ. ΠΑΙΑΝΙΑΣ", "Α.Τ. ΠΑΛΛΗΝΗΣ", "Α.Τ. ΠΑΠΑΓΟΥ - ΧΟΛΑΡΓΟΥ", "Α.Τ. ΠΕΝΤΕΛΗΣ", "Α.Τ. ΠΕΥΚΗΣ - ΛΥΚΟΒΡΥΣΗΣ", "Α.Τ. ΡΑΦΗΝΑΣ - ΠΙΚΕΡΜΙΟΥ", "Α.Τ. ΣΠΑΤΩΝ - ΑΡΤΕΜΙΔΟΣ", "Α.Τ. ΦΙΛΟΘΕΗΣ - ΨΥΧΙΚΟΥ", "Α.Τ. ΧΑΛΑΝΔΡΙΟΥ", "Α.Τ. ΩΡΩΠΟΥ", "Α.Τ. ΑΛΙΜΟΥ", "Α.Τ. ΣΑΡΩΝΙΚΟΥ", "Α.Τ. ΕΛΛΗΝΙΚΟΥ - ΑΡΓΥΡΟΥΠΟΛΗΣ", "Α.Τ. ΒΑΡΗΣ - ΒΟΥΛΑΣ - ΒΟΥΛΙΑΓΜΕΝΗΣ", "Α.Τ. ΓΛΥΦΑΔΑΣ", "Α.Τ. ΗΛΙΟΥΠΟΛΗΣ", "Α.Τ. ΚΕΡΑΤΕΑΣ", "Α.Τ. ΚΡΩΠΙΑΣ", "Α.Τ. ΛΑΥΡΕΩΤΙΚΗΣ", "Α.Τ. ΜΑΡΚΟΠΟΥΛΟΥ - ΜΕΣΟΓΑΙΑΣ", "Α.Τ. ΑΓΙΩΝ ΑΝΑΡΓΥΡΩΝ", "Α.Τ. ΚΑΜΑΤΕΡΟΥ", "Α.Τ. ΑΓΙΑΣ ΒΑΡΒΑΡΑΣ", "Α.Τ. ΑΙΓΑΛΕΩ", "Α.Τ. ΑΣΠΡΟΠΥΡΓΟΥ", "Α.Τ. ΕΛΕΥΣΙΝΑΣ", "Α.Τ. ΖΕΦΥΡΙΟΥ", "Α.Τ. ΙΛΙΟΥ", "Α.Τ. ΜΑΝΔΡΑΣ - ΕΙΔΥΛΛΙΑΣ", "Α.Τ. ΜΕΓΑΡΕΩΝ", "Α.Τ. ΠΕΤΡΟΥΠΟΛΗΣ", "Α.Τ. ΦΥΛΗΣ", "Α.Τ. ΧΑΪΔΑΡΙΟΥ", "Α.Τ. ΑΓΙΟΥ ΙΩΑΝΝΗ ΡΕΝΤΗ", "Α.Τ. ΚΕΡΑΤΣΙΝΙΟΥ - ΔΡΑΠΕΤΣΩΝΑΣ", "Α.Τ. ΚΟΡΥΔΑΛΛΟΥ", "Α.Τ. ΜΟΣΧΑΤΟΥ - ΤΑΥΡΟΥ", "Α.Τ. ΝΙΚΑΙΑΣ", "Α.Τ. ΔΗΜΟΤΙΚΟΥ ΘΕΑΤΡΟΥ", "Α.Τ. ΚΑΜΙΝΙΩΝ - ΝΕΟΥ ΦΑΛΗΡΟΥ", "Α.Τ. ΠΕΡΑΜΑΤΟΣ", "Α΄ Α.Τ. ΑΧΑΡΝΩΝ", "Β΄ Α.Τ. ΑΧΑΡΝΩΝ - ΟΛΥΜΠΙΑΚΟΥ ΧΩΡΙΟΥ", "Α΄ Α.Τ. ΠΕΡΙΣΤΕΡΙΟΥ", "Β΄ Α.Τ. ΠΕΡΙΣΤΕΡΙΟΥ", "Τ.Δ.Ε.Ε. ΑΓΙΟΥ ΔΗΜΗΤΡΙΟΥ", "Τ.Δ.Ε.Ε. ΑΓΙΟΥ ΠΑΝΤΕΛΕΗΜΟΝΑ", "Τ.Δ.Ε.Ε. ΑΚΡΟΠΟΛΕΩΣ", "Τ.Δ.Ε.Ε. ΑΜΠΕΛΟΚΗΠΩΝ", "Τ.Δ.Ε.Ε. ΒΥΡΩΝΑ", "Τ.Δ.Ε.Ε. ΓΑΛΑΤΣΙΟΥ", "Τ.Δ.Ε.Ε. ΔΑΦΝΗΣ - ΥΜΗΤΤΟΥ", "Τ.Δ.Ε.Ε. ΕΞΑΡΧΕΙΩΝ", "Τ.Δ.Ε.Ε. ΖΩΓΡΑΦΟΥ", "Τ.Δ.Ε.Ε. ΚΑΙΣΑΡΙΑΝΗΣ", "Τ.Δ.Ε.Ε. ΚΑΛΛΙΘΕΑΣ", "Τ.Δ.Ε.Ε. ΚΟΛΩΝΟΥ", "Τ.Δ.Ε.Ε. ΚΥΨΕΛΗΣ", "Τ.Δ.Ε.Ε. ΝΕΑΣ ΣΜΥΡΝΗΣ", "Τ.Δ.Ε.Ε. ΟΜΟΝΟΙΑΣ", "Τ.Δ.Ε.Ε. ΠΑΓΚΡΑΤΙΟΥ", "Τ.Δ.Ε.Ε. ΠΑΛΑΙΟΥ ΦΑΛΗΡΟΥ", "Τ.Δ.Ε.Ε. ΠΑΤΗΣΙΩΝ", "Τ.Δ.Ε.Ε. ΣΥΝΤΑΓΜΑΤΟΣ", "Τ.Δ.Ε.Ε. ΑΓΙΑΣ ΠΑΡΑΣΚΕΥΗΣ", "Τ.Δ.Ε.Ε. ΑΜΑΡΟΥΣΙΟΥ", "Τ.Δ.Ε.Ε. ΒΡΙΛΗΣΣΙΩΝ", "Τ.Δ.Ε.Ε. ΔΙΟΝΥΣΟΥ", "Τ.Δ.Ε.Ε. ΗΡΑΚΛΕΙΟΥ", "Τ.Δ.Ε.Ε. ΚΗΦΙΣΙΑΣ", "Τ.Δ.Ε.Ε. ΜΑΡΑΘΩΝΟΣ", "Τ.Δ.Ε.Ε. ΜΕΤΑΜΟΡΦΩΣΗΣ", "Τ.Δ.Ε.Ε. ΝΕΑΣ ΙΩΝΙΑΣ", "Τ.Δ.Ε.Ε. ΝΕΑΣ ΦΙΛΑΔΕΛΦΕΙΑΣ - ΝΕΑΣ ΧΑΛΚΗΔΟΝΑΣ", "Τ.Δ.Ε.Ε. ΠΑΙΑΝΙΑΣ", "Τ.Δ.Ε.Ε. ΠΑΛΛΗΝΗΣ", "Τ.Δ.Ε.Ε. ΠΑΠΑΓΟΥ - ΧΟΛΑΡΓΟΥ", "Τ.Δ.Ε.Ε. ΠΕΝΤΕΛΗΣ", "Τ.Δ.Ε.Ε. ΠΕΥΚΗΣ - ΛΥΚΟΒΡΥΣΗΣ", "Τ.Δ.Ε.Ε. ΡΑΦΗΝΑΣ - ΠΙΚΕΡΜΙΟΥ", "Τ.Δ.Ε.Ε. ΣΠΑΤΩΝ - ΑΡΤΕΜΙΔΟΣ", "Τ.Δ.Ε.Ε. ΦΙΛΟΘΕΗΣ - ΨΥΧΙΚΟΥ", "Τ.Δ.Ε.Ε. ΧΑΛΑΝΔΡΙΟΥ", "Τ.Δ.Ε.Ε. ΩΡΩΠΟΥ", "Τ.Δ.Ε.Ε. ΑΛΙΜΟΥ", "Τ.Δ.Ε.Ε. ΣΑΡΩΝΙΚΟΥ", "Τ.Δ.Ε.Ε. ΕΛΛΗΝΙΚΟΥ - ΑΡΓΥΡΟΥΠΟΛΗΣ", "Τ.Δ.Ε.Ε. ΒΑΡΗΣ - ΒΟΥΛΑΣ - ΒΟΥΛΙΑΓΜΕΝΗΣ", "Τ.Δ.Ε.Ε. ΓΛΥΦΑΔΑΣ", "Τ.Δ.Ε.Ε. ΗΛΙΟΥΠΟΛΗΣ", "Τ.Δ.Ε.Ε. ΚΕΡΑΤΕΑΣ", "Τ.Δ.Ε.Ε. ΚΡΩΠΙΑΣ", "Τ.Δ.Ε.Ε. ΛΑΥΡΕΩΤΙΚΗΣ", "Τ.Δ.Ε.Ε. ΜΑΡΚΟΠΟΥΛΟΥ - ΜΕΣΟΓΑΙΑΣ", "Τ.Δ.Ε.Ε. ΑΓΙΩΝ ΑΝΑΡΓΥΡΩΝ", "Τ.Δ.Ε.Ε. ΑΓΙΑΣ ΒΑΡΒΑΡΑΣ", "Τ.Δ.Ε.Ε. ΑΙΓΑΛΕΩ", "Τ.Δ.Ε.Ε. ΑΣΠΡΟΠΥΡΓΟΥ", "Τ.Δ.Ε.Ε. ΕΛΕΥΣΙΝΑΣ", "Τ.Δ.Ε.Ε. ΖΕΦΥΡΙΟΥ", "Τ.Δ.Ε.Ε. ΙΛΙΟΥ", "Τ.Δ.Ε.Ε. ΜΑΝΔΡΑΣ - ΕΙΔΥΛΛΙΑΣ", "Τ.Δ.Ε.Ε. ΜΕΓΑΡΕΩΝ", "Τ.Δ.Ε.Ε. ΠΕΤΡΟΥΠΟΛΗΣ", "Τ.Δ.Ε.Ε. ΦΥΛΗΣ", "Τ.Δ.Ε.Ε. ΧΑΪΔΑΡΙΟΥ", "Τ.Δ.Ε.Ε. ΚΕΡΑΤΣΙΝΙΟΥ - ΔΡΑΠΕΤΣΩΝΑΣ", "Τ.Δ.Ε.Ε. ΚΟΡΥΔΑΛΛΟΥ", "Τ.Δ.Ε.Ε. ΜΟΣΧΑΤΟΥ - ΤΑΥΡΟΥ", "Τ.Δ.Ε.Ε. ΔΗΜΟΤΙΚΟΥ ΘΕΑΤΡΟΥ", "Τ.Δ.Ε.Ε. ΚΑΜΙΝΙΩΝ - ΝΕΟΥ ΦΑΛΗΡΟΥ", "Τ.Δ.Ε.Ε. ΠΕΡΑΜΑΤΟΣ", "Τ.Δ.Ε.Ε. ΑΧΑΡΝΩΝ", "Τ.Δ.Ε.Ε. ΠΕΡΙΣΤΕΡΙΟΥ", "Τ.Δ.Ε.Ε. ΝΙΚΑΙΑΣ - ΑΓ. Ι. ΡΕΝΤΗ", "Α.Σ. ΦΡΟΥΡΑΣ ΤΑΤΟΪΟΥ", "Α.Σ. ΚΑΛΥΒΙΩΝ", "Α.Σ. ΣΟΥΝΙΟΥ", "Α.Σ. ΠΟΡΤΟ ΡΑΦΤΗ", "Α.Σ. ΘΡΑΚΟΜΑΚΕΔΟΝΩΝ", "Α.Σ. ΒΙΛΙΩΝ", "Α.Σ. ΝΕΑΣ ΠΕΡΑΜΟΥ", "Α΄ Τ.Τ. ΑΥΤΟΚΙΝΗΤΟΔΡΟΜΩΝ Π.Α.Θ.Ε. ΑΤΤΙΚΗΣ", "Β΄ Τ.Τ. ΑΥΤΟΚΙΝΗΤΟΔΡΟΜΩΝ Π.Α.Θ.Ε. ΑΤΤΙΚΗΣ", "Α΄ Τ.Τ. Β/Α ΑΤΤΙΚΗΣ", "Β΄ Τ.Τ. Β/Α ΑΤΤΙΚΗΣ", "Γ΄ Τ.Τ. Β/Α ΑΤΤΙΚΗΣ", "Τ.Τ. ΑΤΤΙΚΗΣ ΟΔΟΥ", "Α΄ Τ.Τ. ΔΥΤΙΚΗΣ ΑΤΤΙΚΗΣ", "Β΄ Τ.Τ. ΔΥΤΙΚΗΣ ΑΤΤΙΚΗΣ", "Γ΄ Τ.Τ. ΔΥΤΙΚΗΣ ΑΤΤΙΚΗΣ", "Α΄ Τ.Τ. Ν/Α ΑΤΤΙΚΗΣ", "Β΄ Τ.Τ. Ν/Α ΑΤΤΙΚΗΣ", "Τ.Τ. ΚΑΛΛΙΘΕΑΣ", "Α΄ Τ.Τ. ΠΕΙΡΑΙΑ", "Β΄ Τ.Τ. ΠΕΙΡΑΙΑ", "Σ.Τ. ΠΕΡΑΜΑΤΟΣ", "Γ.Α.Ε.Β. ΟΜΟΝΟΙΑΣ", "Γ.Α.Ε.Β. ΑΓΙΑΣ ΠΑΡΑΣΚΕΥΗΣ", "Γ.Α.Ε.Β. ΔΗΜΟΤΙΚΟΥ ΘΕΑΤΡΟΥ", "Γ.Α.Ε.Β. Β΄ ΠΕΡΙΣΤΕΡΙΟΥ", "Γ.Α.Ε.Β. ΑΛΙΜΟΥ", "Γ.Α.Ε.Β. ΚΑΛΛΙΘΕΑΣ", "Γ.Α.Ε.Β. Α΄ ΑΧΑΡΝΩΝ"];
+function apTmimata(){ return (LISTS.tmimata && LISTS.tmimata.length) ? LISTS.tmimata : AP_TMIMATA_DEFAULT; }
+
+/* ----- Κεφαλαία χωρίς τόνους & πινακίδες ----- */
+function apUp(s){
+  // Βγάζει μόνο τον τόνο (κρατά τα διαλυτικά, π.χ. ΗΡΩΪΝΗ) και κάνει κεφαλαία.
+  return String(s || '').normalize('NFD').replace(/\u0301/g, '').normalize('NFC').toUpperCase()
+    .replace(/\s+/g, ' ').trim();
+}
+const AP_LAT2GR = { A:'Α', B:'Β', E:'Ε', Z:'Ζ', H:'Η', I:'Ι', K:'Κ', M:'Μ', N:'Ν', O:'Ο', P:'Ρ', T:'Τ', Y:'Υ', X:'Χ' };
+function apPlate(s){
+  const up = apUp(s);
+  const raw = up.replace(/[\s-]+/g, '');
+  const m = raw.match(/^([A-ZΑ-Ω]{2,3})(\d{1,4})$/);
+  if (!m) return up;                              // δεν μοιάζει με ελληνική πινακίδα: μένει όπως γράφτηκε
+  let letters = '';
+  for (const ch of m[1]){
+    if (/[A-Z]/.test(ch)){
+      if (!AP_LAT2GR[ch]) return up;              // λατινικό που δεν υπάρχει σε ελληνικές πινακίδες
+      letters += AP_LAT2GR[ch];
+    } else letters += ch;
+  }
+  return letters + '-' + m[2];
+}
+// Κλειδί αναζήτησης: χωρίς τόνους, τελείες και σημεία.
+function apKey(s){ return apUp(s).replace(/[.΄'’`]/g, '').replace(/\u0308/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function apSearch(list, q, max){
+  const toks = apKey(q).split(/[\s\-\/]+/).filter(Boolean);
+  if (!toks.length) return list.slice(0, max);
+  const scored = [];
+  list.forEach(function(item, idx){
+    let key = apKey(item);
+    if (/^Γ\.Α\.Ε\.Β\./.test(item)) key += ' ΕΝΔΟΟΙΚΟΓΕΝΕΙΑΚΗ ΒΙΑ ΓΑΕΒ';
+    const words = key.split(/[\s\-\/]+/);
+    let score = 0;
+    for (const t of toks){
+      if (words.some(function(w){ return w.indexOf(t) === 0; })) score += 2;
+      else if (key.indexOf(t) !== -1) score += 1;
+      else return;
+    }
+    scored.push([score, idx, item]);
+  });
+  scored.sort(function(a, b){ return b[0] - a[0] || a[1] - b[1]; });
+  return scored.slice(0, max).map(function(x){ return x[2]; });
+}
 
 function apEmpty(){
   return { id:'', kodikos:'', kad:'', el:{}, kl:{}, anef:{}, loipa:{}, pros:[], syl:[], anefList:[] };
@@ -3099,7 +3191,17 @@ function apLoad(){
 }
 let AP = apLoad();
 let apSending = false;
-function apSave(){ try { localStorage.setItem(AP_KEY, JSON.stringify(AP)); } catch(e){} }
+function apSave(){ try { localStorage.setItem(AP_KEY, JSON.stringify(AP)); } catch(e){} apUpdateDot(); }
+// Υπάρχει κάτι συμπληρωμένο που δεν έχει σταλεί; (ο κωδικός μόνος του δεν μετράει)
+function apHasData(){
+  if (String(AP.kad || '').trim() !== '') return true;
+  if (['el','kl','anef','loipa'].some(function(g){ return Object.keys(AP[g] || {}).some(function(k){ return apNum(AP[g][k]) > 0; }); })) return true;
+  return ['pros','syl','anefList'].some(function(k){ return (AP[k] || []).some(apFilled); });
+}
+function apUpdateDot(){
+  const d = document.getElementById('apDot');
+  if (d) d.classList.toggle('on', apHasData());
+}
 function apNum(v){ const n = parseInt(v, 10); return (isNaN(n) || n < 0) ? 0 : n; }
 
 /* ----- Μετρητές ----- */
@@ -3151,8 +3253,24 @@ function apField(kind, i, f, label, inner){
 }
 function apText(kind, i, f, ph, extra){
   const v = (AP[kind][i] || {})[f] || '';
-  return '<input type="text" data-ap-kind="' + kind + '" data-i="' + i + '" data-f="' + f + '"' +
+  const up = /data-ap-(up|plate)/.test(extra || '') ? ' class="ap-up"' : '';
+  return '<input type="text"' + up + ' data-ap-kind="' + kind + '" data-i="' + i + '" data-f="' + f + '"' +
     (ph ? ' placeholder="' + esc(ph) + '"' : '') + (extra || '') + ' value="' + esc(v) + '">';
+}
+// Πεδίο κειμένου με προτάσεις τμημάτων από κάτω.
+function apSuggText(kind, i, f, ph){
+  return apText(kind, i, f, ph, ' data-ap-up="1" data-ap-sugg="tmima" autocomplete="off"') + '<div class="ap-sugg"></div>';
+}
+// Εθνικότητες ως «ταμπελάκια»: αποθηκεύονται ως «ΕΛΛΗΝΙΚΗ, ΑΛΒΑΝΙΚΗ».
+function apChipList(v){ return String(v || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean); }
+function apChips(kind, i, f){
+  const list = apChipList((AP[kind][i] || {})[f]);
+  return '<div class="ap-chips" data-ap-chips="1" data-ap-kind="' + kind + '" data-i="' + i + '" data-f="' + f + '">' +
+    list.map(function(c, n){
+      return '<span class="ap-chip">' + esc(c) + '<button type="button" data-ap-chip-del="' + n + '" aria-label="Αφαίρεση">×</button></span>';
+    }).join('') +
+    '<input type="text" class="ap-chip-in" autocomplete="off" placeholder="' + (list.length ? 'Προσθήκη άλλης…' : 'Γράψτε π.χ. «αλβ»') + '">' +
+    '</div><div class="ap-sugg"></div>';
 }
 function apSelect(kind, i, f, opts, emptyLabel){
   const v = (AP[kind][i] || {})[f] || '';
@@ -3184,24 +3302,25 @@ function apBlockHtml(kind, i){
     body =
       '<div class="row2">' + apField(kind, i, 'time', 'Ώρα', apText(kind, i, 'time', 'π.χ. 2215', ' ' + time)) +
       apField(kind, i, 'arithmos', 'Αριθμός προσαχθέντων', apSelect(kind, i, 'arithmos', AP_NUMS_21)) + '</div>' +
-      apField(kind, i, 'tmima', 'Τμήμα προσαγωγής', apText(kind, i, 'tmima', 'π.χ. Α.Τ. Γλυφάδας')) +
-      apField(kind, i, 'ethn', 'Εθνικότητα', apText(kind, i, 'ethn', 'π.χ. ΕΛΛΗΝΙΚΗ'));
+      apField(kind, i, 'tmima', 'Τμήμα προσαγωγής', apSuggText(kind, i, 'tmima', 'Γράψτε π.χ. «γλυ»')) +
+      apField(kind, i, 'ethn', 'Εθνικότητα', apChips(kind, i, 'ethn'));
   } else if (kind === 'syl'){
     body =
       '<div class="row2">' + apField(kind, i, 'time', 'Ώρα', apText(kind, i, 'time', 'π.χ. 2215', ' ' + time)) +
       apField(kind, i, 'arithmos', 'Αριθμός συλληφθέντων', apSelect(kind, i, 'arithmos', AP_NUMS_21)) + '</div>' +
-      apField(kind, i, 'tmima', 'Τμήμα σύλληψης', apText(kind, i, 'tmima', 'π.χ. Α.Τ. Αχαρνών')) +
-      apField(kind, i, 'ethn', 'Εθνικότητα συλληφθέντων', apText(kind, i, 'ethn', 'π.χ. ΑΛΒΑΝΙΚΗ')) +
+      apField(kind, i, 'tmima', 'Τμήμα σύλληψης', apSuggText(kind, i, 'tmima', 'Γράψτε π.χ. «αχαρ»')) +
+      apField(kind, i, 'ethn', 'Εθνικότητα συλληφθέντων', apChips(kind, i, 'ethn')) +
       apField(kind, i, 'aitia', 'Αιτία σύλληψης', apSelect(kind, i, 'aitia', AP_AITIES)) +
-      (r.aitia === AP_AITIA_ALLO ? apField(kind, i, 'allo', 'Άλλη αιτία', apText(kind, i, 'allo', 'Γράψτε την αιτία')) : '') +
+      (r.aitia === AP_AITIA_ALLO ? apField(kind, i, 'allo', 'Άλλη αιτία', apText(kind, i, 'allo', 'Γράψτε την αιτία', ' data-ap-up="1"')) : '') +
       apField(kind, i, 'perigrafi', 'Περιγραφή σύλληψης',
-        '<textarea class="ap-perigrafi" data-ap-kind="syl" data-i="' + i + '" data-f="perigrafi" placeholder="' + esc(AP_PERIGRAFI_PH) + '">' +
+        '<textarea class="ap-perigrafi ap-up" data-ap-up="1" data-ap-kind="syl" data-i="' + i + '" data-f="perigrafi" placeholder="' + esc(AP_PERIGRAFI_PH) + '">' +
         esc(r.perigrafi || '') + '</textarea>');
   } else {
     body =
       '<div class="row2">' + apField(kind, i, 'time', 'Ώρα', apText(kind, i, 'time', 'π.χ. 0310', ' ' + time)) +
-      apField(kind, i, 'ak', 'Αριθμός κυκλοφορίας', apText(kind, i, 'ak', 'π.χ. ΖΜΚ-0707')) + '</div>' +
-      apField(kind, i, 'odos', 'Οδός, αριθμός, οικείο ΑΤ ή ΤΑ', apText(kind, i, 'odos', 'π.χ. Θησέως 12 - Α.Τ. Καλλιθέας')) +
+      apField(kind, i, 'ak', 'Αριθμός κυκλοφορίας', apText(kind, i, 'ak', 'π.χ. ΖΜΚ-0707', ' data-ap-plate="1"')) + '</div>' +
+      apField(kind, i, 'odos', 'Οδός και αριθμός', apText(kind, i, 'odos', 'π.χ. Θησέως 12', ' data-ap-up="1"')) +
+      apField(kind, i, 'odosAt', 'Οικείο ΑΤ ή ΤΑ', apSuggText(kind, i, 'odosAt', 'Γράψτε π.χ. «καλλι»')) +
       apField(kind, i, 'typos', 'Τύπος οχήματος', apChoices(kind, i, 'typos', AP_TYPOI)) +
       apField(kind, i, 'tropos', 'Τρόπος ανεύρεσης', apChoices(kind, i, 'tropos', AP_TROPOI));
   }
@@ -3252,6 +3371,8 @@ function prepareApodosi(){
   apRenderCounters();
   apRenderList('pros'); apRenderList('syl'); apRenderList('anefList');
   apBadges();
+  apRenderLast();
+  apUpdateDot();
 }
 
 /* ----- Συμβάντα (μία φορά, με ανάθεση στο apodosiView) ----- */
@@ -3298,13 +3419,176 @@ function prepareApodosi(){
   // Οι ώρες διορθώνονται (π.χ. 915 → 09:15) όταν φύγει ο κέρσορας από το πεδίο.
   view.addEventListener('focusout', function(e){
     const t = e.target;
-    if (!t.dataset || !t.dataset.apTime) return;
-    setTimeout(function(){ AP[t.dataset.apKind][+t.dataset.i].time = t.value; apSave(); }, 0);
+    if (!t.dataset) return;
+    if (t.dataset.apTime){
+      setTimeout(function(){ AP[t.dataset.apKind][+t.dataset.i].time = t.value; apSave(); }, 0);
+      return;
+    }
+    // Κεφαλαία χωρίς τόνους / μορφή πινακίδας όταν φύγει ο κέρσορας.
+    if (t.dataset.apKind && (t.dataset.apUp || t.dataset.apPlate)){
+      const v = t.dataset.apPlate ? apPlate(t.value) : (t.tagName === 'TEXTAREA' ? apUpText(t.value) : apUp(t.value));
+      if (v !== t.value) t.value = v;
+      AP[t.dataset.apKind][+t.dataset.i][t.dataset.f] = v;
+      apSave();
+    }
+    if (!t.isConnected) return;   // το πεδίο ξαναζωγραφίστηκε
+    if (t.classList.contains('ap-chip-in') && t.value.trim()){
+      // Αν το γραμμένο ταιριάζει σε μία μόνο εθνικότητα, μπαίνει αυτή· αλλιώς ό,τι γράφτηκε.
+      const m = apSearch(AP_ETHN, t.value, 2).filter(function(x){ return apKey(x).indexOf(apKey(t.value)) === 0; });
+      apAddChip(t.closest('.ap-chips'), m.length === 1 ? m[0] : t.value, false);   // ό,τι έμεινε γραμμένο, χωρίς να «κλέψει» την εστίαση
+      return;
+    }
+    if (t.dataset.apSugg || t.classList.contains('ap-chip-in')){
+      const box = t.closest('.field').querySelector('.ap-sugg');
+      setTimeout(function(){ box.classList.remove('open'); }, 150);
+    }
+  });
+
+  /* ----- Προτάσεις (τμήματα / εθνικότητες) ----- */
+  function showSugg(input){
+    const field = input.closest('.field');
+    const box = field.querySelector('.ap-sugg');
+    const isChip = input.classList.contains('ap-chip-in');
+    const q = input.value;
+    let items;
+    if (isChip){
+      const have = apChipList(AP[input.closest('.ap-chips').dataset.apKind][+input.closest('.ap-chips').dataset.i].ethn);
+      items = apSearch(AP_ETHN.filter(function(x){ return have.indexOf(x) === -1; }), q, 8);
+    } else {
+      if (!q.trim()){ box.classList.remove('open'); return; }
+      items = apSearch(apTmimata(), q, 8);
+    }
+    let html = items.map(function(x){ return '<button type="button" data-ap-pick="' + esc(x) + '">' + esc(x) + '</button>'; }).join('');
+    const typed = apUp(q);
+    if (isChip && typed && items.indexOf(typed) === -1){
+      html += '<button type="button" class="ap-sugg-new" data-ap-pick="' + esc(typed) + '">+ Προσθήκη «' + esc(typed) + '»</button>';
+    }
+    box.innerHTML = html;
+    box.classList.toggle('open', !!html);
+  }
+  view.addEventListener('focusin', function(e){
+    const t = e.target;
+    if (t.dataset && t.dataset.apSugg || t.classList.contains('ap-chip-in')) showSugg(t);
+  });
+  view.addEventListener('input', function(e){
+    const t = e.target;
+    if (t.dataset && t.dataset.apSugg || t.classList.contains('ap-chip-in')) showSugg(t);
+  });
+  view.addEventListener('keydown', function(e){
+    const t = e.target;
+    if (!t.classList.contains('ap-chip-in')) return;
+    if ((e.key === 'Enter' || e.key === ',') && t.value.trim()){
+      e.preventDefault();
+      // Enter = η πρώτη πρόταση (π.χ. «ελλ» → ΕΛΛΗΝΙΚΗ)· αν δεν υπάρχει, ό,τι γράφτηκε.
+      const first = t.closest('.field').querySelector('.ap-sugg [data-ap-pick]:not(.ap-sugg-new)');
+      apAddChip(t.closest('.ap-chips'), first ? first.dataset.apPick : t.value);
+    } else if (e.key === 'Backspace' && !t.value){
+      const wrap = t.closest('.ap-chips');
+      const list = apChipList(AP[wrap.dataset.apKind][+wrap.dataset.i].ethn);
+      if (list.length){ list.pop(); apSetChips(wrap, list); }
+    }
+  });
+  // Επιλογή πρότασης χωρίς να χάνεται το πληκτρολόγιο.
+  view.addEventListener('mousedown', function(e){ if (e.target.closest('[data-ap-pick]')) e.preventDefault(); });
+  view.addEventListener('click', function(e){
+    const pick = e.target.closest('[data-ap-pick]');
+    if (pick){
+      const field = pick.closest('.field');
+      const wrap = field.querySelector('.ap-chips');
+      if (wrap){ apAddChip(wrap, pick.dataset.apPick); }
+      else {
+        const input = field.querySelector('[data-ap-sugg]');
+        input.value = pick.dataset.apPick;
+        AP[input.dataset.apKind][+input.dataset.i][input.dataset.f] = input.value;
+        field.querySelector('.ap-sugg').classList.remove('open');
+        apSave(); apBadges();
+      }
+      return;
+    }
+    const del = e.target.closest('[data-ap-chip-del]');
+    if (del){
+      const wrap = del.closest('.ap-chips');
+      const list = apChipList(AP[wrap.dataset.apKind][+wrap.dataset.i].ethn);
+      list.splice(+del.dataset.apChipDel, 1);
+      apSetChips(wrap, list);
+      return;
+    }
+    const chipsBox = e.target.closest('.ap-chips');
+    if (chipsBox) chipsBox.querySelector('.ap-chip-in').focus();
   });
   document.getElementById('apProsAdd').addEventListener('click', function(){ apAdd('pros'); });
   document.getElementById('apSylAdd').addEventListener('click', function(){ apAdd('syl'); });
   document.getElementById('apAnefAdd').addEventListener('click', function(){ apAdd('anefList'); });
 })();
+
+// Για την περιγραφή: κεφαλαία χωρίς τόνους, αλλά κρατάμε τις αλλαγές γραμμής.
+function apUpText(s){ return String(s || '').split('\n').map(function(l){ return apUp(l); }).join('\n').trim(); }
+function apSetChips(wrap, list, refocus){
+  const kind = wrap.dataset.apKind, i = +wrap.dataset.i, f = wrap.dataset.f;
+  AP[kind][i][f] = list.join(', ');
+  apSave(); apBadges();
+  const field = wrap.closest('.field');
+  field.innerHTML = '<span class="label">' + field.querySelector('.label').innerHTML + '</span>' + apChips(kind, i, f);
+  if (refocus !== false) field.querySelector('.ap-chip-in').focus();
+}
+function apAddChip(wrap, text, refocus){
+  const v = apUp(text).replace(/,/g, ' ').trim();
+  if (!v) return;
+  const list = apChipList(AP[wrap.dataset.apKind][+wrap.dataset.i].ethn);
+  if (list.indexOf(v) === -1) list.push(v);
+  wrap.querySelector('.ap-chip-in').value = '';
+  apSetChips(wrap, list, refocus);
+}
+
+/* ----- Διόρθωση τελευταίας απόδοσης ----- */
+function apGetLast(){
+  try {
+    const o = JSON.parse(localStorage.getItem(AP_LAST_KEY) || 'null');
+    if (o && o.data && (Date.now() - o.ts) < 24 * 3600 * 1000) return o;   // μόνο για 24 ώρες
+  } catch(e){}
+  return null;
+}
+function apFmtTime(ts){
+  const d = new Date(ts);
+  const p = function(n){ return ('0' + n).slice(-2); };
+  return p(d.getDate()) + '/' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function apRenderLast(){
+  const box = document.getElementById('apLastBox');
+  const last = apGetLast();
+  box.innerHTML = last ? '<button type="button" onclick="apLoadLast()">✏️ Διόρθωση τελευταίας απόδοσης (' +
+    esc(last.data.kodikos || '') + ', ' + apFmtTime(last.ts) + ')</button>' : '';
+}
+function apLoadLast(){
+  const last = apGetLast();
+  if (!last) return;
+  if (apHasData() && !confirm('Τα στοιχεία που έχετε συμπληρώσει τώρα θα αντικατασταθούν από την απόδοση των ' + apFmtTime(last.ts) + '. Συνέχεια;')) return;
+  AP = Object.assign(apEmpty(), JSON.parse(JSON.stringify(last.data)));
+  AP.id = '';                       // νέα αποστολή
+  apSave();
+  prepareApodosi();
+  document.getElementById('apSecPros').open = AP.pros.some(apFilled);
+  document.getElementById('apSecSyl').open = AP.syl.some(apFilled);
+  document.getElementById('apSecAnef').open = AP.anefList.some(apFilled) || apNum(AP.anef.auto) + apNum(AP.anef.diky) > 0;
+  document.getElementById('apSecLoipa').open = Object.keys(AP.loipa).length > 0;
+  const st = document.getElementById('apStatus');
+  st.textContent = 'Φορτώθηκε η απόδοση των ' + apFmtTime(last.ts) + '. Διορθώστε ό,τι χρειάζεται και πατήστε «Αποστολή απόδοσης». Θα σταλεί ως νέα απάντηση.';
+  st.className = 'status';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ----- Τελική μορφή των στοιχείων πριν σταλούν ----- */
+function apPayload(){
+  const a = JSON.parse(JSON.stringify(AP));
+  a.pros.forEach(function(r){ r.tmima = apUp(r.tmima); r.ethn = apUp(r.ethn); });
+  a.syl.forEach(function(r){ r.tmima = apUp(r.tmima); r.ethn = apUp(r.ethn); r.allo = apUp(r.allo); r.perigrafi = apUpText(r.perigrafi); });
+  a.anefList.forEach(function(r){
+    r.ak = apPlate(r.ak);
+    r.odos = [apUp(r.odos), apUp(r.odosAt)].filter(Boolean).join(' - ');   // η φόρμα έχει ένα πεδίο για οδό και ΑΤ
+    delete r.odosAt;
+  });
+  return a;
+}
 
 /* ----- Έλεγχος και επιβεβαίωση πριν την αποστολή ----- */
 function apSummaryLines(){
@@ -3328,7 +3612,7 @@ const AP_REQUIRED = {
   pros: [['time','η ώρα'],['arithmos','ο αριθμός προσαχθέντων'],['tmima','το τμήμα'],['ethn','η εθνικότητα']],
   syl: [['time','η ώρα'],['arithmos','ο αριθμός συλληφθέντων'],['tmima','το τμήμα'],['ethn','η εθνικότητα'],
         ['aitia','η αιτία'],['perigrafi','η περιγραφή']],
-  anefList: [['time','η ώρα'],['ak','ο αριθμός κυκλοφορίας'],['odos','η οδός / ΑΤ'],['typos','ο τύπος οχήματος'],['tropos','ο τρόπος ανεύρεσης']]
+  anefList: [['time','η ώρα'],['ak','ο αριθμός κυκλοφορίας'],['odos','η οδός'],['odosAt','το οικείο ΑΤ ή ΤΑ'],['typos','ο τύπος οχήματος'],['tropos','ο τρόπος ανεύρεσης']]
 };
 const AP_SEC_OF = { pros: 'apSecPros', syl: 'apSecSyl', anefList: 'apSecAnef' };
 function apBlockComplete(kind, r){ return apMissing(kind, r).length === 0; }
@@ -3354,18 +3638,39 @@ function apErrors(){
       if (m.length){ errs.push(AP_TITLES[kind] + ' ' + (i + 1) + ': λείπει ' + m.join(', ') + '.'); bad[kind] = true; }
     });
   });
-  function need(kind, count, msg){
-    if (count > 0 && !AP[kind].some(function(r){ return apFilled(r) && apBlockComplete(kind, r); }) && !bad[kind]){
-      errs.push(msg); bad[kind] = true;
+  function sumOf(kind){
+    return AP[kind].filter(apFilled).reduce(function(t, r){ return t + apNum(r.arithmos); }, 0);
+  }
+  // Προσαγωγές και συλλήψεις: ο μετρητής πρέπει να είναι ίσος με το σύνολο ατόμων στις αναλύσεις.
+  function match(kind, count, word, people){
+    if (bad[kind]) return;
+    const filled = AP[kind].filter(apFilled).length;
+    if (count > 0 && !filled){
+      errs.push('Δηλώσατε ' + count + ' ' + word + ': συμπληρώστε την ανάλυση.'); bad[kind] = true; return;
+    }
+    const sum = sumOf(kind);
+    if (sum !== count){
+      errs.push('Δηλώσατε ' + count + ' ' + word + ', αλλά στην ανάλυση το σύνολο των ' + people + ' είναι ' + sum + '. Πρέπει να είναι ίδια.');
+      bad[kind] = true;
     }
   }
-  need('pros', apNum(AP.el.prosImed) + apNum(AP.el.prosAllod), 'Δηλώσατε προσαγωγές: συμπληρώστε την ανάλυση τουλάχιστον μίας προσαγωγής.');
-  need('syl', apNum(AP.el.syll), 'Δηλώσατε συλλήψεις: συμπληρώστε την ανάλυση τουλάχιστον μίας σύλληψης.');
-  need('anefList', apNum(AP.anef.auto) + apNum(AP.anef.diky), 'Δηλώσατε ανευρέσεις: συμπληρώστε τα στοιχεία τουλάχιστον μίας ανεύρεσης.');
+  match('pros', apNum(AP.el.prosImed) + apNum(AP.el.prosAllod), 'προσαγωγές (ημεδαπών και αλλοδαπών)', 'προσαχθέντων');
+  match('syl', apNum(AP.el.syll), 'συλλήψεις', 'συλληφθέντων');
+  // Ανευρέσεις: τόσες αναλυτικές όσα τα οχήματα, με ανώτατο όριο τις 3 θέσεις της φόρμας.
+  if (!bad.anefList){
+    const n = apNum(AP.anef.auto) + apNum(AP.anef.diky);
+    const want = Math.min(n, AP_LIMIT.anefList);
+    const filled = AP.anefList.filter(apFilled).length;
+    if (filled !== want){
+      if (n > AP_LIMIT.anefList) errs.push('Δηλώσατε ' + n + ' ανευρέσεις: συμπληρώστε και τις ' + AP_LIMIT.anefList + ' αναλυτικές θέσεις (η φόρμα δέχεται έως ' + AP_LIMIT.anefList + ').');
+      else errs.push('Δηλώσατε ' + n + ' ανευρέσεις οχημάτων, αλλά έχετε συμπληρώσει ' + filled + ' αναλυτικά. Πρέπει να είναι ίδια.');
+      bad.anefList = true;
+    }
+  }
   // Ανοίγουμε τις ενότητες με λάθη, για να φαίνεται αμέσως τι λείπει.
   Object.keys(bad).forEach(function(kind){
     document.getElementById(AP_SEC_OF[kind]).open = true;
-    if (!AP[kind].length){ AP[kind].push({}); apRenderList(kind); }
+    if (!AP[kind].length && AP[kind] !== undefined){ AP[kind].push({}); apRenderList(kind); }
   });
   return errs;
 }
@@ -3413,10 +3718,14 @@ async function apSend(){
   status.className = 'status';
   try {
     const resp = await fetch(API_URL, { method: 'POST',
-      body: new URLSearchParams({ action: 'apodosi', payload: JSON.stringify({ apodosiId: AP.id, sender: getMe() || '', ap: AP }) }) });
+      body: new URLSearchParams({ action: 'apodosi', payload: JSON.stringify({ apodosiId: AP.id, sender: getMe() || '', ap: apPayload() }) }) });
     const out = JSON.parse(await resp.text());
     if (!out.ok) throw new Error(out.error || 'Άγνωστο σφάλμα.');
     localStorage.setItem(AP_LAST_CODE_KEY, AP.kodikos);
+    try {
+      const copy = JSON.parse(JSON.stringify(AP)); copy.id = '';
+      localStorage.setItem(AP_LAST_KEY, JSON.stringify({ ts: Date.now(), data: copy }));
+    } catch(e){}
     const code = AP.kodikos;
     AP = apEmpty();
     apSave();
