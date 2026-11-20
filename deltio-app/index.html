@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="fcm-config.js"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1f3a5f">
 <link rel="icon" type="image/png" href="icons/favicon-64.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Δελτίο ΗΔΟ">
+<meta name="apple-mobile-web-app-title" content="Γ' Αλλαγή">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Ημερήσιο Δελτίο Οχήματος</title>
+<title>Γ' Αλλαγή – Άμεση Δράση Αττικής</title>
 <style>
   *{box-sizing:border-box;}
   html{background:#1f3a5f;}   /* ίδιο χρώμα με την κεφαλίδα όταν «τραβιέται» η σελίδα στο iPhone */
@@ -376,7 +377,7 @@
     align-items:center;justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;
     padding:calc(48px + env(safe-area-inset-top,0px)) 20px calc(30px + env(safe-area-inset-bottom,0px));}
   #authScreen.hidden{display:none;}
-  .au-logo{width:72px;height:72px;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+  .au-logo{height:130px;width:auto;filter:drop-shadow(0 8px 18px rgba(0,0,0,.35));}
   .au-title{color:#fff;font-size:20px;font-weight:600;margin-top:14px;}
   .au-sub{color:#c9d4e2;font-family:Georgia,"Times New Roman",serif;font-size:13px;letter-spacing:.05em;
     text-transform:uppercase;margin-top:4px;text-align:center;}
@@ -399,6 +400,37 @@
   .au-link{display:block;margin:14px auto 0;border:none;background:none;color:#1f3a5f;font-size:13px;text-decoration:underline;}
   .au-bio{font-size:46px;text-align:center;margin:6px 0 2px;}
   .au-foot{color:#9fb0c5;font-size:11px;margin-top:18px;text-align:center;max-width:360px;line-height:1.5;}
+
+  /* ---- Οθόνη σύνδεσης: σκούρα, «γυάλινη» ---- */
+  #authScreen{background:radial-gradient(120% 70% at 50% 16%,#24477a 0%,#0e1c30 60%,#08111f 100%) fixed;
+    padding:calc(56px + env(safe-area-inset-top,0px)) 24px calc(22px + env(safe-area-inset-bottom,0px));}
+  #authScreen .au-logo{height:150px;filter:drop-shadow(0 10px 25px rgba(0,0,0,.6));}
+  #authScreen .au-title{font-size:26px;margin-top:18px;letter-spacing:.02em;}
+  #authScreen .au-sub{font-family:inherit;color:#9fb4d1;font-size:12px;letter-spacing:.2em;}
+  #authScreen .au-card{background:none;box-shadow:none;padding:0;margin-top:34px;max-width:360px;}
+  #authScreen .au-card h2{color:#fff;font-size:18px;text-align:center;}
+  #authScreen .au-card p{color:#9fb4d1;text-align:center;}
+  .au-in{display:flex;align-items:center;gap:10px;height:54px;padding:0 6px 0 14px;margin-bottom:12px;
+    border:1px solid #c5ccd4;border-radius:14px;background:#fff;}
+  .au-in svg{width:20px;height:20px;flex-shrink:0;color:#7a8796;}
+  .au-card .au-in input,.au-in input{flex:1;min-width:0;height:100%;border:none;background:none;padding:0;font-size:16px;outline:none;color:#1c2733;}
+  .au-eye2{border:none;background:none;width:42px;height:42px;display:flex;align-items:center;justify-content:center;color:#7a8796;}
+  #authScreen .au-in{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);}
+  #authScreen .au-in:focus-within{border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.1);}
+  #authScreen .au-in svg,#authScreen .au-eye2{color:#8ea3c0;}
+  #authScreen .au-in input{color:#fff;}
+  #authScreen .au-in input::placeholder{color:#8ea3c0;}
+  #authScreen .au-btn{height:54px;border-radius:14px;margin-top:8px;font-size:16px;font-weight:700;color:#0e1c30;
+    background:linear-gradient(180deg,#f3f5f8,#c9d1dc);box-shadow:0 6px 18px rgba(0,0,0,.35);}
+  #authScreen .au-msg{color:#ffb3b3;}
+  #authScreen .au-msg.ok{color:#9be3b5;}
+  #authScreen .au-link{color:#c9d4e2;text-decoration:none;font-size:14px;margin-top:22px;}
+  #authScreen .au-foot{color:#5f7697;margin-top:auto;padding-top:24px;}
+  .au-biobtn{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px auto 0;border:none;background:none;
+    color:#e6ecf4;font-size:15px;}
+  .au-biobtn .ring{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);}
+  .au-biobtn svg{width:46px;height:46px;color:#fff;}
   .who-acc{display:flex;align-items:center;gap:8px;border:none;background:none;padding:0;font-size:12px;color:#5c6773;text-align:left;}
   .who-acc .who-av{width:24px;height:24px;border-radius:50%;background:#1f3a5f;color:#fff;font-size:11px;font-weight:700;
     display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -428,33 +460,189 @@
   .mine-who{font-size:12px;color:#1f3a5f;font-weight:600;}
   .mine-fix{font-size:11px;color:#b26a00;}
   .mine-empty{text-align:center;color:#5c6773;font-size:13px;padding:30px 10px;}
+
+  /* ===== Νέο μενού: κεφαλίδα, Αρχική, μπάρα κάτω ===== */
+  body{padding-bottom:calc(88px + env(safe-area-inset-bottom,0px)) !important;}
+  .top-tabs{display:none !important;}
+  .apphead{background:radial-gradient(130% 160% at 50% 0%,#24477a 0%,#0e1c30 75%);color:#fff;
+    padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;align-items:center;gap:10px;
+    position:sticky;top:0;z-index:50;}
+  .apphead img{height:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));}
+  .apphead .ah-t{font-weight:700;font-size:16px;line-height:1.15;}
+  .apphead .ah-s{font-size:10px;letter-spacing:.18em;color:#9fb4d1;}
+  .apphead .ah-pg{margin-left:auto;font-size:13px;color:#c9d4e2;}
+  .ah-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.3);
+    background:rgba(255,255,255,.12);color:#fff;font-weight:700;font-size:15px;}
+  #homeView{padding:0 0 10px;}
+  .home-top{background:radial-gradient(130% 120% at 50% 0%,#1d3a63 0%,#0e1c30 80%);color:#fff;padding:16px 20px 62px;margin-top:-1px;}
+  .home-hi{font-size:22px;font-weight:600;}
+  .home-name{font-size:14px;color:#c9d4e2;margin-top:3px;}
+  .home-date{font-size:12px;color:#8ea3c0;margin-top:2px;}
+  .home-wrap{margin:-46px 14px 0;}
+  .home-wrap #installCard .install-card{margin:0 0 12px;}
+  .h-alert{background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(14,28,48,.08);padding:12px 14px;margin-bottom:12px;
+    border-left:4px solid #c98a00;font-size:13px;}
+  .h-alert b{font-size:14px;}
+  .h-sec{font-size:11px;letter-spacing:.14em;color:#6b7785;margin:16px 4px 10px;font-weight:600;}
+  .h-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .h-tile{position:relative;text-align:left;background:#fff;border:none;border-radius:16px;padding:14px;min-height:108px;
+    box-shadow:0 4px 16px rgba(14,28,48,.07);color:#1c2733;font-family:inherit;}
+  .h-tile:active{transform:scale(.98);}
+  .h-ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+  .h-ic svg{width:22px;height:22px;}
+  .h-tile b{display:block;font-size:15px;}
+  .h-tile span{font-size:11.5px;color:#6b7785;line-height:1.35;display:block;margin-top:2px;}
+  .h-badge{position:absolute;top:12px;right:12px;min-width:20px;height:20px;border-radius:10px;background:#d93025;color:#fff;
+    font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px;}
+  .h-tile.soon{opacity:.55;}
+  .h-tile.soon span{color:#a06a00;}
+  .seg{display:flex;background:#e3e1d8;border-radius:10px;padding:3px;margin:12px 16px 0;}
+  .seg button{flex:1;border:none;background:none;padding:9px 6px;font-size:13px;font-weight:600;color:#5c6773;border-radius:8px;}
+  .seg button.on{background:#fff;color:#0e1c30;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+  #bnav{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;background:rgba(255,255,255,.97);
+    border-top:1px solid #e1e3e6;padding:6px 2px calc(6px + env(safe-area-inset-bottom,0px));
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+  #bnav button{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;
+    font-size:10.5px;color:#7a8796;padding:4px 0;position:relative;font-family:inherit;}
+  #bnav svg{width:24px;height:24px;}
+  #bnav button.on{color:#0e1c30;font-weight:700;}
+  #bnav .tab-dot{position:absolute;top:2px;left:calc(50% + 8px);}
+  #bnav .nb{position:absolute;top:0;left:calc(50% + 6px);min-width:17px;height:17px;border-radius:9px;background:#d93025;
+    color:#fff;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 4px;}
+  /* ===== Δικαστήρια ===== */
+  #courtsView{padding-top:12px;}
+  .ct-seg{display:flex;background:#e3e1d8;border-radius:10px;padding:3px;margin:0 0 12px;}
+  .ct-seg button{flex:1;border:none;background:none;padding:9px 4px;font-size:13px;font-weight:600;color:#5c6773;border-radius:8px;}
+  .ct-seg button.on{background:#fff;color:#0e1c30;box-shadow:0 1px 4px rgba(0,0,0,.12);}
+  .ct-h{font-size:11px;letter-spacing:.12em;color:#6b7785;margin:16px 2px 8px;font-weight:600;text-transform:uppercase;}
+  .ct-card{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:#fff;border:none;border-radius:14px;
+    padding:12px;margin-bottom:10px;box-shadow:0 3px 12px rgba(14,28,48,.07);font-family:inherit;color:#1c2733;}
+  .ct-day{width:54px;flex-shrink:0;text-align:center;border-radius:10px;background:#0e1c30;color:#fff;padding:6px 0;}
+  .ct-day b{display:block;font-size:20px;line-height:1.1;}
+  .ct-day span{font-size:11px;letter-spacing:.06em;color:#9fb4d1;}
+  .ct-day.done{background:#c5ccd4;} .ct-day.done span{color:#fff;}
+  .ct-main{flex:1;min-width:0;}
+  .ct-main .l1{font-size:14px;font-weight:700;}
+  .ct-main .l2{font-size:12.5px;color:#4a5562;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ct-main .l3{font-size:12px;color:#6b7785;margin-top:3px;}
+  .ct-bd{display:inline-block;font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 7px;margin-right:5px;color:#fff;background:#d93025;}
+  .ct-bd.post{background:#b26a00;} .ct-bd.done{background:#7a8796;} .ct-bd.ok{background:#2f6e4e;} .ct-bd.ask{background:#6b4f9e;}
+  .ct-empty{text-align:center;color:#6b7785;font-size:13px;padding:30px 12px;line-height:1.5;}
+  .ct-back{border:none;background:none;color:#1f4f8a;font-size:15px;padding:4px 0 10px;font-family:inherit;}
+  .ct-hero{background:#0e1c30;color:#fff;border-radius:18px;padding:16px;position:relative;}
+  .ct-hero .d{font-size:12px;color:#9fb4d1;letter-spacing:.08em;text-transform:uppercase;}
+  .ct-hero .big{font-size:26px;font-weight:700;margin:4px 0 2px;}
+  .ct-hero .t{font-size:15px;line-height:1.35;}
+  .ct-hero .cd{position:absolute;top:14px;right:14px;background:#c98a00;color:#fff;font-size:12px;font-weight:700;border-radius:20px;padding:4px 10px;}
+  .ct-hero .case{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.18);font-size:17px;font-weight:700;}
+  .ct-hero .case span{display:block;font-size:11px;letter-spacing:.1em;color:#9fb4d1;font-weight:400;margin-bottom:2px;}
+  .ct-box{background:#fff;border-radius:16px;box-shadow:0 3px 12px rgba(14,28,48,.07);padding:4px 14px;margin-top:12px;}
+  .ct-row{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid #eceae3;font-size:14px;}
+  .ct-row:last-child{border-bottom:none;}
+  .ct-row .k{width:104px;flex-shrink:0;color:#6b7785;font-size:12px;padding-top:2px;}
+  .ct-row .v{font-weight:600;min-width:0;word-break:break-word;}
+  .ct-row .v a{display:block;color:#1f4f8a;font-size:12.5px;margin-top:3px;text-decoration:none;}
+  .ct-pdf{display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:none;border-radius:16px;box-shadow:0 3px 12px rgba(14,28,48,.07);
+    padding:12px 14px;margin-top:12px;font-family:inherit;text-align:left;color:#1c2733;}
+  .ct-pdf .th{width:40px;height:52px;border:1px solid #ddd;border-radius:4px;background:repeating-linear-gradient(#fff 0 6px,#e9ebee 6px 7px);flex-shrink:0;}
+  .ct-pdf b{font-size:14px;} .ct-pdf span{display:block;font-size:12px;color:#6b7785;} .ct-pdf .o{margin-left:auto;color:#1f4f8a;font-weight:700;font-size:14px;}
+  .ct-btn{display:block;width:100%;min-height:50px;border:none;border-radius:14px;font-size:15.5px;font-weight:700;margin-top:10px;font-family:inherit;}
+  .ct-btn.ack{background:#2f6e4e;color:#fff;} .ct-btn.pri{background:#0e1c30;color:#fff;}
+  .ct-btn.sec{background:#fff;color:#0e1c30;border:1.5px solid #0e1c30;}
+  .ct-btn.warn{background:#fff;color:#a32d2d;border:1.5px solid #e2b4b4;}
+  .ct-btn:disabled{opacity:.55;}
+  .ct-acked{margin-top:10px;text-align:center;color:#2f6e4e;font-size:13px;font-weight:600;}
+  .ct-ask{background:#f3effa;border:1px solid #d9cdee;border-radius:14px;padding:12px 14px;margin-top:12px;}
+  .ct-ask b{color:#4b3478;}
+  .ct-two{display:flex;gap:8px;} .ct-two .ct-btn{flex:1;}
+  .ct-form{background:#fff;border-radius:16px;box-shadow:0 3px 12px rgba(14,28,48,.07);padding:12px 14px;margin-top:12px;}
+  .ct-form label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#5c6773;margin:12px 0 4px;}
+  .ct-form label:first-child{margin-top:0;}
+  .ct-form input,.ct-form select{width:100%;padding:11px;font-size:16px;border:1px solid #c5ccd4;border-radius:9px;background:#fff;color:#1c2733;font-family:inherit;}
+  .ct-form .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .ct-chk{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px;}
+  .ct-chk input{width:20px;height:20px;}
+  .ct-hist{font-size:12.5px;color:#4a5562;line-height:1.6;}
+  .ct-hist div{border-left:2px solid #d8dde3;padding-left:10px;margin-left:4px;}
+  .ct-hist small{color:#7a8796;}
+  .ct-who{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+  .ct-chip{display:inline-flex;align-items:center;gap:6px;background:#e8eef7;color:#0e1c30;border-radius:16px;padding:5px 10px;font-size:13px;font-weight:600;}
+  .ct-chip button{border:none;background:none;font-size:15px;color:#5c6773;padding:0;}
+  .ct-sugg{border:1px solid #d8dde3;border-radius:9px;margin-top:4px;max-height:200px;overflow-y:auto;}
+  .ct-sugg button{display:block;width:100%;text-align:left;border:none;border-bottom:1px solid #eef0f2;background:#fff;padding:10px;font-size:14px;font-family:inherit;}
+  .ct-files{display:flex;gap:8px;margin-top:4px;}
+  .ct-files label{flex:1;margin:0;display:flex;align-items:center;justify-content:center;gap:6px;height:48px;border:1.5px dashed #9aa6b4;
+    border-radius:12px;font-size:14px;text-transform:none;letter-spacing:0;color:#0e1c30;font-weight:600;background:#f7f8fa;}
+  .ct-files input{display:none;}
+  .ct-pages{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;margin-top:10px;}
+  .ct-pg{position:relative;border:1px solid #d8dde3;border-radius:8px;overflow:hidden;background:#fff;}
+  .ct-pg img{display:block;width:100%;height:120px;object-fit:cover;object-position:top;}
+  .ct-pg .n{position:absolute;top:4px;left:4px;background:rgba(14,28,48,.8);color:#fff;font-size:11px;border-radius:6px;padding:1px 6px;}
+  .ct-pg .x{position:absolute;top:3px;right:3px;width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.92);font-size:14px;}
+  .ct-pg select{width:100%;border:none;border-top:1px solid #d8dde3;font-size:12px;padding:6px 4px;border-radius:0;}
+  .ct-st{margin-top:10px;font-size:13px;text-align:center;min-height:18px;}
+  .ct-st.err{color:#a32d2d;} .ct-st.ok{color:#2f6e4e;}
+  .ct-filter{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px;}
+  .ct-filter button{flex-shrink:0;border:1px solid #c5ccd4;background:#fff;border-radius:16px;padding:6px 12px;font-size:12.5px;font-family:inherit;color:#4a5562;}
+  .ct-filter button.on{background:#0e1c30;border-color:#0e1c30;color:#fff;}
+  #pdfViewer{position:fixed;inset:0;z-index:950;background:#1b2430;display:flex;flex-direction:column;}
+  #pdfViewer .pv-h{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px 10px;color:#fff;background:#0e1c30;}
+  #pdfViewer .pv-h b{flex:1;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #pdfViewer .pv-h button{border:none;background:rgba(255,255,255,.12);color:#fff;border-radius:10px;padding:8px 12px;font-size:14px;font-family:inherit;}
+  #pdfViewer .pv-b{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:10px;}
+  #pdfViewer .pv-b img{display:block;width:100%;max-width:900px;margin:0 auto 10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.4);}
+  #pdfViewer .pv-msg{color:#c9d4e2;text-align:center;padding:40px 10px;font-size:14px;}
+  @media (min-width:900px){ #courtsView{max-width:860px;margin:0 auto;} }
+  .h-line{padding:7px 0 2px;font-size:13px;color:#1f3a5f;cursor:pointer;}
+  .h-tile.ct-on .h-ic{background:#fdecea !important;}
+  .ct-toast{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:970;background:#0e1c30;color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:14px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.3);}
 </style>
 </head>
 <body>
 <div id="authScreen">
-  <img class="au-logo" src="icons/icon-192.png" alt="">
-  <div class="au-title">Δελτίο ΗΔΟ</div>
-  <div class="au-sub">Άμεση Δράση Αττικής &ndash; Γ&#39; Αλλαγή</div>
+  <img class="au-logo" src="icons/badge.png" alt="Σήμα Γ' Αλλαγής">
+  <div class="au-title">Γ&#39; Αλλαγή</div>
+  <div class="au-sub">Άμεση Δράση Αττικής</div>
   <div class="au-card" id="authCard"><p style="text-align:center;margin:0;">Φόρτωση…</p></div>
-  <div class="au-foot">Προσωπικός λογαριασμός. Μην δίνετε τον κωδικό σας σε άλλον.<br>Ξεχάσατε τον κωδικό; Ζητήστε νέο προσωρινό από τον διαχειριστή.</div>
+  <div class="au-foot">Ξεχάσατε τον κωδικό; Ζητήστε νέο προσωρινό από τον διαχειριστή.</div>
 </div>
 
-<div class="header">
-  <div class="title">Ημερήσιο Δελτίο Οχήματος</div>
-  <div class="subtitle">Άμεση Δράση Αττικής &ndash; Γ&#39; Αλλαγή</div>
+<div class="apphead">
+  <img src="icons/badge.png" alt="">
+  <div><div class="ah-t">Γ&#39; Αλλαγή</div><div class="ah-s">ΑΜΕΣΗ ΔΡΑΣΗ ΑΤΤΙΚΗΣ</div></div>
+  <span class="ah-pg" id="ahPage"></span>
+  <button type="button" class="ah-av" id="ahAv" onclick="openAccountMenu()" aria-label="Λογαριασμός">?</button>
 </div>
 
-<div id="installCard"></div>
+<div id="homeView" style="display:none;">
+  <div class="home-top">
+    <div class="home-hi" id="homeHi">Καλημέρα</div>
+    <div class="home-name" id="homeName"></div>
+    <div class="home-date" id="homeDate"></div>
+  </div>
+  <div class="home-wrap">
+    <div id="installCard"></div>
+    <div id="homeAlerts"></div>
+    <div class="h-sec">ΕΝΟΤΗΤΕΣ</div>
+    <div class="h-grid" id="homeGrid"></div>
+  </div>
+</div>
+
 <div id="whoBox"></div>
+<div class="seg" id="deltioSeg" style="display:none;">
+  <button type="button" id="segQuick" onclick="switchTab('quick')">Γρήγορη Καταγραφή</button>
+  <button type="button" id="segFull" onclick="switchTab('full')">Πλήρες Δελτίο</button>
+</div>
 
 <div class="top-tabs">
   <button type="button" class="top-tab active" id="tabQuickBtn" onclick="switchTab('quick')">Γρήγορη Καταγραφή</button>
   <button type="button" class="top-tab" id="tabFullBtn" onclick="switchTab('full')">Πλήρες Δελτίο</button>
   <button type="button" class="top-tab" id="tabReportBtn" onclick="switchTab('report')">Αναφορά</button>
-  <button type="button" class="top-tab" id="tabApodosiBtn" onclick="switchTab('apodosi')">Απόδοση<span class="tab-dot" id="apDot"></span></button>
+  <button type="button" class="top-tab" id="tabApodosiBtn" onclick="switchTab('apodosi')">Απόδοση</button>
 </div>
 
-<div class="section" id="quickView">
+<div class="section" id="quickView" style="display:none;">
   <div class="section-title" style="margin-top:0;">Γρήγορη καταγραφή σήματος</div>
   <div>
     <span class="label">Κωδικός σήματος</span>
@@ -744,6 +932,15 @@
   <div id="apStatus" class="status"></div>
 </div>
 
+<div class="section" id="courtsView" style="display:none;"></div>
+
+<nav id="bnav">
+  <button type="button" id="nbHome" onclick="switchTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Αρχική</button>
+  <button type="button" id="nbDeltio" onclick="switchTab(lastDeltioTab)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8.5 13h7M8.5 17h5"/></svg>Δελτίο<span class="nb" id="nbDeltioN"></span></button>
+  <button type="button" id="nbApodosi" onclick="switchTab('apodosi')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M7 16v-5M12 16V6M17 16v-8"/></svg>Απόδοση<span class="tab-dot" id="apDot"></span></button>
+  <button type="button" id="nbReport" onclick="switchTab('report')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Αναφορά<span class="nb" id="nbReportN"></span></button>
+  <button type="button" id="nbMe" onclick="openAccountMenu()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>Εγώ</button>
+</nav>
 <script>
 /* =======================================================================
    ΛΟΓΑΡΙΑΣΜΟΙ — σύνδεση, πρώτη αλλαγή κωδικού, κλείδωμα με Face ID /
@@ -754,7 +951,7 @@
    ======================================================================= */
 const AUTH_KEY = 'hdo_auth_v1';        // { token, user:{u,name,role,admin} }
 const BIO_KEY  = 'hdo_bio_v1';         // { id, u } — αναγνωριστικό κλειδιού συσκευής
-const LOCK_AFTER_MS = 5 * 60 * 1000;   // κλείδωμα αν η εφαρμογή μείνει στο παρασκήνιο >5'
+const LOCK_AFTER_MS = 60 * 1000;       // ξανά Face ID αν η εφαρμογή μείνει στο παρασκήνιο >1'
 let AUTH = null;
 let authTicket = null;
 let hiddenAt = 0;
@@ -808,22 +1005,29 @@ function authMsg(t, ok){
   const m = document.getElementById('auMsg');
   if (m){ m.textContent = t || ''; m.className = 'au-msg' + (ok ? ' ok' : ''); }
 }
+const IC = {
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg>',
+  face: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H5.5A2.5 2.5 0 0 0 3 5.5V7M17 3h1.5A2.5 2.5 0 0 1 21 5.5V7M7 21H5.5A2.5 2.5 0 0 1 3 18.5V17M17 21h1.5a2.5 2.5 0 0 0 2.5-2.5V17"/><path d="M8.5 9v1.5M15.5 9v1.5M12 9v4.5h-1M9 16.2c1.8 1.3 4.2 1.3 6 0"/></svg>',
+  finger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 11v3.5a6 6 0 0 1-1.6 4.1M8.6 20.5A9 9 0 0 0 10 15.5V12a2 2 0 0 1 4 0v1.5M17 14.5V12a5 5 0 0 0-10 0v2.5M5 14v-2a7 7 0 0 1 12.6-4.2M19.6 11c.3 1.6.4 3.2.3 4.8M14 17.5a12 12 0 0 1-.9 3"/></svg>'
+};
+function bioIcon(){ return /Android/.test(navigator.userAgent) ? IC.finger : IC.face; }
 function pwField(id, label, ac){
-  return '<label for="' + id + '">' + label + '</label><div class="au-pw"><input type="password" id="' + id +
-    '" autocomplete="' + ac + '"><button type="button" class="au-eye" tabindex="-1" onclick="pwToggle(\'' + id + '\', this)">👁</button></div>';
+  return '<div class="au-in">' + IC.lock + '<input type="password" id="' + id + '" placeholder="' + label +
+    '" aria-label="' + label + '" autocomplete="' + ac + '"><button type="button" class="au-eye2" tabindex="-1" aria-label="Εμφάνιση κωδικού" onclick="pwToggle(\'' + id + '\', this)">' + IC.eye + '</button></div>';
 }
 function pwToggle(id, b){
   const i = document.getElementById(id);
   i.type = i.type === 'password' ? 'text' : 'password';
-  b.textContent = i.type === 'password' ? '👁' : '🙈';
+  b.innerHTML = i.type === 'password' ? IC.eye : IC.eyeOff;
 }
 
 function showLogin(note){
   const last = localStorage.getItem('hdo_last_user') || '';
-  authShow('<h2>Σύνδεση</h2><p>Με το όνομα χρήστη και τον κωδικό που σας έδωσε ο διαχειριστής.</p>' +
-    '<form onsubmit="doLogin(event)" autocomplete="on">' +
-    '<label for="auUser">Όνομα χρήστη</label>' +
-    '<input type="text" id="auUser" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + authEsc(last) + '">' +
+  authShow('<form onsubmit="doLogin(event)" autocomplete="on">' +
+    '<div class="au-in">' + IC.user + '<input type="text" id="auUser" placeholder="Όνομα χρήστη" aria-label="Όνομα χρήστη" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + authEsc(last) + '"></div>' +
     pwField('auPass', 'Κωδικός', 'current-password') +
     '<button type="submit" class="au-btn" id="auGo">Σύνδεση</button>' +
     '<div class="au-msg" id="auMsg"></div></form>');
@@ -852,7 +1056,7 @@ async function doLogin(ev){
 
 function showFirstPassword(user){
   authShow('<h2>Καλώς ήρθατε' + (user && user.name ? ', ' + authEsc(user.name) : '') + '</h2>' +
-    '<p>Πρώτη σύνδεση: ορίστε τον δικό σας κωδικό (τουλάχιστον 6 χαρακτήρες). Ο προσωρινός κωδικός παύει να ισχύει.</p>' +
+    '<p>Πρώτη σύνδεση: ορίστε τον δικό σας κωδικό (τουλάχιστον 6 χαρακτήρες).</p>' +
     '<form onsubmit="doFirstPassword(event)">' +
     '<input type="text" autocomplete="username" value="' + authEsc(user ? user.u : '') + '" style="display:none">' +
     pwField('auNew1', 'Νέος κωδικός', 'new-password') + pwField('auNew2', 'Ξανά ο νέος κωδικός', 'new-password') +
@@ -881,10 +1085,13 @@ function authLoggedIn(token, user, fresh){
   try { localStorage.setItem('hdo_last_name', user.name || user.u); } catch(e){}
   authHide();
   if (typeof renderWho === 'function') renderWho();
+  if (typeof renderHome === 'function' && document.getElementById('homeView').style.display !== 'none') renderHome();
   // Συντάκτης = ο λογαριασμός: συμπληρώνεται όπου είναι κενό.
   const syn = document.getElementById('synodos');
   if (syn && user.name && (!syn.value.trim() || (prevName && syn.value.trim() === prevName))) syn.value = user.name;
   if (typeof loadLists === 'function') loadLists();
+  if (typeof courtsRefresh === 'function'){ CT.mine = []; CT.all = []; CT.alerts = null; CT.loadedAt = 0; ctLoadCache(); courtsRefresh(true); }
+  if (typeof pushSync === 'function') setTimeout(pushSync, 1500);
   if (fresh) setTimeout(offerBio, 400);
 }
 
@@ -896,10 +1103,13 @@ function authExpired(msg){
 }
 
 function authLogout(){
+  // Με Face ID / δακτυλικό: η αποσύνδεση «κλειδώνει» την εφαρμογή, όπως οι
+  // εφαρμογές τραπεζών — την επόμενη φορά μπαίνετε ξανά με το πρόσωπο/δάχτυλο.
+  if (bioOn()){ closeSheet(); showLock(); return; }
   if (!confirm('Αποσύνδεση από αυτή τη συσκευή;\n\nΤα πρόχειρα που δεν έχετε στείλει παραμένουν στο κινητό.')) return;
   closeSheet();
   AUTH = null;
-  try { localStorage.removeItem(AUTH_KEY); localStorage.removeItem(BIO_KEY); } catch(e){}
+  try { localStorage.removeItem(AUTH_KEY); } catch(e){}
   showLogin();
 }
 
@@ -926,7 +1136,7 @@ async function bioEnable(){
   try {
     const cred = await navigator.credentials.create({ publicKey: {
       challenge: rnd(32),
-      rp: { name: 'Δελτίο ΗΔΟ', id: location.hostname },
+      rp: { name: "Γ' Αλλαγή", id: location.hostname },
       user: { id: rnd(16), name: AUTH.user.u, displayName: authName() },
       pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
       authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
@@ -972,20 +1182,29 @@ async function bioToggle(){
   openAccountMenu();
 }
 
-function showLock(){
-  authShow('<div class="au-bio">🔒</div><h2 style="text-align:center;">' + authEsc(authName()) + '</h2>' +
-    '<p style="text-align:center;">Ξεκλειδώστε με ' + bioLabel() + '.</p>' +
-    '<button type="button" class="au-btn" id="auUnlock" onclick="tryUnlock()">Ξεκλείδωμα</button>' +
+function showLock(auto){
+  authShow('<h2>' + authEsc(authName()) + '</h2>' +
+    '<button type="button" class="au-biobtn" id="auUnlock" onclick="tryUnlock()"><span class="ring">' + bioIcon() + '</span>' +
+    'Ξεκλείδωμα με ' + bioLabel() + '</button>' +
     '<div class="au-msg" id="auMsg"></div>' +
-    '<button type="button" class="au-link" onclick="lockToPassword()">Σύνδεση με κωδικό</button>');
+    '<button type="button" class="au-link" onclick="lockToPassword()">Σύνδεση με κωδικό ή με άλλο λογαριασμό</button>');
+  if (auto) setTimeout(function(){ tryUnlock(true); }, 300);
 }
-async function tryUnlock(){
-  if (await bioVerify()){ authHide(); return; }
-  authMsg('Δεν έγινε ξεκλείδωμα. Δοκιμάστε ξανά.');
+let unlocking = false;
+async function tryUnlock(silent){
+  if (unlocking) return;
+  unlocking = true;
+  const ok = await bioVerify();
+  unlocking = false;
+  if (ok){ authHide(); if (typeof renderWho === 'function') renderWho(); if (typeof ctHandleHash === 'function') ctHandleHash(); return; }
+  if (!silent) authMsg('Δεν έγινε ξεκλείδωμα. Δοκιμάστε ξανά.');
 }
 function lockToPassword(){
+  // Το κλειδί Face ID του χρήστη μένει: αν ξαναμπεί ο ίδιος με κωδικό,
+  // το Face ID είναι αμέσως ενεργό. Αν μπει άλλος, δεν ισχύει γι' αυτόν.
+  if (typeof pushDisable === 'function' && pushState()) pushDisable();
   AUTH = null;
-  try { localStorage.removeItem(AUTH_KEY); localStorage.removeItem(BIO_KEY); } catch(e){}
+  try { localStorage.removeItem(AUTH_KEY); } catch(e){}
   showLogin();
 }
 
@@ -1012,6 +1231,9 @@ async function openAccountMenu(){
     '<button class="menu-item" onclick="showChangePassword()"><span class="mi-ic">🔑</span>Αλλαγή κωδικού</button>' +
     (bioSupported ? '<button class="menu-item" onclick="bioToggle()"><span class="mi-ic">🔐</span>Ξεκλείδωμα με ' + bioLabel() +
       '<span class="mi-sw' + (bioOn() ? ' on' : '') + '">' + (bioOn() ? 'ΝΑΙ' : 'ΟΧΙ') + '</span></button>' : '') +
+    (pushConfigured() ? '<button class="menu-item" onclick="pushToggle()"><span class="mi-ic">🔔</span>Ειδοποιήσεις' +
+      '<span class="mi-sw' + (pushOn() ? ' on' : '') + '">' + (pushOn() ? 'ΝΑΙ' : 'ΟΧΙ') + '</span></button>' +
+      (pushOn() ? '<button class="menu-item" onclick="pushTest()"><span class="mi-ic">📨</span>Δοκιμαστική ειδοποίηση</button>' : '') : '') +
     '<button class="menu-item danger" onclick="authLogout()"><span class="mi-ic">⎋</span>Αποσύνδεση</button>');
 }
 
@@ -1075,17 +1297,17 @@ function renderMine(items, all){
 function authStart(){
   authLoad();
   if (!AUTH){ showLogin(); return; }
-  if (bioOn()) showLock(); else authHide();
+  if (bioOn()) showLock(true); else authHide();
   // Ανανέωση της σύνδεσης στο παρασκήνιο (αν δεν υπάρχει ίντερνετ, συνεχίζουμε κανονικά).
   authApi({ action: 'me', token: AUTH.token }).then(function(out){
-    if (out.ok && out.token){ authSave(out.token, out.user); if (typeof renderWho === 'function') renderWho(); }
+    if (out.ok && out.token){ authSave(out.token, out.user); if (typeof renderWho === 'function') renderWho(); if (typeof courtsRefresh === 'function') courtsRefresh(true); }
     else if (out.authError) authExpired(out.error);
   }).catch(function(){});
 }
 document.addEventListener('visibilitychange', function(){
   if (document.hidden){ hiddenAt = Date.now(); return; }
   if (hiddenAt && AUTH && bioOn() && Date.now() - hiddenAt > LOCK_AFTER_MS &&
-      document.getElementById('authScreen').classList.contains('hidden')) showLock();
+      document.getElementById('authScreen').classList.contains('hidden')) showLock(true);
   hiddenAt = 0;
 });
 authLoad();   // νωρίς, ώστε και το πρώτο αίτημα (λίστες) να έχει το token
@@ -1507,12 +1729,8 @@ function getMe(){ return (AUTH && AUTH.user && AUTH.user.name) || localStorage.g
 function renderWho(){
   const box = document.getElementById('whoBox');
   if (AUTH){
-    const n = authName();
-    const ini = n.replace(/[^A-Za-zΑ-Ωα-ωΆ-Ώά-ώ ]/g,'').trim().split(/\s+/).slice(-1)[0] || '?';
-    box.innerHTML = '<div class="who-bar"><button type="button" class="who-acc" onclick="openAccountMenu()">' +
-      '<span class="who-av">' + esc(ini.charAt(0).toUpperCase()) + '</span>' +
-      '<span>Συντάσσει: <span class="who-name">' + esc(n) + '</span>' + (AUTH.user.admin ? '<span class="who-role">ΔΙΑΧ.</span>' : '') + '</span></button>' +
-      '<button type="button" class="link-btn" onclick="openAccountMenu()">λογαριασμός ▾</button></div>';
+    box.innerHTML = '';
+    updateHeadAvatar();
     return;
   }
   const me = getMe();
@@ -3044,7 +3262,23 @@ function blankFields(isoDate){
   return f;
 }
 
+let lastDeltioTab = 'quick';
+const PAGE_TITLES = { quick: 'Δελτίο', full: 'Δελτίο', report: 'Αναφορά', apodosi: 'Απόδοση', courts: 'Δικαστήρια', home: '' };
 function switchTab(tab){
+  if (tab === 'quick' || tab === 'full'){ lastDeltioTab = tab; try { localStorage.setItem('hdo_last_deltio_tab', tab); } catch(e){} }
+  document.getElementById('homeView').style.display = (tab === 'home') ? 'block' : 'none';
+  document.getElementById('courtsView').style.display = (tab === 'courts') ? 'block' : 'none';
+  if (tab === 'courts') renderCourts();
+  document.getElementById('deltioSeg').style.display = (tab === 'quick' || tab === 'full') ? 'flex' : 'none';
+  document.getElementById('segQuick').classList.toggle('on', tab === 'quick');
+  document.getElementById('segFull').classList.toggle('on', tab === 'full');
+  document.getElementById('nbHome').classList.toggle('on', tab === 'home');
+  document.getElementById('nbDeltio').classList.toggle('on', tab === 'quick' || tab === 'full');
+  document.getElementById('nbApodosi').classList.toggle('on', tab === 'apodosi');
+  document.getElementById('nbReport').classList.toggle('on', tab === 'report');
+  document.getElementById('ahPage').textContent = PAGE_TITLES[tab] || '';
+  if (tab === 'home'){ renderHome(); courtsRefresh(false); }
+  window.scrollTo(0, 0);
   document.getElementById('quickView').style.display = (tab === 'quick') ? 'block' : 'none';
   document.getElementById('fullView').style.display = (tab === 'full') ? 'block' : 'none';
   document.getElementById('reportView').style.display = (tab === 'report') ? 'block' : 'none';
@@ -4245,10 +4479,714 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('sw.js').catch(function(){});
   });
 }
+/* ===== Αρχική οθόνη ===== */
+const HIC = {
+  deltio: '<svg viewBox="0 0 24 24" fill="none" stroke="#1f4f8a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M8.5 13h7M8.5 17h5"/></svg>',
+  apodosi: '<svg viewBox="0 0 24 24" fill="none" stroke="#2f6e4e" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M7 16v-5M12 16V6M17 16v-8"/></svg>',
+  report: '<svg viewBox="0 0 24 24" fill="none" stroke="#6b4f9e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+  mine: '<svg viewBox="0 0 24 24" fill="none" stroke="#a46a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v3H9z"/><path d="M9 5.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6.5a1 1 0 0 0-1-1h-3M8.5 12l2 2 4-4"/></svg>',
+  court: '<svg viewBox="0 0 24 24" fill="none" stroke="#7a8796" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></svg>',
+  cal: '<svg viewBox="0 0 24 24" fill="none" stroke="#7a8796" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
+};
+function countObj(o){ return o ? Object.keys(o).length : 0; }
+function homeCounts(){
+  let d = 0, r = 0, a = false;
+  try { d = countObj(getDrafts()); } catch(e){}
+  try { r = countObj(getRDrafts()); } catch(e){}
+  try { a = apHasData(); } catch(e){}
+  return { deltio: d, report: r, apodosi: a };
+}
+function updateNavBadges(){
+  const c = homeCounts();
+  [['nbDeltioN', c.deltio], ['nbReportN', c.report]].forEach(function(x){
+    const el = document.getElementById(x[0]);
+    if (!el) return;
+    el.textContent = x[1] || '';
+    el.style.display = x[1] ? 'flex' : 'none';
+  });
+}
+function updateHeadAvatar(){
+  const b = document.getElementById('ahAv');
+  if (!b) return;
+  const n = AUTH ? authName() : '';
+  const w = n.replace(/[^A-Za-zΑ-Ωα-ωΆ-Ώά-ώΪΫϊϋΐΰ ]/g, '').trim().split(/\s+/).filter(function(x){ return x.length > 1; });
+  b.textContent = (w.length ? w[w.length - 1].charAt(0) : '?').toUpperCase();
+}
+function tile(icon, bg, title, sub, onclick, badge, soon){
+  return '<button type="button" class="h-tile' + (soon ? ' soon' : '') + '"' + (onclick ? ' onclick="' + onclick + '"' : '') + '>' +
+    '<div class="h-ic" style="background:' + bg + '">' + icon + '</div><b>' + title + '</b><span>' + sub + '</span>' +
+    (badge ? '<div class="h-badge">' + badge + '</div>' : '') + '</button>';
+}
+function renderHome(){
+  const h = new Date().getHours();
+  document.getElementById('homeHi').textContent = (h >= 5 && h < 12) ? 'Καλημέρα' : (h >= 12 && h < 21 ? 'Καλησπέρα' : 'Καλό βράδυ');
+  document.getElementById('homeName').textContent = AUTH ? authName() : '';
+  try {
+    document.getElementById('homeDate').textContent = new Date().toLocaleDateString('el-GR', { weekday: 'long', day: 'numeric', month: 'long' });
+  } catch(e){}
+  const c = homeCounts();
+  // Ειδοποιήσεις (π.χ. κλήσεις δικαστηρίων — μπορεί να είναι περισσότερες από μία).
+  const alerts = (typeof courtsHomeAlerts === 'function') ? courtsHomeAlerts() : [];
+  if (typeof pushHomeCard === 'function'){ const pc = pushHomeCard(); if (pc) alerts.push(pc); }
+  if (c.deltio) alerts.push('<div class="h-alert" onclick="switchTab(\'full\')"><b>📝 ' + (c.deltio === 1 ? '1 δελτίο δεν έχει σταλεί' : c.deltio + ' δελτία δεν έχουν σταλεί') + '</b><br>Τα βρίσκετε στο Πλήρες Δελτίο, στα «Ημιτελή».</div>');
+  document.getElementById('homeAlerts').innerHTML = alerts.join('');
+  document.getElementById('homeGrid').innerHTML =
+    tile(HIC.deltio, '#e8eef7', 'Δελτίο', 'Γρήγορη καταγραφή και πλήρες δελτίο', "switchTab(lastDeltioTab)", c.deltio) +
+    tile(HIC.apodosi, '#e6f4ec', 'Απόδοση', 'Στοιχεία απόδοσης βάρδιας', "switchTab('apodosi')", c.apodosi ? '•' : '') +
+    tile(HIC.report, '#efe9f8', 'Αναφορά', 'Προς την Υπηρεσία ή άλλη', "switchTab('report')", c.report) +
+    tile(HIC.mine, '#fff3dc', 'Τα δικά μου', 'Ό,τι έχω στείλει', "openMine(false)", 0) +
+    tile(HIC.court.replace('#7a8796', '#a32d2d'), '#fdecea', 'Δικαστήρια', 'Οι κλήσεις μου, αναβολές, υπενθυμίσεις', 'openCourts()', courtsHomeCount()) +
+    tile(HIC.cal, '#f0f1f3', 'Υπηρεσία', 'Σύντομα', '', 0, true);
+  updateNavBadges();
+}
+
+/* =======================================================================
+   ΔΙΚΑΣΤΗΡΙΑ — οι κλήσεις μου, λεπτομέρειες, γνώση, ημερολόγιο,
+   αναβολή, «Τι έγινε;» και (για Γραμματεία/διαχειριστή) νέα κλήση.
+   ======================================================================= */
+const CT_CACHE_KEY = 'hdo_courts_v1';
+const CT_LIBS = {
+  jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  pdfjs: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+  pdfjsWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+};
+const CT_DAYS = ['Κυριακή','Δευτέρα','Τρίτη','Τετάρτη','Πέμπτη','Παρασκευή','Σάββατο'];
+const CT_MON = ['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+let CT = { mine: [], all: [], alerts: null, meta: null, loadedAt: 0, mode: 'mine', filter: 'pending', openId: null, form: null };
+
+function ctToday(){ const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function ctDate(iso){ const p = String(iso||'').split('-'); return new Date(+p[0], +p[1]-1, +p[2], 12); }
+function ctGr(iso){ const p = String(iso||'').split('-'); return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : ''; }
+function ctDiff(iso){ return Math.round((ctDate(iso) - ctDate(ctToday())) / 86400000); }
+function ctWhen(iso){
+  const n = ctDiff(iso);
+  if (n === 0) return 'σήμερα'; if (n === 1) return 'αύριο'; if (n > 1) return 'σε ' + n + ' ημέρες';
+  if (n === -1) return 'χθες'; return 'πριν ' + (-n) + ' ημέρες';
+}
+function ctShort(name){
+  return String(name||'').replace('Μονομελές Εφετείο Κακουργημάτων','ΜΕΚ').replace('Τριμελές Εφετείο Κακουργημάτων','ΤΕΚ')
+    .replace('Τριμελές Εφετείο Πλημμελημάτων','ΤΕΠ').replace('Μονομελές Πλημμελειοδικείο','ΜΠΠ')
+    .replace('Τριμελές Πλημμελειοδικείο','ΤΠΠ').replace('Πταισματοδικείο','Πταισμ.');
+}
+function ctIsStaff(){ return !!(AUTH && AUTH.user && AUTH.user.staff); }
+function ctNeedsAnswer(c){ return c.status === 'Ενεργή' && c.date < ctToday(); }
+function ctPostponed(c){ return (c.hist || []).some(function(h){ return h.k === 'postpone'; }); }
+function ctFind(id){ return CT.mine.concat(CT.all).find(function(c){ return c.id === id; }) || null; }
+
+async function ctApi(params){
+  const out = await authApi(Object.assign({ token: AUTH ? AUTH.token : '' }, params));
+  if (!out.ok){
+    if (out.authError){ authExpired(out.error); }
+    throw new Error(out.error || 'Σφάλμα.');
+  }
+  return out;
+}
+
+function ctLoadCache(){
+  try {
+    const c = JSON.parse(localStorage.getItem(CT_CACHE_KEY) || 'null');
+    if (c && AUTH && c.u === AUTH.user.u){ CT.mine = c.mine || []; CT.alerts = c.alerts || null; }
+  } catch(e){}
+}
+async function courtsRefresh(force){
+  if (!AUTH) return;
+  if (!force && Date.now() - CT.loadedAt < 20000) return;
+  try {
+    const out = await ctApi({ action: 'courtMine' });
+    CT.mine = out.items || []; CT.alerts = out.alerts || null; CT.loadedAt = Date.now();
+    try { localStorage.setItem(CT_CACHE_KEY, JSON.stringify({ u: AUTH.user.u, mine: CT.mine, alerts: CT.alerts })); } catch(e){}
+    if (ctIsStaff() && (CT.mode === 'all' || force)) { try { const a = await ctApi({ action: 'courtAll' }); CT.all = a.items || []; CT.alerts = a.alerts; } catch(e){} }
+  } catch(e){}
+  if (document.getElementById('homeView').style.display !== 'none') renderHome();
+  if (document.getElementById('courtsView').style.display !== 'none') renderCourts();
+  ctHandleHash();
+}
+
+/* ----- Αρχική: ειδοποιήσεις & μετρητής ----- */
+function courtsHomeCount(){
+  return CT.mine.filter(function(c){ return c.status === 'Ενεργή' && (!c.ack || ctNeedsAnswer(c)); }).length;
+}
+function courtsHomeAlerts(){
+  const out = [];
+  const today = ctToday();
+  const fresh = CT.mine.filter(function(c){ return c.status === 'Ενεργή' && !c.ack && c.date >= today; });
+  const soon = CT.mine.filter(function(c){ return c.status === 'Ενεργή' && c.ack && c.date >= today && ctDiff(c.date) <= 7; });
+  const ask = CT.mine.filter(ctNeedsAnswer);
+  function lines(arr, fmt){ return arr.sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); })
+    .map(function(c){ return '<div class="h-line" onclick="event.stopPropagation();openCourt(\'' + c.id + '\')">' + fmt(c) + ' ›</div>'; }).join(''); }
+  if (fresh.length) out.push('<div class="h-alert" style="border-left-color:#d93025"><b>⚖️ ' + (fresh.length === 1 ? 'Νέα κλήση σε δικαστήριο' : fresh.length + ' νέες κλήσεις σε δικαστήριο') + '</b>' +
+    lines(fresh, function(c){ return ctGr(c.date) + ' ' + c.time + ' · ' + esc(ctShort(c.court)); }) + '</div>');
+  if (ask.length) out.push('<div class="h-alert" style="border-left-color:#6b4f9e"><b>❓ Τι έγινε στη δίκη;</b>' +
+    lines(ask, function(c){ return ctGr(c.date) + ' · ' + esc(ctShort(c.court)); }) + '</div>');
+  if (soon.length) out.push('<div class="h-alert" style="border-left-color:#1f4f8a"><b>📅 Δίκες τις επόμενες ημέρες</b>' +
+    lines(soon, function(c){ return ctWhen(c.date) + ' · ' + c.time + ' · ' + esc(ctShort(c.court)); }) + '</div>');
+  const a = CT.alerts;
+  if (ctIsStaff() && a){
+    const parts = [];
+    if (a.postponed && a.postponed.length) parts.push('<div class="h-line" onclick="event.stopPropagation();openCourtsAll(\'post\')">🔁 ' + a.postponed.length + (a.postponed.length === 1 ? ' αναβολή' : ' αναβολές') + ' τις τελευταίες 3 ημέρες ›</div>');
+    if (a.unacked && a.unacked.length) parts.push('<div class="h-line" onclick="event.stopPropagation();openCourtsAll(\'pending\')">⏳ ' + a.unacked.length + ' χωρίς «Έλαβα γνώση» (24+ ώρες) ›</div>');
+    if (a.noAnswer && a.noAnswer.length) parts.push('<div class="h-line" onclick="event.stopPropagation();openCourtsAll(\'ask\')">❓ ' + a.noAnswer.length + ' δίκες χωρίς απάντηση «Τι έγινε» ›</div>');
+    if (parts.length) out.push('<div class="h-alert" style="border-left-color:#0e1c30"><b>👥 Δικαστήρια — διαχείριση</b>' + parts.join('') + '</div>');
+  }
+  return out;
+}
+
+/* ----- Πλοήγηση ----- */
+function openCourts(){ CT.openId = null; CT.form = null; CT.mode = 'mine'; switchTab('courts'); courtsRefresh(true); }
+function openCourt(id){ CT.openId = id; CT.form = null; switchTab('courts'); }
+function openCourtsAll(filter){ CT.openId = null; CT.form = null; CT.mode = 'all'; CT.filter = filter || 'pending'; switchTab('courts'); ctLoadAll(); }
+function ctBack(){ CT.openId = null; CT.form = null; renderCourts(); window.scrollTo(0,0); }
+async function ctLoadAll(){
+  try { const a = await ctApi({ action: 'courtAll' }); CT.all = a.items || []; CT.alerts = a.alerts; } catch(e){}
+  renderCourts();
+}
+function ctSetMode(m){ CT.mode = m; CT.openId = null; CT.form = null; if (m === 'all') ctLoadAll(); else if (m === 'new') ctNewForm(); else renderCourts(); }
+
+// Άνοιγμα από ειδοποίηση: ...#court:ID
+function ctHandleHash(){
+  const m = /#court:([\w-]+)/.exec(location.hash || '');
+  if (!m || !AUTH) return;
+  if (!document.getElementById('authScreen').classList.contains('hidden')) return;   // πρώτα ξεκλείδωμα
+  history.replaceState(null, '', location.pathname + location.search);
+  openCourt(m[1]);
+}
+window.addEventListener('hashchange', ctHandleHash);
+
+/* ----- Σχεδίαση ----- */
+function renderCourts(){
+  const box = document.getElementById('courtsView');
+  if (!box) return;
+  if (CT.form){ box.innerHTML = ctFormHtml(); ctFormAfter(); return; }
+  if (CT.openId){ const c = ctFind(CT.openId); if (c){ box.innerHTML = ctDetailHtml(c); return; } }
+  let html = '';
+  if (ctIsStaff()){
+    html += '<div class="ct-seg"><button class="' + (CT.mode === 'mine' ? 'on' : '') + '" onclick="ctSetMode(\'mine\')">Οι κλήσεις μου</button>' +
+      '<button class="' + (CT.mode === 'all' ? 'on' : '') + '" onclick="ctSetMode(\'all\')">Όλες</button>' +
+      '<button onclick="ctSetMode(\'new\')">+ Νέα κλήση</button></div>';
+  }
+  html += CT.mode === 'all' ? ctAllHtml() : ctMineHtml();
+  box.innerHTML = html;
+}
+
+function ctCardHtml(c, showName){
+  const d = ctDate(c.date);
+  const badges = [];
+  if (c.status === 'Εκδικάστηκε') badges.push('<span class="ct-bd done">Εκδικάστηκε</span>');
+  else {
+    if (!c.ack) badges.push('<span class="ct-bd">' + (showName ? 'Δεν έλαβε γνώση' : 'Νέα') + '</span>');
+    else if (showName) badges.push('<span class="ct-bd ok">✓ Γνώση</span>');
+    if (ctNeedsAnswer(c)) badges.push('<span class="ct-bd ask">Τι έγινε;</span>');
+    if (ctPostponed(c)) badges.push('<span class="ct-bd post">Αναβολή</span>');
+  }
+  return '<button type="button" class="ct-card" onclick="openCourt(\'' + c.id + '\')">' +
+    '<div class="ct-day' + (c.status === 'Εκδικάστηκε' ? ' done' : '') + '"><b>' + d.getDate() + '</b><span>' + CT_MON[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2) + '</span></div>' +
+    '<div class="ct-main"><div class="l1">' + (showName ? esc(c.name) + ' · ' : '') + esc(c.time) + ' · ' + esc(ctShort(c.court)) + '</div>' +
+    (c.accused ? '<div class="l2">κατά ' + esc(c.accused) + '</div>' : '') +
+    '<div class="l3">' + badges.join('') + (c.status === 'Ενεργή' ? esc(ctWhen(c.date)) : '') + '</div></div></button>';
+}
+
+function ctMineHtml(){
+  const today = ctToday();
+  const sorted = CT.mine.slice().sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
+  const ask = sorted.filter(ctNeedsAnswer);
+  const up = sorted.filter(function(c){ return c.status === 'Ενεργή' && c.date >= today; });
+  const old = sorted.filter(function(c){ return c.status !== 'Ενεργή'; }).reverse();
+  if (!sorted.length) return '<div class="ct-empty">⚖️<br>Δεν έχετε κλήσεις σε δικαστήριο.<br>Όταν σας καταχωρηθεί κλήση, θα τη βλέπετε εδώ και θα λάβετε ειδοποίηση.</div>';
+  let h = '';
+  if (ask.length) h += '<div class="ct-h">Χρειάζεται απάντηση</div>' + ask.map(function(c){ return ctCardHtml(c); }).join('');
+  if (up.length) h += '<div class="ct-h">Επερχόμενες</div>' + up.map(function(c){ return ctCardHtml(c); }).join('');
+  if (old.length) h += '<div class="ct-h">Παλιές (σβήνονται αυτόματα 3 μήνες μετά)</div>' + old.map(function(c){ return ctCardHtml(c); }).join('');
+  return h;
+}
+
+function ctAllHtml(){
+  const today = ctToday();
+  const F = [['pending','Χωρίς γνώση'],['up','Επερχόμενες'],['ask','Χωρίς απάντηση'],['post','Αναβολές'],['every','Όλες']];
+  let list = CT.all.slice().sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
+  const threeDays = Date.now() - 3*86400000;
+  list = list.filter(function(c){
+    switch (CT.filter){
+      case 'pending': return c.status === 'Ενεργή' && !c.ack;
+      case 'up': return c.status === 'Ενεργή' && c.date >= today;
+      case 'ask': return ctNeedsAnswer(c);
+      case 'post': return (c.hist || []).some(function(h){ return h.k === 'postpone' && h.ms > threeDays; });
+      default: return true;
+    }
+  });
+  let h = '<div class="ct-filter">' + F.map(function(f){ return '<button class="' + (CT.filter === f[0] ? 'on' : '') + '" onclick="CT.filter=\'' + f[0] + '\';renderCourts()">' + f[1] + '</button>'; }).join('') + '</div>';
+  if (!list.length) h += '<div class="ct-empty">Καμία κλήση σε αυτή την κατηγορία.</div>';
+  return h + list.map(function(c){ return ctCardHtml(c, true); }).join('');
+}
+
+function ctDetailHtml(c){
+  const d = ctDate(c.date);
+  const mine = AUTH && c.u === AUTH.user.u;
+  const active = c.status === 'Ενεργή';
+  const map = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.addr || c.court);
+  let h = '<button class="ct-back" onclick="ctBack()">‹ ' + (CT.mode === 'all' ? 'Όλες οι κλήσεις' : 'Οι κλήσεις μου') + '</button>';
+  h += '<div class="ct-hero">' + (active ? '<div class="cd">' + esc(ctWhen(c.date)) + '</div>' : '') +
+    '<div class="d">' + CT_DAYS[d.getDay()] + (mine ? '' : ' · ' + esc(c.name)) + '</div>' +
+    '<div class="big">' + d.getDate() + ' ' + CT_MON[d.getMonth()] + ' ' + d.getFullYear() + ' · ' + esc(c.time) + '</div>' +
+    '<div class="t">' + esc(c.court) + '</div>' +
+    (c.accused ? '<div class="case"><span>ΥΠΟΘΕΣΗ — κατά</span>' + esc(c.accused) + '</div>' : '') + '</div>';
+  if (active && ctNeedsAnswer(c) && (mine || ctIsStaff())){
+    h += '<div class="ct-ask"><b>❓ Τι έγινε στη δίκη;</b><div class="ct-two">' +
+      '<button class="ct-btn ack" onclick="ctDone(\'' + c.id + '\')">Εκδικάστηκε</button>' +
+      '<button class="ct-btn sec" onclick="ctPostponeForm(\'' + c.id + '\')">Πήρε αναβολή</button></div></div>';
+  }
+  h += '<div class="ct-box">' +
+    (c.addr ? '<div class="ct-row"><div class="k">Διεύθυνση</div><div class="v">' + esc(c.addr) + '<a href="' + map + '" target="_blank" rel="noopener">📍 Οδηγίες στον χάρτη</a></div></div>' : '') +
+    (c.room ? '<div class="ct-row"><div class="k">Όροφος / Αίθουσα</div><div class="v">' + esc(c.room) + '</div></div>' : '') +
+    (c.role ? '<div class="ct-row"><div class="k">Ιδιότητα</div><div class="v">' + esc(c.role) + '</div></div>' : '') +
+    (c.num ? '<div class="ct-row"><div class="k">Αρ. κλήσεως</div><div class="v">' + esc(c.num) + '</div></div>' : '') +
+    ((c.others || []).length ? '<div class="ct-row"><div class="k">Καλούνται επίσης</div><div class="v">' + c.others.map(function(o){ return esc(o.name); }).join(', ') + '</div></div>' : '') +
+    '<div class="ct-row"><div class="k">Κατάσταση</div><div class="v">' + esc(c.status) + (c.ack ? ' · γνώση ' + esc(c.ack) : ' · <span style="color:#d93025">δεν έχει δοθεί γνώση</span>') + '</div></div>' +
+    '</div>';
+  if (c.hasPdf) h += '<button class="ct-pdf" onclick="ctOpenPdf(\'' + c.id + '\')"><div class="th"></div><div><b>Κλήση (PDF)</b><span>' + (c.pages ? c.pages + (String(c.pages) === '1' ? ' σελίδα' : ' σελίδες') : 'έγγραφο') + '</span></div><div class="o">Άνοιγμα ›</div></button>';
+  if (mine && active && !c.ack) h += '<button class="ct-btn ack" id="ctAckBtn" onclick="ctAck(\'' + c.id + '\')">✓ Έλαβα γνώση</button>';
+  else if (mine && c.ack) h += '<div class="ct-acked">✓ Λάβατε γνώση ' + esc(c.ack) + '</div>';
+  if (active){
+    h += '<button class="ct-btn sec" onclick="ctCalendar(\'' + c.id + '\')">📅 Προσθήκη στο ημερολόγιο</button>' +
+      '<div style="font-size:12px;color:#6b7785;text-align:center;margin-top:6px;">Το ημερολόγιο θα σας θυμίσει την παραμονή στις 20:00 και 2 ώρες πριν.</div>';
+    if (!ctNeedsAnswer(c)) h += '<button class="ct-btn sec" onclick="ctPostponeForm(\'' + c.id + '\')">🔁 Πήρε αναβολή</button>';
+  }
+  h += '<div id="ctPostBox"></div>';
+  if (ctIsStaff()){
+    h += '<div class="ct-h">Διαχείριση</div>' +
+      (active && !c.ack ? '<button class="ct-btn sec" onclick="ctRemind(\'' + c.id + '\')">🔔 Στείλε υπενθύμιση</button>' : '') +
+      '<button class="ct-btn sec" onclick="ctEditForm(\'' + c.id + '\')">✏️ Διόρθωση στοιχείων</button>' +
+      '<button class="ct-btn warn" onclick="ctDelete(\'' + c.id + '\')">🗑 Διαγραφή κλήσης</button>';
+  }
+  h += '<div class="ct-st" id="ctSt"></div>';
+  if ((c.hist || []).length){
+    h += '<div class="ct-h">Ιστορικό</div><div class="ct-hist">' + c.hist.slice().reverse().map(function(x){
+      return '<div>' + esc(x.a) + '<br><small>' + esc(x.t) + ' · ' + esc(x.by) + '</small></div>'; }).join('') + '</div>';
+  }
+  return h;
+}
+function ctStatus(t, kind){ const s = document.getElementById('ctSt'); if (s){ s.textContent = t || ''; s.className = 'ct-st' + (kind ? ' ' + kind : ''); } }
+function ctReplace(items){
+  (items || []).forEach(function(n){
+    [CT.mine, CT.all].forEach(function(arr){ const i = arr.findIndex(function(c){ return c.id === n.id; }); if (i >= 0) arr[i] = n; });
+  });
+  try { localStorage.setItem(CT_CACHE_KEY, JSON.stringify({ u: AUTH.user.u, mine: CT.mine, alerts: CT.alerts })); } catch(e){}
+}
+
+async function ctAck(id){
+  const b = document.getElementById('ctAckBtn'); if (b){ b.disabled = true; b.textContent = 'Αποστολή…'; }
+  try { const out = await ctApi({ action: 'courtAck', id: id }); ctReplace([out.item]); renderCourts(); updateNavBadges(); }
+  catch(e){ ctStatus(navigator.onLine === false ? 'Χρειάζεται σύνδεση στο ίντερνετ.' : e.message, 'err'); if (b){ b.disabled = false; b.textContent = '✓ Έλαβα γνώση'; } }
+}
+
+async function ctCalendar(id){
+  ctStatus('Προετοιμασία…');
+  // Ανοίγουμε το παράθυρο αμέσως (αλλιώς το iPhone το μπλοκάρει) και του δίνουμε τη διεύθυνση μετά.
+  const w = window.open('', '_blank');
+  try {
+    const out = await ctApi({ action: 'courtIcs', id: id });
+    const url = API_URL + '?ics=' + encodeURIComponent(out.ticket);
+    if (w) w.location.href = url; else location.href = url;
+    if (w) setTimeout(function(){ try { if (w.location.href === 'about:blank') w.close(); } catch(e){} }, 6000);
+    ctStatus('Στο παράθυρο που άνοιξε, πατήστε «Προσθήκη» / «Add to Calendar».', 'ok');
+  } catch(e){ if (w) w.close(); ctStatus(e.message, 'err'); }
+}
+
+function ctPostponeForm(id){
+  const c = ctFind(id); if (!c) return;
+  const others = (c.others || []).filter(function(o){ return o.status === 'Ενεργή'; });
+  const box = document.getElementById('ctPostBox');
+  box.innerHTML = '<div class="ct-form"><b style="font-size:15px;">🔁 Νέα ημερομηνία δίκης</b>' +
+    '<div class="grid2" style="margin-top:10px;"><div><label>Ημερομηνία</label><input type="date" id="ctPDate" min="' + ctToday() + '"></div>' +
+    '<div><label>Ώρα</label><input type="time" id="ctPTime" value="' + esc(c.time || '09:00') + '"></div></div>' +
+    '<label>Αίθουσα (μόνο αν άλλαξε)</label><input type="text" id="ctPRoom" placeholder="' + esc(c.room || '') + '">' +
+    (others.length ? '<label>Ισχύει και για</label>' + others.map(function(o){
+      return '<label class="ct-chk" style="text-transform:none;letter-spacing:0;font-size:14px;color:#1c2733;"><input type="checkbox" class="ctPO" value="' + o.id + '" checked> ' + esc(o.name) + '</label>'; }).join('') : '') +
+    '<button class="ct-btn pri" id="ctPGo" onclick="ctPostpone(\'' + id + '\')">Καταχώριση αναβολής</button></div>';
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+async function ctPostpone(id){
+  const date = document.getElementById('ctPDate').value, time = document.getElementById('ctPTime').value;
+  if (!date || !time){ ctStatus('Βάλτε νέα ημερομηνία και ώρα.', 'err'); return; }
+  const applyTo = Array.from(document.querySelectorAll('.ctPO:checked')).map(function(x){ return x.value; });
+  const b = document.getElementById('ctPGo'); b.disabled = true;
+  try {
+    const out = await ctApi({ action: 'courtPostpone', payload: JSON.stringify({ id: id, date: date, time: time, room: document.getElementById('ctPRoom').value.trim(), applyTo: applyTo }) });
+    ctReplace(out.items); renderCourts();
+    ctStatus('✓ Η αναβολή καταχωρίστηκε. Πατήστε «Προσθήκη στο ημερολόγιο» για τη νέα ημερομηνία και σβήστε την παλιά από το ημερολόγιό σας.', 'ok');
+  } catch(e){ ctStatus(e.message, 'err'); b.disabled = false; }
+}
+async function ctDone(id){
+  const c = ctFind(id); if (!c) return;
+  const others = (c.others || []).filter(function(o){ return o.status === 'Ενεργή'; });
+  let applyTo = [];
+  if (others.length && confirm('Εκδικάστηκε και για: ' + others.map(function(o){ return o.name; }).join(', ') + ';\n\nΟΚ = ναι, για όλους · Άκυρο = μόνο για εμένα')) applyTo = others.map(function(o){ return o.id; });
+  try { await ctApi({ action: 'courtDone', payload: JSON.stringify({ id: id, applyTo: applyTo }) }); await courtsRefresh(true); renderCourts(); }
+  catch(e){ ctStatus(e.message, 'err'); }
+}
+async function ctRemind(id){
+  try { const out = await ctApi({ action: 'courtRemind', id: id }); ctStatus(out.sent ? '✓ Στάλθηκε υπενθύμιση στο κινητό του.' : 'Ο συνάδελφος δεν έχει ενεργοποιήσει ειδοποιήσεις — ενημερώστε τον αλλιώς.', out.sent ? 'ok' : 'err'); }
+  catch(e){ ctStatus(e.message, 'err'); }
+}
+async function ctDelete(id){
+  if (!confirm('Οριστική διαγραφή της κλήσης (και του PDF);')) return;
+  try { await ctApi({ action: 'courtDelete', id: id });
+    CT.mine = CT.mine.filter(function(c){ return c.id !== id; }); CT.all = CT.all.filter(function(c){ return c.id !== id; });
+    CT.openId = null; renderCourts(); }
+  catch(e){ ctStatus(e.message, 'err'); }
+}
+
+/* ----- Προβολή PDF μέσα στην εφαρμογή ----- */
+function ctLoadScript(src){
+  return new Promise(function(res, rej){
+    if (document.querySelector('script[data-src="' + src + '"]')) return res();
+    const s = document.createElement('script'); s.src = src; s.dataset.src = src;
+    s.onload = function(){ res(); }; s.onerror = function(){ rej(new Error('Δεν φορτώθηκε βιβλιοθήκη (ίντερνετ;)')); };
+    document.head.appendChild(s);
+  });
+}
+async function ctPdfLib(){
+  await ctLoadScript(CT_LIBS.pdfjs);
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = CT_LIBS.pdfjsWorker;
+  return window.pdfjsLib;
+}
+function b64ToBytes(b64){ const bin = atob(b64); const a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; }
+async function ctOpenPdf(id){
+  const v = document.createElement('div'); v.id = 'pdfViewer';
+  v.innerHTML = '<div class="pv-h"><button onclick="document.getElementById(\'pdfViewer\').remove()">✕</button><b>Κλήση</b><button id="pvShare" style="display:none">Αποθήκευση</button></div>' +
+    '<div class="pv-b" id="pvBody"><div class="pv-msg"><span class="spinner"></span> Φόρτωση…</div></div>';
+  document.body.appendChild(v);
+  try {
+    const out = await ctApi({ action: 'courtPdf', id: id });
+    const bytes = b64ToBytes(out.base64);
+    const lib = await ctPdfLib();
+    const doc = await lib.getDocument({ data: bytes.slice() }).promise;
+    const body = document.getElementById('pvBody'); body.innerHTML = '';
+    for (let p = 1; p <= doc.numPages; p++){
+      const page = await doc.getPage(p);
+      const vp0 = page.getViewport({ scale: 1 });
+      const scale = Math.min(2.2, 1600 / vp0.width);
+      const vp = page.getViewport({ scale: scale });
+      const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+      await page.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+      const img = document.createElement('img'); img.src = cv.toDataURL('image/jpeg', 0.85); body.appendChild(img);
+    }
+    const sb = document.getElementById('pvShare');
+    sb.style.display = '';
+    sb.onclick = function(){
+      const file = new File([bytes], out.name, { type: 'application/pdf' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) navigator.share({ files: [file], title: out.name }).catch(function(){});
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = out.name; a.click(); }
+    };
+  } catch(e){
+    const body = document.getElementById('pvBody'); if (body) body.innerHTML = '<div class="pv-msg">' + esc(e.message) + '</div>';
+  }
+}
+
+/* ----- Νέα κλήση / Διόρθωση (Γραμματεία, διαχειριστής) ----- */
+async function ctEnsureMeta(){
+  if (CT.meta) return CT.meta;
+  const out = await ctApi({ action: 'courtMeta' });
+  CT.meta = out; return out;
+}
+async function ctNewForm(){
+  CT.openId = null;
+  CT.form = { edit: null, recips: [], date: '', time: '09:00', court: '', courtOther: '', addr: '', room: '', role: 'Μάρτυρας', accused: '', num: '', pages: [], split: false, q: '' };
+  document.getElementById('courtsView').innerHTML = '<div class="ct-empty"><span class="spinner"></span> Φόρτωση…</div>';
+  try { await ctEnsureMeta(); } catch(e){ CT.form = null; document.getElementById('courtsView').innerHTML = '<div class="ct-empty">' + esc(e.message) + '</div>'; return; }
+  renderCourts();
+}
+async function ctEditForm(id){
+  const c = ctFind(id); if (!c) return;
+  try { await ctEnsureMeta(); } catch(e){ ctStatus(e.message, 'err'); return; }
+  const known = (CT.meta.courts || []).some(function(x){ return x.name === c.court; });
+  CT.form = { edit: c, recips: [c.u], date: c.date, time: c.time, court: known ? c.court : '__other', courtOther: known ? '' : c.court,
+    addr: c.addr, room: c.room, role: c.role || 'Μάρτυρας', accused: c.accused, num: c.num, pages: [], split: false, q: '' };
+  renderCourts(); window.scrollTo(0,0);
+}
+function ctUserName(u){ const x = (CT.meta && CT.meta.users || []).find(function(y){ return y.u === u; }); return x ? x.name : u; }
+function ctFormSave(){
+  const F = CT.form; if (!F) return;
+  const g = function(id){ const el = document.getElementById(id); return el ? el.value : undefined; };
+  ['date','time','addr','room','role','accused','num','courtOther'].forEach(function(k){
+    const v = g('ctF_' + k); if (v !== undefined) F[k] = v; });
+  const cs = g('ctF_court'); if (cs !== undefined) F.court = cs;
+  const sp = document.getElementById('ctF_split'); if (sp) F.split = sp.checked;
+  document.querySelectorAll('.ctPgOwner').forEach(function(sel){ const p = F.pages[+sel.dataset.i]; if (p) p.owner = sel.value; });
+}
+function ctFormHtml(){
+  const F = CT.form, M = CT.meta || { courts: [], roles: [] };
+  let h = '<button class="ct-back" onclick="ctBack()">‹ Πίσω</button>';
+  h += '<div class="ct-form"><b style="font-size:16px;">' + (F.edit ? '✏️ Διόρθωση κλήσης — ' + esc(F.edit.name) : '⚖️ Νέα κλήση') + '</b>';
+  if (!F.edit){
+    h += '<label>Παραλήπτες</label><div class="ct-who">' + F.recips.map(function(u){
+      return '<span class="ct-chip">' + esc(ctUserName(u)) + '<button onclick="ctFormSave();CT.form.recips=CT.form.recips.filter(function(x){return x!==\'' + u + '\'});renderCourts()">✕</button></span>'; }).join('') + '</div>' +
+      '<input type="text" id="ctF_q" placeholder="Αναζήτηση συναδέλφου…" autocomplete="off" value="' + esc(F.q) + '" oninput="ctFormSave();CT.form.q=this.value;ctSugg()">' +
+      '<div id="ctSugg"></div>';
+  }
+  h += '<div class="grid2"><div><label>Ημερομηνία</label><input type="date" id="ctF_date" value="' + esc(F.date) + '"></div>' +
+    '<div><label>Ώρα</label><input type="time" id="ctF_time" value="' + esc(F.time) + '"></div></div>';
+  h += '<label>Δικαστήριο</label><select id="ctF_court" onchange="ctFormSave();ctCourtChanged()"><option value="">— Επιλέξτε —</option>' +
+    M.courts.map(function(c){ return '<option' + (F.court === c.name ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') +
+    '<option value="__other"' + (F.court === '__other' ? ' selected' : '') + '>Άλλο…</option></select>';
+  if (F.court === '__other') h += '<input type="text" id="ctF_courtOther" style="margin-top:8px;" placeholder="Όνομα δικαστηρίου" value="' + esc(F.courtOther) + '">';
+  h += '<label>Διεύθυνση</label><input type="text" id="ctF_addr" value="' + esc(F.addr) + '">' +
+    '<label>Όροφος / Αίθουσα</label><input type="text" id="ctF_room" placeholder="π.χ. 2ος όροφος · Αίθουσα Δ80 Δ\'" value="' + esc(F.room) + '">' +
+    '<div class="grid2"><div><label>Ιδιότητα</label><select id="ctF_role">' + (M.roles || []).map(function(r){ return '<option' + (F.role === r ? ' selected' : '') + '>' + esc(r) + '</option>'; }).join('') + '</select></div>' +
+    '<div><label>Αρ. κλήσεως</label><input type="text" id="ctF_num" value="' + esc(F.num) + '"></div></div>' +
+    '<label>Κατηγορούμενος (αν πολλοί, με κόμμα)</label><input type="text" id="ctF_accused" value="' + esc(F.accused) + '">';
+  h += '<label>Η κλήση (φωτογραφία ή PDF)' + (F.edit ? ' — μόνο αν θέλετε να την αντικαταστήσετε' : '') + '</label>' +
+    '<div class="ct-files"><label>📷 Φωτογραφία<input type="file" accept="image/*" capture="environment" onchange="ctAddFiles(this)"></label>' +
+    '<label>📎 Αρχείο<input type="file" accept="image/*,application/pdf" multiple onchange="ctAddFiles(this)"></label></div>';
+  if (F.pages.length){
+    const multi = !F.edit && F.recips.length > 1;
+    if (multi) h += '<label class="ct-chk" style="text-transform:none;letter-spacing:0;font-size:14px;color:#1c2733;margin-top:10px;"><input type="checkbox" id="ctF_split"' + (F.split ? ' checked' : '') + ' onchange="ctFormSave();renderCourts()"> Διαφορετικές σελίδες για κάθε συνάδελφο</label>';
+    h += '<div class="ct-pages">' + F.pages.map(function(p, i){
+      return '<div class="ct-pg"><img src="' + p.src + '"><span class="n">' + (i+1) + '</span><button class="x" onclick="ctFormSave();CT.form.pages.splice(' + i + ',1);renderCourts()">✕</button>' +
+        (multi && F.split ? '<select class="ctPgOwner" data-i="' + i + '"><option value="">— σε ποιον; —</option>' + F.recips.map(function(u){
+          return '<option value="' + u + '"' + (p.owner === u ? ' selected' : '') + '>' + esc(ctUserName(u)) + '</option>'; }).join('') + '</select>' : '') + '</div>'; }).join('') + '</div>';
+  }
+  h += '<button class="ct-btn pri" id="ctF_go" onclick="ctSubmit()">' + (F.edit ? 'Αποθήκευση' : 'Αποστολή κλήσης') + '</button><div class="ct-st" id="ctSt"></div></div>';
+  return h;
+}
+function ctFormAfter(){ ctSugg(); }
+function ctSugg(){
+  const box = document.getElementById('ctSugg'); if (!box || !CT.form) return;
+  const q = (CT.form.q || '').trim();
+  if (!q){ box.innerHTML = ''; return; }
+  const key = function(s){ return (typeof apUp === 'function') ? apUp(s) : String(s).toUpperCase(); };
+  const list = (CT.meta.users || []).filter(function(x){ return CT.form.recips.indexOf(x.u) < 0 && (key(x.name).indexOf(key(q)) >= 0 || x.u.indexOf(q.toLowerCase()) >= 0); }).slice(0, 8);
+  box.innerHTML = list.length ? '<div class="ct-sugg">' + list.map(function(x){
+    return '<button type="button" onclick="ctFormSave();CT.form.recips.push(\'' + x.u + '\');CT.form.q=\'\';renderCourts();setTimeout(function(){var i=document.getElementById(\'ctF_q\');if(i)i.focus();},30)">' + esc(x.name) + ' <small style="color:#7a8796">@' + esc(x.u) + '</small></button>'; }).join('') + '</div>' : '';
+}
+function ctCourtChanged(){
+  const F = CT.form; const c = (CT.meta.courts || []).find(function(x){ return x.name === F.court; });
+  if (c) F.addr = c.addr; else if (F.court === '__other') F.addr = '';
+  renderCourts();
+}
+
+// Φωτογραφίες/PDF → σελίδες JPEG (συμπιεσμένες).
+function ctImgToJpeg(src){
+  return new Promise(function(res, rej){
+    const img = new Image();
+    img.onload = function(){
+      const max = 1700, k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const cv = document.createElement('canvas'); cv.width = Math.round(img.naturalWidth * k); cv.height = Math.round(img.naturalHeight * k);
+      const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(img, 0, 0, cv.width, cv.height);
+      res({ src: cv.toDataURL('image/jpeg', 0.72), w: cv.width, h: cv.height, owner: '' });
+    };
+    img.onerror = function(){ rej(new Error('Η εικόνα δεν διαβάστηκε.')); };
+    img.src = src;
+  });
+}
+async function ctAddFiles(input){
+  ctFormSave();
+  const files = Array.from(input.files || []); input.value = '';
+  if (!files.length) return;
+  ctStatus('Επεξεργασία αρχείων…');
+  try {
+    for (const f of files){
+      if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)){
+        const lib = await ctPdfLib();
+        const doc = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+        for (let p = 1; p <= doc.numPages; p++){
+          const page = await doc.getPage(p);
+          const vp0 = page.getViewport({ scale: 1 });
+          const vp = page.getViewport({ scale: Math.min(3, 1700 / Math.max(vp0.width, vp0.height)) });
+          const cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+          const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+          await page.render({ canvasContext: g, viewport: vp }).promise;
+          CT.form.pages.push({ src: cv.toDataURL('image/jpeg', 0.72), w: cv.width, h: cv.height, owner: '' });
+        }
+      } else {
+        const url = URL.createObjectURL(f);
+        CT.form.pages.push(await ctImgToJpeg(url));
+        URL.revokeObjectURL(url);
+      }
+    }
+    renderCourts();
+  } catch(e){ ctStatus(e.message || 'Σφάλμα στο αρχείο.', 'err'); }
+}
+async function ctBuildPdf(pages){
+  await ctLoadScript(CT_LIBS.jspdf);
+  const J = window.jspdf.jsPDF;
+  let doc = null;
+  pages.forEach(function(p){
+    const W = 595, H = Math.round(595 * p.h / p.w);          // πλάτος Α4, ύψος ανάλογα με τη φωτογραφία
+    if (!doc) doc = new J({ unit: 'pt', format: [W, H], orientation: W > H ? 'l' : 'p', compress: true });
+    else doc.addPage([W, H], W > H ? 'l' : 'p');
+    doc.addImage(p.src, 'JPEG', 0, 0, W, H);
+  });
+  return doc.output('datauristring').split(',')[1];
+}
+async function ctSubmit(){
+  ctFormSave();
+  const F = CT.form;
+  const court = F.court === '__other' ? (F.courtOther || '').trim() : F.court;
+  if (!F.edit && !F.recips.length) return ctStatus('Διαλέξτε τουλάχιστον έναν συνάδελφο.', 'err');
+  if (!F.date || !F.time) return ctStatus('Συμπληρώστε ημερομηνία και ώρα.', 'err');
+  if (!court) return ctStatus('Διαλέξτε δικαστήριο.', 'err');
+  if (!F.edit && !F.pages.length && !confirm('Δεν έχετε βάλει φωτογραφία/PDF της κλήσης. Συνέχεια χωρίς;')) return;
+  const split = !F.edit && F.split && F.recips.length > 1 && F.pages.length;
+  if (split){
+    const miss = F.recips.filter(function(u){ return !F.pages.some(function(p){ return p.owner === u; }); });
+    if (F.pages.some(function(p){ return !p.owner; })) return ctStatus('Διαλέξτε σε ποιον ανήκει κάθε σελίδα.', 'err');
+    if (miss.length) return ctStatus('Δεν έχουν σελίδες: ' + miss.map(ctUserName).join(', '), 'err');
+  }
+  const base = { date: F.date, time: F.time, court: court, addr: F.addr, room: F.room, role: F.role, accused: F.accused, num: F.num };
+  const b = document.getElementById('ctF_go'); b.disabled = true;
+  try {
+    if (F.edit){
+      ctStatus('Αποθήκευση…');
+      const pdf = F.pages.length ? await ctBuildPdf(F.pages) : '';
+      const out = await ctApi({ action: 'courtUpdate', payload: JSON.stringify(Object.assign({ id: F.edit.id, pdf: pdf, pages: F.pages.length || '' }, base)) });
+      ctReplace([out.item]); CT.form = null; CT.openId = F.edit.id;
+    } else if (split){
+      const group = Math.random().toString(36).slice(2, 10);
+      for (let i = 0; i < F.recips.length; i++){
+        const u = F.recips[i];
+        ctStatus('Αποστολή ' + (i+1) + ' από ' + F.recips.length + '…');
+        const pg = F.pages.filter(function(p){ return p.owner === u; });
+        await ctApi({ action: 'courtCreate', payload: JSON.stringify(Object.assign({ recipients: [u], group: group, pdf: await ctBuildPdf(pg), pages: pg.length, reqId: group + '-' + u }, base)) });
+      }
+      CT.form = null;
+    } else {
+      ctStatus('Αποστολή…');
+      const pdf = F.pages.length ? await ctBuildPdf(F.pages) : '';
+      await ctApi({ action: 'courtCreate', payload: JSON.stringify(Object.assign({ recipients: F.recips, pdf: pdf, pages: F.pages.length || '', reqId: Math.random().toString(36).slice(2) }, base)) });
+      CT.form = null;
+    }
+    CT.mode = 'all'; CT.filter = 'up';
+    await courtsRefresh(true); await ctLoadAll();
+    ctToast('✓ Η κλήση στάλθηκε. Οι συνάδελφοι ειδοποιήθηκαν.');
+  } catch(e){ ctStatus(e.message, 'err'); b.disabled = false; }
+}
+
+function ctToast(msg){
+  const t = document.createElement('div'); t.className = 'ct-toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 3500);
+}
+
+/* =======================================================================
+   ΕΙΔΟΠΟΙΗΣΕΙΣ PUSH (Firebase Cloud Messaging)
+   ======================================================================= */
+const PUSH_KEY = 'hdo_push_v1';     // { u, token }
+const FB_APP = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js';
+const FB_MSG = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js';
+let fbMessaging = null;
+
+function pushConfigured(){ return !!(window.FCM_CONFIG && window.FCM_CONFIG.apiKey && window.FCM_VAPID); }
+function isIOS(){ return /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+function isStandalone(){ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+function pushSupported(){ return pushConfigured() && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+function pushState(){ try { return JSON.parse(localStorage.getItem(PUSH_KEY) || 'null'); } catch(e){ return null; } }
+function pushOn(){ const s = pushState(); return !!(s && AUTH && s.u === AUTH.user.u && 'Notification' in window && Notification.permission === 'granted'); }
+function deviceLabel(){
+  const ua = navigator.userAgent;
+  return (/iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'Συσκευή') +
+    (isStandalone() ? ' (εφαρμογή)' : ' (browser)');
+}
+async function fbInit(){
+  if (fbMessaging) return fbMessaging;
+  await ctLoadScript(FB_APP); await ctLoadScript(FB_MSG);
+  if (!firebase.apps.length) firebase.initializeApp(window.FCM_CONFIG);
+  fbMessaging = firebase.messaging();
+  // Με την εφαρμογή ανοιχτή: μήνυμα μέσα στην εφαρμογή + ανανέωση κλήσεων.
+  fbMessaging.onMessage(function(p){
+    const n = (p && (p.notification || p.data)) || {};
+    ctToast((n.title || 'Ειδοποίηση') + (n.body ? ' — ' + n.body : ''));
+    if (typeof courtsRefresh === 'function') courtsRefresh(true);
+  });
+  return fbMessaging;
+}
+async function pushGetToken(){
+  const m = await fbInit();
+  const reg = await navigator.serviceWorker.ready;
+  return m.getToken({ vapidKey: window.FCM_VAPID, serviceWorkerRegistration: reg });
+}
+// Ενεργοποίηση (πρέπει να γίνεται με πάτημα κουμπιού — κανόνας iPhone).
+async function pushEnable(){
+  if (!pushConfigured()){ alert('Οι ειδοποιήσεις δεν έχουν ρυθμιστεί ακόμα από τον διαχειριστή.'); return false; }
+  if (isIOS() && !isStandalone()){
+    alert('Στο iPhone οι ειδοποιήσεις δουλεύουν μόνο από την εγκατεστημένη εφαρμογή.\n\nΣτο Safari πατήστε Κοινή χρήση → «Προσθήκη στην οθόνη Αφετηρίας», ανοίξτε την από το εικονίδιο και ενεργοποιήστε τις από εκεί.');
+    return false;
+  }
+  if (!pushSupported()){ alert('Αυτός ο browser δεν υποστηρίζει ειδοποιήσεις.'); return false; }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted'){
+    alert('Οι ειδοποιήσεις δεν επιτράπηκαν. Μπορείτε να τις επιτρέψετε από τις Ρυθμίσεις του κινητού → Ειδοποιήσεις.');
+    return false;
+  }
+  try {
+    const token = await pushGetToken();
+    await ctApi({ action: 'pushSubscribe', fcmToken: token, device: deviceLabel() });
+    localStorage.setItem(PUSH_KEY, JSON.stringify({ u: AUTH.user.u, token: token }));
+    ctToast('🔔 Οι ειδοποιήσεις ενεργοποιήθηκαν.');
+    if (typeof renderHome === 'function' && document.getElementById('homeView').style.display !== 'none') renderHome();
+    return true;
+  } catch(e){
+    alert('Δεν ενεργοποιήθηκαν οι ειδοποιήσεις: ' + (e.message || e));
+    return false;
+  }
+}
+async function pushDisable(){
+  const s = pushState();
+  try { if (s && AUTH) await ctApi({ action: 'pushUnsubscribe', fcmToken: s.token }); } catch(e){}
+  try { if (fbMessaging) await fbMessaging.deleteToken(); } catch(e){}
+  try { localStorage.removeItem(PUSH_KEY); } catch(e){}
+}
+async function pushToggle(){
+  if (pushOn()) await pushDisable(); else await pushEnable();
+  openAccountMenu();
+}
+async function pushTest(){
+  try { const out = await ctApi({ action: 'pushTest' }); if (!out.sent) alert('Δεν στάλθηκε: δεν βρέθηκε ενεργή συσκευή.'); else ctToast('Στάλθηκε — θα εμφανιστεί σε λίγα δευτερόλεπτα.'); }
+  catch(e){ alert(e.message); }
+}
+// Σε κάθε άνοιγμα: αν έχουν επιτραπεί οι ειδοποιήσεις, ενημερώνουμε σιωπηλά τον
+// διακομιστή (το token αλλάζει κάποιες φορές, ή μπήκε άλλος χρήστης στη συσκευή).
+async function pushSync(){
+  if (!AUTH || !pushSupported() || Notification.permission !== 'granted') return;
+  const s = pushState();
+  if (!s) return;
+  try {
+    const token = await pushGetToken();
+    if (token !== s.token || s.u !== AUTH.user.u){
+      if (s.u !== AUTH.user.u && s.token){ /* ο διακομιστής θα το μεταφέρει στον νέο χρήστη */ }
+      await ctApi({ action: 'pushSubscribe', fcmToken: token, device: deviceLabel() });
+      localStorage.setItem(PUSH_KEY, JSON.stringify({ u: AUTH.user.u, token: token }));
+    }
+  } catch(e){}
+}
+function pushHomeCard(){
+  if (!AUTH || !pushConfigured() || pushOn()) return '';
+  if (localStorage.getItem('hdo_push_dismiss') === AUTH.user.u) return '';
+  const ios = isIOS() && !isStandalone();
+  return '<div class="h-alert" style="border-left-color:#c98a00"><b>🔔 Ενεργοποιήστε τις ειδοποιήσεις</b>' +
+    '<div style="margin-top:4px;color:#4a5562;">' + (ios ? 'Για να μαθαίνετε αμέσως για κλήσεις, προσθέστε πρώτα την εφαρμογή στην οθόνη Αφετηρίας και ανοίξτε την από εκεί.' :
+      'Για να μαθαίνετε αμέσως για νέες κλήσεις, αναβολές και υπενθυμίσεις δικών.') + '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;">' + (ios ? '' : '<button class="ct-btn pri" style="margin:0;min-height:42px;flex:1;" onclick="pushEnable()">Ενεργοποίηση</button>') +
+    '<button class="ct-btn sec" style="margin:0;min-height:42px;flex:' + (ios ? 1 : '0 0 90px') + ';" onclick="localStorage.setItem(\'hdo_push_dismiss\', AUTH.user.u);renderHome()">' + (ios ? 'Εντάξει' : 'Όχι') + '</button></div></div>';
+}
+if ('serviceWorker' in navigator){
+  // Πάτημα ειδοποίησης όταν η εφαρμογή είναι ήδη ανοιχτή.
+  navigator.serviceWorker.addEventListener('message', function(e){
+    const d = e.data || {};
+    const t = (d.data && d.data.target) || (d.notification && d.notification.data && d.notification.data.target) || '';
+    if (/^court:/.test(t)) openCourt(t.slice(6));
+    else if (d.messageType === 'push-received' && typeof courtsRefresh === 'function') courtsRefresh(true);
+  });
+}
+
+ctLoadCache();
 showInstallCard();
 prepareApodosi();
 authStart();
 renderWho();
+ctHandleHash();
+setTimeout(pushSync, 2500);
+try { lastDeltioTab = localStorage.getItem('hdo_last_deltio_tab') || 'quick'; } catch(e){}
+switchTab('home');
+setInterval(updateNavBadges, 5000);
 </script>
 
 </body>
